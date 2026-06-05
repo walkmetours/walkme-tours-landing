@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json" />
 
 <!-- Resource hints -->
-<link rel="preload" href="project/assets/fonts/GTEestiProDisplay-Bold.otf" as="font" type="font/otf" crossorigin>
+<link rel="preload" href="project/assets/fonts/GTEestiProDisplay-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="project/assets/parks/xcaret-plus.png" as="image" fetchpriority="high">
 
 <!-- Open Graph -->
@@ -46,7 +46,8 @@
 /* ---------- Brand fonts ---------- */
 @font-face {
   font-family: "GT Eesti Pro Display";
-  src: url("project/assets/fonts/GTEestiProDisplay-Bold.otf") format("opentype");
+  src: url("project/assets/fonts/GTEestiProDisplay-Bold.woff2") format("woff2"),
+       url("project/assets/fonts/GTEestiProDisplay-Bold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -55,7 +56,8 @@
 }
 @font-face {
   font-family: "Travel Soulmates";
-  src: url("project/assets/fonts/TravelSoulmates.otf") format("opentype");
+  src: url("project/assets/fonts/TravelSoulmates.woff2") format("woff2"),
+       url("project/assets/fonts/TravelSoulmates.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
