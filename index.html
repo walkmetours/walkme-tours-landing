@@ -1,3019 +1,368 @@
 <!DOCTYPE html>
-<html lang="es-MX">
+<html lang="es" data-currency="MXN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Walkme Tours | Xcaret + Transporte desde Playa del Carmen</title>
-<meta name="description" content="Reserva tours Xcaret desde Playa del Carmen con transporte incluido. Precio taquilla, combo 3x2 y asesoría por WhatsApp. Agencia oficial Grupo Xcaret." />
-<meta name="keywords" content="parques Xcaret Playa del Carmen, tours Xcaret transporte, Xel-Ha precio, Xenotes, Xenses, Xplor, paquetes Xcaret 3x2, agencia Xcaret PDC" />
-<meta name="theme-color" content="#3D7A35" />
-<link rel="icon" type="image/x-icon" href="favicon.ico" />
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-<link rel="manifest" href="manifest.json" />
-
-<!-- Resource hints -->
-<link rel="preload" href="project/assets/fonts/GTEestiProDisplay-Bold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="project/assets/parks/xcaret-plus.png" as="image" fetchpriority="high">
-
-<!-- Open Graph -->
-<meta property="og:title" content="Walkme Tours — Parques Xcaret + Transporte desde Playa del Carmen" />
-<meta property="og:description" content="Agencia oficial Grupo Xcaret en Playa del Carmen. Precio taquilla con transporte incluido. Xcaret Plus, Xel-Há, Xenotes, Xplor y más. Reserva fácil por WhatsApp." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.walkmetours.com/" />
-<meta property="og:locale" content="es_MX" />
-<meta property="og:site_name" content="Walkme Tours" />
-<meta property="og:image" content="https://www.walkmetours.com/project/assets/parks/xcaret-plus.png" />
-<meta property="og:image:width" content="1458" />
-<meta property="og:image:height" content="996" />
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Walkme Tours — Parques Xcaret + Transporte desde Playa del Carmen" />
-<meta name="twitter:description" content="Precio taquilla con transporte incluido. Xcaret Plus, Xel-Há, Xenotes, Xplor y más. Reserva por WhatsApp." />
-<meta name="twitter:image" content="https://www.walkmetours.com/project/assets/parks/xcaret-plus.png" />
-
-<!-- Canonical -->
-<link rel="canonical" href="https://www.walkmetours.com/" />
-
-<!-- Google Fonts: Inter (body) -->
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-<style>
-/* ---------- Brand fonts ---------- */
-@font-face {
-  font-family: "GT Eesti Pro Display";
-  src: url("project/assets/fonts/GTEestiProDisplay-Bold.woff2") format("woff2"),
-       url("project/assets/fonts/GTEestiProDisplay-Bold.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  /* Full Latin including accented chars */
-  unicode-range: U+0000-00FF, U+0100-024F, U+0250-02AF;
-}
-@font-face {
-  font-family: "Travel Soulmates";
-  src: url("project/assets/fonts/TravelSoulmates.woff2") format("woff2"),
-       url("project/assets/fonts/TravelSoulmates.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  /* Only basic ASCII — accented chars (á é í ó ú ñ) fall back to Inter */
-  unicode-range: U+0020-007E;
-}
-
-/* ---------- Design Tokens ---------- */
-:root {
-  /* Brand palette — from WalkMe logo */
-  --green: #3D7A35;        /* forest green primario */
-  --green-dark: #2D5C27;   /* forest green oscuro */
-  --green-light: #E8F5E4;  /* forest green claro */
-  --navy: #2D5C27;         /* titulos / texto oscuro */
-  --navy-dark: #1F4020;
-  --navy-soft: #4A8C40;
-  --orange: #F5A623;       /* naranja logo */
-  --orange-soft: #F7BC5A;
-  --yellow: #F4DC4F;       /* amarillo "ME" del logo */
-  --pink: #E91E8C;         /* rosa "WALK" del logo */
-  --gray-50: #F5F7FA;
-  --gray-100: #F3F4F6;
-  --gray-200: #E8ECF0;
-  --gray-400: #9CA3AF;
-  --gray-500: #6B7280;
-  --gray-700: #374151;
-  --gray-900: #111827;
-  --ink: #1A2E1A;
-
-  --display: "GT Eesti Pro Display", "Inter", system-ui, sans-serif;
-  --accent-font: "Travel Soulmates", "Inter", cursive;
-  --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-  --shadow-card: 0 2px 8px rgba(0, 51, 102, 0.08);
-  --shadow-card-hover: 0 14px 36px rgba(0, 51, 102, 0.18);
-  --shadow-feature: 0 24px 60px rgba(0, 51, 102, 0.25);
-  --shadow-button: 0 6px 18px rgba(0, 166, 81, 0.35);
-
-  --radius-sm: 8px;
-  --radius: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-}
-
-/* ---------- Reset / base ---------- */
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0;
-  font-family: var(--body);
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--ink);
-  background: #fff;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-img { max-width: 100%; display: block; }
-a { color: inherit; text-decoration: none; }
-button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
-p { margin: 0; }
-
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-@media (min-width: 768px) { .container { padding: 0 32px; } }
-
-/* ---------- Section ---------- */
-.section { padding: 64px 0; }
-@media (min-width: 768px) { .section { padding: 96px 0; } }
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--body);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--green);
-}
-.eyebrow::before {
-  content: "";
-  display: none;
-}
-
-.section-title {
-  font-family: var(--display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--navy);
-  font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.08;
-  text-wrap: balance;
-}
-.section-subtitle {
-  margin-top: 16px;
-  color: var(--gray-500);
-  font-size: 17px;
-  max-width: 60ch;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-/* ---------- Buttons ---------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 26px;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.01em;
-  transition: transform .15s ease, box-shadow .25s ease, background .2s ease, color .2s ease;
-  white-space: nowrap;
-}
-.btn:active { transform: translateY(1px); }
-
-.btn-wa {
-  background: var(--green);
-  color: white;
-  box-shadow: var(--shadow-button);
-}
-.btn-wa:hover { background: var(--green-dark); box-shadow: 0 10px 24px rgba(0,122,61,.4); }
-
-.btn-wa-light {
-  background: white;
-  color: var(--navy);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-}
-.btn-wa-light:hover { background: var(--green); color: white; }
-
-.btn-orange {
-  background: var(--orange);
-  color: white;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.35);
-}
-.btn-orange:hover { background: #E55F00; }
-
-.btn-ghost {
-  background: transparent;
-  color: white;
-  border: 1.5px solid rgba(255,255,255,0.45);
-}
-.btn-ghost:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.8); }
-
-.btn svg { flex: none; }
-
-/* ---------- Top nav ---------- */
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: saturate(1.4) blur(14px);
-  -webkit-backdrop-filter: saturate(1.4) blur(14px);
-  border-bottom: 1px solid rgba(0, 51, 102, 0.06);
-}
-.nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  height: 72px;
-}
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.nav-logo img { height: 44px; width: auto; }
-.nav-links {
-  display: none;
-  gap: 28px;
-  align-items: center;
-}
-.nav-links a {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--navy);
-  transition: color .15s ease;
-}
-.nav-links a:hover { color: var(--green); }
-.nav-cta { display: none; }
-@media (min-width: 900px) {
-  .nav-links { display: flex; }
-  .nav-cta { display: inline-flex; }
-}
-.nav-cta {
-  background: var(--green);
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.nav-cta:hover { background: var(--green-dark); }
-
-/* Mobile nav toggle */
-.nav-mobile-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 10px;
-  cursor: pointer;
-  border: none;
-  background: none;
-}
-@media (min-width: 900px) { .nav-mobile-btn { display: none; } }
-.nav-mobile-btn span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--navy);
-  border-radius: 2px;
-  transition: all .2s ease;
-}
-.nav-mobile-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  z-index: 200;
-  padding: 8px 24px 24px;
-  flex-direction: column;
-  gap: 0;
-  border-top: 2px solid var(--gray-200);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.14);
-  border-radius: 0 0 16px 16px;
-}
-.nav-mobile-menu.open { display: flex; }
-.nav-mobile-menu a {
-  padding: 18px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--navy);
-  border-bottom: 1px solid var(--gray-200);
-}
-.nav-mobile-menu a:last-child { border-bottom: none; }
-.nav-mobile-menu a:hover { color: var(--green); }
-
-/* ---------- HERO ---------- */
-.hero {
-  position: relative;
-  min-height: 640px;
-  color: white;
-  overflow: hidden;
-  isolation: isolate;
-  background: #3D7A35;
-}
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* grain texture */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
-  z-index: -1;
-}
-.hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 80% 20%, rgba(244,220,79,0.12), transparent 50%),
-              radial-gradient(ellipse at 10% 80%, rgba(229,30,140,0.08), transparent 40%);
-  z-index: -1;
-}
-.hero-inner {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 48px;
-  padding: 56px 0 64px;
-  align-items: center;
-}
-@media (min-width: 980px) {
-  .hero-inner {
-    grid-template-columns: 1.05fr 1fr;
-    padding: 80px 0 120px;
-    gap: 64px;
-  }
-}
-
-.badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: var(--orange);
-  color: white;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  box-shadow: 0 8px 22px rgba(245,166,35,0.4);
-}
-.badge-pill .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--orange);
-  box-shadow: 0 0 0 0 rgba(255,107,0,0.6);
-  animation: pulse 1.8s infinite;
-}
-@keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(255,107,0,0.6); }
-  70%  { box-shadow: 0 0 0 10px rgba(255,107,0,0); }
-  100% { box-shadow: 0 0 0 0 rgba(255,107,0,0); }
-}
-
-.hero h1 {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(36px, 6.4vw, 72px);
-  line-height: 0.98;
-  letter-spacing: -0.025em;
-  margin: 22px 0 18px;
-  color: white;
-  text-wrap: balance;
-}
-.hero h1 .accent {
-  font-family: var(--accent-font);
-  font-weight: 400;
-  color: var(--yellow);
-  display: inline-block;
-  font-size: 0.92em;
-  letter-spacing: 0.02em;
-  transform: translateY(0.06em);
-  margin-right: 0.06em;
-}
-.hero h1 .three-two {
-  display: inline-block;
-  position: relative;
-  color: var(--yellow);
-}
-.hero h1 .three-two::after {
-  content: "";
-  position: absolute;
-  left: -4%;
-  right: -4%;
-  bottom: 6%;
-  height: 14%;
-  background: rgba(229,30,140,0.45);
-  z-index: -1;
-  border-radius: 4px;
-  transform: skewX(-8deg);
-}
-.hero p.lead {
-  font-size: 18px;
-  line-height: 1.55;
-  max-width: 56ch;
-  color: rgba(255,255,255,0.92);
-}
-@media (min-width: 768px) { .hero p.lead { font-size: 19px; } }
-
-.hero-ctas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 32px;
-}
-
-.trust-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px 24px;
-  margin-top: 32px;
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-}
-.trust-row span { display: inline-flex; align-items: center; gap: 6px; }
-.trust-row svg { color: var(--yellow); }
-.hero-wa-note {
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-  margin-top: 8px;
-}
-
-/* Hero visual: stacked park photo cards */
-.hero-visual {
-  position: relative;
-  height: 480px;
-  display: none;
-}
-@media (min-width: 980px) { .hero-visual { display: block; } }
-
-.hv-card {
-  position: absolute;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-feature);
-  background: #ddd;
-}
-.hv-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.hv-card .label {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: 14px 16px;
-  background: linear-gradient(to top, rgba(0,0,0,0.62), transparent);
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.02em;
-}
-.hv-1 { top: 4%;  right: 28%; width: 58%; height: 62%; transform: rotate(-3deg); }
-.hv-2 { top: 30%; right: 0%;  width: 52%; height: 56%; transform: rotate(4deg);  }
-.hv-3 { bottom: 0; left: 4%; width: 46%; height: 44%; transform: rotate(-6deg); }
-
-.hv-badge {
-  position: absolute;
-  z-index: 3;
-  background: white;
-  color: var(--navy);
-  border-radius: 18px;
-  padding: 14px 18px;
-  box-shadow: var(--shadow-feature);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-  font-size: 14px;
-}
-.hv-badge .big {
-  font-family: var(--display);
-  font-size: 28px;
-  color: var(--orange);
-  line-height: 1;
-}
-.hv-badge.b1 { top: 14%;    left: -4%;  transform: rotate(-4deg); }
-.hv-badge.b2 { bottom: 10%; right: -2%; transform: rotate(3deg);  }
-
-/* Wave divider */
-.wave-divider {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 60px;
-  width: 100%;
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* ---------- Combos section ---------- */
-#combos { background: var(--gray-50); }
-
-.section-head {
-  display: grid;
-  gap: 12px;
-  text-align: center;
-  margin-bottom: 56px;
-}
-.section-head .eyebrow { justify-self: center; }
-.section-head .section-subtitle { margin-left: auto; margin-right: auto; }
-
-.combo-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-@media (min-width: 720px)  { .combo-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1020px) { .combo-grid { grid-template-columns: repeat(3, 1fr); align-items: stretch; } }
-
-.combo-card {
-  position: relative;
-  background: white;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  transition: transform .25s ease, box-shadow .25s ease;
-  border: 1px solid rgba(0,51,102,0.06);
-}
-.combo-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-card-hover);
-}
-.combo-card.featured {
-  border: 2px solid var(--orange);
-  box-shadow: 0 20px 48px rgba(255, 107, 0, 0.22);
-}
-@media (min-width: 1020px) {
-  .combo-card.featured       { transform: translateY(-10px); }
-  .combo-card.featured:hover { transform: translateY(-14px); }
-}
-
-.combo-media {
-  position: relative;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  background: #fff;
-}
-.combo-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform .5s ease;
-}
-.combo-card:hover .combo-media img { transform: scale(1.06); }
-.combo-media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: none;
-}
-
-.featured-badge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 2;
-  background: var(--orange);
-  color: white;
-  font-weight: 800;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  padding: 8px 14px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-transform: uppercase;
-  box-shadow: 0 8px 20px rgba(255,107,0,0.4);
-}
-
-.combo-body {
-  padding: 28px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  flex: 1;
-}
-
-.combo-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.combo-title-row h3 {
-  font-family: var(--display);
-  font-size: 22px;
-  color: var(--navy);
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-}
-.combo-tag {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--green);
-  background: var(--green-light);
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.combo-price {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.combo-price .currency {
-  font-size: 14px;
-  color: var(--gray-500);
-  font-weight: 600;
-}
-.combo-price .amount {
-  font-family: var(--display);
-  font-size: 40px;
-  font-weight: 700;
-  color: var(--navy);
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.combo-price .per {
-  font-size: 13px;
-  color: var(--gray-500);
-}
-
-.combo-includes {
-  border-top: 1px dashed var(--gray-200);
-  padding-top: 16px;
-  display: grid;
-  gap: 10px;
-}
-.combo-includes .label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gray-500);
-}
-.combo-includes ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
-.combo-includes li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  color: var(--gray-700);
-  font-weight: 500;
-}
-.combo-includes li svg { flex: none; color: var(--green); }
-
-.combo-benefits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.combo-benefits span {
-  font-size: 12px;
-  color: var(--navy);
-  background: rgba(0, 51, 102, 0.06);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.combo-footer {
-  margin-top: auto;
-  display: grid;
-  gap: 8px;
-}
-.combo-footer .btn { width: 100%; }
-
-.combos-note {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--gray-500);
-  max-width: 70ch;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
-
-/* ---------- Personalized ---------- */
-.personalized {
-  position: relative;
-  background: #F4DC4F;   /* amarillo "ME" del logo */
-  color: var(--green-dark);
-  overflow: hidden;
-  isolation: isolate;
-}
-.personalized::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 5% 10%, rgba(229,30,140,0.10), transparent 35%),
-    radial-gradient(circle at 95% 90%, rgba(61,122,53,0.14), transparent 35%);
-  z-index: -1;
-}
-.personalized::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: none;
-  z-index: -1;
-}
-
-.personalized-inner {
-  display: grid;
-  gap: 48px;
-  align-items: center;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 920px) {
-  .personalized-inner { grid-template-columns: 1.1fr 1fr; gap: 80px; }
-}
-
-.discount-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--green);
-  color: white;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.discount-tag .num {
-  font-family: var(--display);
-  font-size: 22px;
-  color: var(--yellow);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.personalized h2 {
-  font-family: var(--display);
-  font-size: clamp(32px, 5vw, 56px);
-  margin-top: 22px;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  color: var(--green-dark);
-  text-wrap: balance;
-}
-.personalized h2 .script {
-  font-family: var(--accent-font);
-  font-weight: 400;
-  color: var(--pink);
-  display: inline-block;
-  margin-right: 0.08em;
-  font-size: 1.08em;
-  transform: translateY(0.04em);
-}
-.personalized .lead {
-  margin-top: 18px;
-  font-size: 18px;
-  color: rgba(45,92,39,0.85);
-  max-width: 50ch;
-  line-height: 1.55;
-}
-
-.benefit-list {
-  list-style: none;
-  padding: 0;
-  margin: 28px 0 0;
-  display: grid;
-  gap: 14px;
-}
-.benefit-list li {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  font-size: 16px;
-  color: var(--green-dark);
-  font-weight: 500;
-}
-.benefit-list .ico {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--green);
-  display: grid;
-  place-items: center;
-  color: white;
-}
-
-.personalized-actions {
-  margin-top: 32px;
-  display: grid;
-  gap: 12px;
-}
-.personalized-trust {
-  font-size: 13px;
-  color: rgba(45,92,39,0.75);
-}
-
-/* Personalized visual collage */
-.pers-visual {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  height: 380px;
-  margin-left: auto;
-  margin-right: auto;
-}
-@media (min-width: 920px) { .pers-visual { height: 440px; max-width: 460px; } }
-
-.pers-tile {
-  position: absolute;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: white;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
-  display: flex;
-  flex-direction: column;
-}
-.pers-tile img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-.pers-tile .meta {
-  padding: 8px 12px;
-  font-size: 12px;
-  color: var(--green-dark);
-  font-weight: 700;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-}
-.pers-tile .meta .check {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--green);
-  color: white;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.pt-1 { top: 0;     left: 0;    width: 48%; transform: rotate(-3deg); z-index: 1; }
-.pt-2 { top: 5%;    right: 0;   width: 44%; transform: rotate(3deg);  z-index: 1; }
-.pt-3 { bottom: 0;  left: 6%;   width: 46%; transform: rotate(2deg);  z-index: 2; }
-.pt-4 { bottom: 8%; right: 2%;  width: 42%; transform: rotate(-2deg); z-index: 2; }
-
-.pers-stamp {
-  position: absolute;
-  z-index: 5;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: var(--green);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-family: var(--display);
-  font-size: 28px;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  box-shadow: 0 8px 24px rgba(61,122,53,0.4);
-  padding: 8px;
-}
-.pers-stamp small {
-  display: block;
-  font-family: var(--body);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  margin-top: 4px;
-  text-transform: uppercase;
-  line-height: 1.3;
-}
-
-/* ---------- E-bikes ---------- */
-#ebikes { background: white; }
-
-.bike-grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 720px) {
-  .bike-grid { grid-template-columns: repeat(3, 1fr); align-items: stretch; }
-}
-
-.bike-card {
-  position: relative;
-  background: white;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-}
-.bike-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card-hover);
-  border-color: var(--green);
-}
-.bike-card.popular {
-  border-color: var(--green);
-  background: linear-gradient(170deg, #fff 60%, var(--green-light) 100%);
-  box-shadow: 0 18px 40px rgba(0, 166, 81, 0.15);
-}
-.bike-card .icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius);
-  background: var(--gray-50);
-  display: grid;
-  place-items: center;
-  color: var(--navy);
-}
-.bike-card.popular .icon { background: var(--green); color: white; }
-.bike-card h3 {
-  font-family: var(--display);
-  font-size: 24px;
-  color: var(--navy);
-  letter-spacing: -0.01em;
-}
-.bike-price {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-.bike-price .amount {
-  font-family: var(--display);
-  font-size: 40px;
-  color: var(--navy);
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.bike-price .ccy {
-  font-size: 14px;
-  color: var(--gray-500);
-  font-weight: 600;
-}
-.bike-card .duration {
-  font-size: 14px;
-  color: var(--gray-500);
-}
-.bike-card .btn { margin-top: auto; }
-
-.popular-badge {
-  position: absolute;
-  top: -14px;
-  right: 24px;
-  background: var(--green);
-  color: white;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: 999px;
-  box-shadow: 0 8px 20px rgba(0,166,81,0.4);
-}
-
-.bike-includes {
-  margin-top: 56px;
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  padding: 32px 28px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-@media (min-width: 720px) {
-  .bike-includes { grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
-}
-.bike-includes h4 {
-  font-family: var(--display);
-  color: var(--navy);
-  font-size: 22px;
-  letter-spacing: -0.01em;
-}
-.bike-includes ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 720px)  { .bike-includes ul { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 980px)  { .bike-includes ul { grid-template-columns: repeat(3, 1fr); } }
-.bike-includes li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  color: var(--gray-700);
-  font-weight: 500;
-}
-.bike-includes li svg { color: var(--green); flex: none; }
-
-.bike-note {
-  margin-top: 16px;
-  text-align: center;
-  color: var(--gray-500);
-  font-size: 13px;
-}
-
-/* ---------- How it works ---------- */
-#how { background: var(--gray-50); }
-
-.steps {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-@media (min-width: 720px)  { .steps { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1020px) { .steps { grid-template-columns: repeat(4, 1fr); } }
-
-.step {
-  position: relative;
-  background: white;
-  border-radius: var(--radius-lg);
-  padding: 32px 26px 28px;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.step-num {
-  display: inline-flex;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--navy), var(--green));
-  color: white;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--display);
-  font-size: 24px;
-  letter-spacing: -0.02em;
-  box-shadow: 0 10px 24px rgba(0, 51, 102, 0.25);
-}
-.step h3 {
-  font-family: var(--display);
-  color: var(--navy);
-  font-size: 19px;
-  letter-spacing: -0.01em;
-}
-.step p {
-  font-size: 14.5px;
-  color: var(--gray-500);
-  line-height: 1.55;
-}
-.step::after {
-  content: "";
-  display: none;
-  position: absolute;
-  top: 56px;
-  right: -12px;
-  width: 24px;
-  height: 2px;
-  background: var(--gray-200);
-}
-@media (min-width: 1020px) {
-  .step:not(:last-child)::after { display: block; }
-}
-
-.how-explain {
-  margin-top: 36px;
-  background: white;
-  border-left: 4px solid var(--green);
-  padding: 20px 24px;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  font-size: 15px;
-  color: var(--gray-700);
-  line-height: 1.6;
-  max-width: 80ch;
-}
-
-/* ---------- Trust grid ---------- */
-#confianza { background: white; }
-
-.trust-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-@media (min-width: 720px)  { .trust-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1020px) { .trust-grid { grid-template-columns: repeat(3, 1fr); } }
-
-.trust-card {
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  border: 1px solid transparent;
-  transition: all .2s ease;
-}
-.trust-card:hover {
-  background: white;
-  border-color: var(--green-light);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-3px);
-}
-.trust-icon {
-  flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--green-light);
-  color: var(--green-dark);
-  display: grid;
-  place-items: center;
-}
-.trust-card.alt  .trust-icon { background: #FFF0E6; color: var(--orange); }
-.trust-card.alt2 .trust-icon { background: rgba(0,51,102,0.08); color: var(--navy); }
-.trust-card h3 {
-  font-family: var(--display);
-  color: var(--navy);
-  font-size: 18px;
-  letter-spacing: -0.01em;
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-.trust-card p {
-  font-size: 14.5px;
-  color: var(--gray-500);
-  line-height: 1.55;
-}
-
-/* ---------- FAQ ---------- */
-#faq { background: var(--gray-50); }
-
-.faq-list {
-  max-width: 880px;
-  margin: 0 auto;
-  display: grid;
-  gap: 12px;
-}
-.faq {
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
-  border: 1px solid rgba(0, 51, 102, 0.04);
-  overflow: hidden;
-  transition: box-shadow .2s ease;
-}
-.faq[open] { box-shadow: var(--shadow-card-hover); }
-.faq summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 22px 24px;
-  font-family: var(--display);
-  font-size: 17px;
-  color: var(--navy);
-  letter-spacing: -0.005em;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary .chev {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  background: var(--gray-50);
-  color: var(--green);
-  display: grid;
-  place-items: center;
-  transition: transform .2s ease, background .2s ease;
-}
-.faq[open] summary .chev { transform: rotate(180deg); background: var(--green); color: white; }
-.faq .answer {
-  padding: 0 24px 22px;
-  color: var(--gray-700);
-  font-size: 15px;
-  line-height: 1.65;
-}
-
-/* ---------- Final CTA ---------- */
-.cta-final {
-  position: relative;
-  color: white;
-  background: linear-gradient(120deg, #3D7A35 0%, #2D5C27 50%, #1F4020 100%);
-  overflow: hidden;
-  isolation: isolate;
-}
-.cta-final::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 80% 30%, rgba(244,220,79,0.18), transparent 40%),
-    radial-gradient(circle at 20% 80%, rgba(255,107,0,0.16), transparent 40%);
-  z-index: -1;
-}
-.cta-final-inner {
-  text-align: center;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 32px 0;
-}
-.cta-final h2 {
-  font-family: var(--display);
-  font-size: clamp(32px, 5vw, 52px);
-  letter-spacing: -0.025em;
-  line-height: 1.04;
-  text-wrap: balance;
-}
-.cta-final h2 .script {
-  font-family: var(--accent-font);
-  color: var(--yellow);
-  margin-right: 0.06em;
-  font-weight: 400;
-  font-size: 1.05em;
-}
-.cta-final p.lead {
-  margin: 18px auto 0;
-  font-size: 18px;
-  color: rgba(255,255,255,0.92);
-  max-width: 56ch;
-}
-.cta-final .btn-wrap { margin-top: 32px; }
-.cta-final .trust-row { justify-content: center; }
-
-/* ---------- Footer ---------- */
-footer {
-  background: var(--gray-900);
-  color: rgba(255,255,255,0.7);
-}
-.footer-inner {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 40px;
-  padding: 72px 0 32px;
-}
-@media (min-width: 720px) {
-  .footer-inner { grid-template-columns: 1.4fr 1fr 1.2fr 1fr; gap: 56px; }
-}
-.footer-col h4 {
-  font-family: var(--display);
-  font-size: 16px;
-  color: white;
-  margin-bottom: 18px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-.footer-brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.footer-brand-logo img { height: 56px; filter: brightness(1.1); }
-.footer-col p, .footer-col li, .footer-col a {
-  font-size: 14.5px;
-  line-height: 1.7;
-  color: rgba(255,255,255,0.68);
-}
-.footer-col ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-.footer-col a:hover { color: var(--yellow); }
-.footer-contact-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.footer-contact-row svg { color: var(--green); margin-top: 3px; flex: none; }
-
-.social-list { display: flex; gap: 10px; }
-.social-list a {
-  display: inline-grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.06);
-  color: white;
-  transition: background .2s ease;
-}
-.social-list a:hover { background: var(--green); }
-
-.footer-bottom {
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding: 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: rgba(255,255,255,0.45);
-}
-@media (min-width: 720px) { .footer-bottom { flex-direction: row; } }
-
-/* ---------- Floating WhatsApp FAB ---------- */
-.fab-wa {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 60;
-  background: var(--green);
-  color: white;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 14px 32px rgba(0, 166, 81, 0.45);
-  transition: transform .15s ease;
-}
-.fab-wa:hover { transform: scale(1.06); }
-.fab-wa::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 2px solid var(--green);
-  opacity: 0.5;
-  animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-@keyframes ping {
-  0%       { transform: scale(0.8); opacity: 0.6; }
-  80%, 100%{ transform: scale(1.3); opacity: 0;   }
-}
-.fab-wa .tip {
-  position: absolute;
-  right: 76px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  color: var(--navy);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s ease;
-}
-.fab-wa .tip::after {
-  content: "";
-  position: absolute;
-  right: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 6px solid transparent;
-  border-left-color: white;
-}
-.fab-wa:hover .tip { opacity: 1; }
-@media (max-width: 720px) { .fab-wa .tip { display: none; } }
-
-/* ---------- Accessibility ---------- */
-:focus-visible {
-  outline: 3px solid var(--orange);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/* ---------- Parks section ---------- */
-#parques { background: white; }
-
-.parks-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-@media (min-width: 600px)  { .parks-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 900px)  { .parks-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1200px) { .parks-grid { grid-template-columns: repeat(4, 1fr); } }
-
-.park-card {
-  background: white;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--gray-200);
-  transition: transform .22s ease, box-shadow .22s ease;
-}
-.park-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.park-media {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--green-dark), var(--green));
-}
-.park-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .5s ease;
-}
-.park-card:hover .park-media img { transform: scale(1.07); }
-.park-media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 55%);
-}
-.park-media .park-name-overlay {
-  position: absolute;
-  bottom: 14px;
-  left: 16px;
-  right: 16px;
-  z-index: 2;
-  color: white;
-  font-family: var(--display);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-.park-tag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.3);
-}
-
-.park-body {
-  padding: 20px 18px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-}
-.park-desc {
-  font-size: 13.5px;
-  color: var(--gray-500);
-  line-height: 1.5;
-}
-.park-features {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 6px;
-}
-.park-features li {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--gray-700);
-  font-weight: 500;
-  line-height: 1.35;
-}
-.park-features li svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--green);
-}
-.park-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-top: auto;
-}
-.park-price-row .from {
-  font-size: 12px;
-  color: var(--gray-400);
-  font-weight: 500;
-}
-.park-price-row .amount {
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--green);
-  line-height: 1;
-}
-.park-price-row .ccy {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--green);
-}
-.park-price-row .transport {
-  margin-left: auto;
-  font-size: 11.5px;
-  color: var(--gray-400);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.park-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 13px 16px;
-  border-radius: var(--radius-sm);
-  background: var(--green-light);
-  color: var(--green-dark);
-  font-size: 13.5px;
-  font-weight: 700;
-  transition: background .18s ease, color .18s ease;
-  text-align: center;
-}
-.park-cta:hover { background: var(--green); color: white; }
-.park-cta svg { flex: none; }
-
-.parks-note {
-  margin-top: 36px;
-  text-align: center;
-  font-size: 13.5px;
-  color: var(--gray-500);
-  line-height: 1.6;
-}
-.parks-note strong { color: var(--ink); }
-
-/* park placeholder (no image) */
-.park-media-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: rgba(255,255,255,0.75);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-.park-media-placeholder svg { opacity: 0.6; }
-
-/* ---------- Responsive small tweaks ---------- */
-@media (max-width: 979px) { .hero-visual { display: none; } }
-
-@media (max-width: 899px) {
-  .nav-cta { display: none; }
-}
-
-@media (max-width: 767px) {
-  .hero h1 {
-    font-size: clamp(26px, 7vw, 36px);
-    line-height: 1.05;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-ctas { flex-direction: column; }
-  .hero-ctas .btn { width: 100%; }
-  .btn { width: 100%; }
-  .trust-row { flex-direction: column; gap: 10px; }
-}
-
-/* ============================================================
-   MEJORAS MOBILE — Hero visual + Sección Personalizada
-   ============================================================ */
-
-/* --- Hero: mostrar collage simplificado en mobile --- */
-/* Fotos mobile dentro de hero-copy — ocultas en desktop */
-.hero-mobile-photos { display: none; }
-
-@media (max-width: 979px) {
-  .hero { min-height: auto; }
-  .hero-inner { padding-bottom: 72px; }
-
-  /* hero-visual queda solo para desktop — en mobile lo reemplaza .hero-mobile-photos */
-  .hero-visual { display: none !important; }
-
-  /* hero-copy como columna flex en mobile (orden DOM es el correcto) */
-  .hero-copy { display: flex; flex-direction: column; }
-
-  .hero-mobile-photos {
-    display: flex;
-    gap: 10px;
-    margin-top: 22px;
-    height: 210px;
-    overflow: visible;
-  }
-  .hmp-card {
-    position: relative;
-    flex: 1;
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-feature);
-  }
-  .hmp-card:first-child { transform: rotate(-3deg); }
-  .hmp-card:last-child  { transform: rotate(3deg); }
-  .hmp-card img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    object-position: center center;
-  }
-  .hmp-card:first-child img { object-position: center 30%; }
-  .hmp-card:last-child  img { object-position: center 25%; }
-  .hmp-label {
-    position: absolute;
-    inset: auto 0 0 0;
-    padding: 10px 12px;
-    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-    color: white;
-    font-weight: 700;
-    font-size: 13px;
-  }
-}
-
-/* --- Hero eyebrow (reemplaza badge-pill) --- */
-.hero-eyebrow {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.60);
-  letter-spacing: 0.08em;
-  margin: 0 0 2px;
-  line-height: 1.4;
-}
-
-/* --- Hero subtítulo --- */
-.hero-subtitle {
-  font-size: 16px;
-  color: rgba(255,255,255,0.82);
-  margin: 6px 0 16px;
-  line-height: 1.45;
-}
-@media (min-width: 768px) {
-  .hero-subtitle { font-size: 19px; }
-}
-
-/* --- Hero H1: título largo — escala ajustada para 2 líneas sin overflow --- */
-@media (max-width: 767px) {
-  .hero h1 {
-    font-size: clamp(26px, 7vw, 34px);
-    line-height: 1.1;
-    margin: 10px 0 0;
-    letter-spacing: -0.02em;
-    text-wrap: balance;
-  }
-}
-@media (max-width: 400px) {
-  .hero h1 { font-size: clamp(22px, 6.5vw, 28px); }
-}
-
-/* --- Sección Personalizada: tipografía y layout mobile --- */
-@media (max-width: 767px) {
-  .personalized h2 {
-    font-size: clamp(22px, 7.5vw, 30px);
-    line-height: 1.1;
-  }
-  .personalized h2 .script {
-    font-size: 1em;
-  }
-  .discount-tag {
-    font-size: 11px;
-    padding: 8px 14px;
-  }
-  .discount-tag .num { font-size: 18px; }
-  .personalized .lead {
-    font-size: 16px;
-    max-width: 100%;
-  }
-  .pers-visual {
-    height: 260px;
-    max-width: 320px;
-  }
-  .pers-stamp {
-    width: 90px;
-    height: 90px;
-    font-size: 22px;
-  }
-}
-
-/* --- Caracteres mixtos fuera de ASCII en títulos Travel Soulmates ---
-   Travel Soulmates cubre unicode-range U+0020-007E (ASCII básico).
-   Acentos y símbolos como á, ¿ caen al fallback Inter sin este fix.
-   .script-mix fuerza GT Eesti Pro Display manteniendo color y peso. */
-.pers-mix {
-  font-family: var(--display);
-  font-weight: 700;
-  color: var(--pink);
-  display: inline;
-}
-.cta-mix {
-  font-family: var(--display);
-  font-weight: 700;
-  color: var(--yellow);
-  display: inline;
-}
-</style>
-
-<script type="application/ld+json">
-[
-  {
-    "@context": "https://schema.org",
-    "@type": ["TravelAgency", "LocalBusiness"],
-    "name": "WalkMe Tours",
-    "url": "https://www.walkmetours.com/",
-    "description": "Agencia local en Playa del Carmen que reserva experiencias del Grupo Xcaret con transporte incluido y asesoría personalizada por WhatsApp.",
-    "logo": "https://www.walkmetours.com/project/assets/walkme-logo.png",
-    "image": "https://www.walkmetours.com/project/assets/parks/xcaret-plus.png",
-    "telephone": "+525639748122",
-    "email": "walkmetravel@gmail.com",
-    "priceRange": "$$",
-    "hasMap": "https://maps.app.goo.gl/iy8CyU4dXF8NLBXN9",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "5ta Avenida entre Calles 10 y 12",
-      "addressLocality": "Playa del Carmen",
-      "addressRegion": "Quintana Roo",
-      "addressCountry": "MX"
-    },
-    "openingHoursSpecification": [
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-        "opens": "10:00",
-        "closes": "19:00"
-      }
-    ],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "contactType": "reservations",
-      "telephone": "+525639748122",
-      "availableLanguage": ["Spanish"]
-    },
-    "sameAs": [
-      "https://www.instagram.com/walkme_travel",
-      "https://www.facebook.com/profile.php?id=61575660364881"
-    ]
-  },
-
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "¿Los precios incluyen transporte?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sí. Todos los precios incluyen transporte desde Playa del Carmen. Si viajas desde Cancún, Tulum u otro punto, escríbenos para cotizar el suplemento."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Desde dónde sale el transporte?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "El transporte sale desde Playa del Carmen, con puntos de recogida en la zona. Confirmaremos contigo el punto exacto antes de la fecha del tour."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Puedo reservar desde Cancún o Tulum?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sí. Contáctanos por WhatsApp y cotizaremos el transporte adicional desde tu ubicación."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Los precios están sujetos a disponibilidad?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sí. Todos los precios son sujetos a disponibilidad. Te confirmaremos en minutos si hay lugar en tu fecha."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Puedo combinar parques y tours?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Claro. Ese es el objetivo del paquete personalizado 20%. Elige 2 o más experiencias y recibes 20% de descuento."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Cómo funciona el 20% de descuento?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sencillo: combinas 2 o más experiencias, y recibes 20% de descuento automático. Máximo 4 parques/tours por paquete. Contáctanos para cotizar tu combo."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Cómo reservo por WhatsApp?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Haz clic en cualquier botón «Reservar por WhatsApp» o en el botón flotante verde. Te abrirá WhatsApp con nuestro número. Cuéntanos qué paquete quieres y listo."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Cuáles son las tarifas de e-bikes?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Por hora: $150 MXN · Por día (10 AM – 7 PM): $400 MXN · 24 horas: $500 MXN."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿La renta de e-bike es por hora o por día?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Ofrecemos ambas opciones: por hora, por día (9 horas) o 24 horas. Elige la que mejor se ajuste a tu plan."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "¿Qué pasa si no hay disponibilidad?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Si no hay lugar en tu fecha, te ofrecemos alternativas de fechas cercanas o paquetes similares. Nuestro equipo te ayuda a encontrar la mejor opción."
-        }
-      }
-    ]
-  },
-
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "WalkMe Tours",
-    "url": "https://www.walkmetours.com/"
-  }
-]
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WalkMe Tours · Agencia de tours en Playa del Carmen</title>
+  <meta name="description" content="Agencia de tours en 5ta Avenida, Playa del Carmen. Reserva experiencias de Grupo Xcaret, tours en Riviera Maya y renta de bicicletas eléctricas por WhatsApp.">
+  <link rel="canonical" href="index.html">
+  <link rel="alternate" hreflang="es" href="index.html">
+  <link rel="alternate" hreflang="en" href="index-en.html">
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
 
-<!-- ============ NAV ============ -->
-<header class="nav">
-  <div class="container nav-inner">
-    <a href="#top" class="nav-logo" aria-label="Walkme Tours inicio">
-      <img src="project/assets/walkme-logo.png" alt="Walkme Tours" width="2056" height="1525" />
+<!-- WhatsApp icon symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="wa-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></symbol>
+</svg>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html"><img src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe Travel"></a>
+  <ul class="nav-links">
+    <li><a class="active" href="index.html">Inicio</a></li>
+    <li><a href="xcaret.html">Xcaret</a></li>
+    <li><a href="tours.html">Tours</a></li>
+    <li><a href="bikes.html">Bikes</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <a class="active" href="index.html">ES</a>
+      <a href="index-en.html">EN</a>
+    </div>
+    <a class="nav-wa" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20info%20sobre%20tours" target="_blank" rel="noopener">
+      <svg width="16" height="16"><use href="#wa-icon"/></svg>
+      <span>WhatsApp</span>
     </a>
-
-    <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#parques">Parques Xcaret</a>
-      <a href="#combos">Combos 3x2</a>
-      <a href="#personalizado">Personalizado</a>
-      <a href="#ebikes">E-Bikes</a>
-      <a href="#faq">FAQ</a>
-    </nav>
-
-    <a class="nav-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours%2C%20me%20gustar%C3%ADa%20reservar%20un%20tour%20Xcaret%20desde%20Playa%20del%20Carmen" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5-1.3c1.5.8 3.2 1.3 5 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
-      Hablar por WhatsApp
-    </a>
-
-    <button class="nav-mobile-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu" id="mobile-toggle">
-      <span></span><span></span><span></span>
-    </button>
   </div>
+</nav>
 
-  <nav class="nav-mobile-menu" id="mobile-menu" aria-label="Menú móvil">
-    <a href="#parques"      onclick="closeMobileMenu()">Parques Xcaret</a>
-    <a href="#combos"       onclick="closeMobileMenu()">Combos 3x2</a>
-    <a href="#personalizado" onclick="closeMobileMenu()">Personalizado</a>
-    <a href="#ebikes"       onclick="closeMobileMenu()">E-Bikes</a>
-    <a href="#faq"          onclick="closeMobileMenu()">FAQ</a>
-    <a href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours%2C%20me%20gustar%C3%ADa%20reservar%20un%20tour%20Xcaret%20desde%20Playa%20del%20Carmen" target="_blank" rel="noopener" style="color:var(--green);">
-      📲 Hablar por WhatsApp
-    </a>
-  </nav>
-</header>
+<!-- HERO -->
+<section class="hero hero--tall">
 
-<!-- ============ HERO ============ -->
-<main id="top">
-<section class="hero" aria-label="Inicio — Paquetes Xcaret 3x2">
-  <div class="container hero-inner">
-    <div class="hero-copy">
-      <p class="hero-eyebrow">Agencia oficial Grupo Xcaret · 5ta Av. Playa del Carmen</p>
-      <h1>
-        Reserva Xcaret desde Playa del Carmen
-      </h1>
-      <p class="hero-subtitle">Cotiza y reserva por WhatsApp. Agencia física en 5ta Av (Centro).</p>
-      <!-- Fotos mobile: visible solo en mobile, entre texto y botones -->
-      <div class="hero-mobile-photos" aria-hidden="true">
-        <div class="hmp-card">
-          <img src="project/assets/parks/xcaret-plus.png" alt="" width="1458" height="996" fetchpriority="high" />
-          <div class="hmp-label">Xcaret Plus</div>
-        </div>
-        <div class="hmp-card">
-          <img src="project/assets/parks/xichen-deluxe_TourCenoteXIMIY.jpg" alt="" width="1280" height="853" />
-          <div class="hmp-label">Xichén Deluxe</div>
-        </div>
-      </div>
-      <div class="hero-ctas">
-        <a class="btn btn-wa-light" href="https://wa.me/525639748122?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20reservar%20un%20tour%20Xcaret%20desde%20Playa%20del%20Carmen." target="_blank" rel="noopener">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#00A651" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-          Reservar por WhatsApp
-        </a>
-        <a class="btn btn-ghost" href="https://maps.app.goo.gl/gSf4LanNvkZW7DVE6" target="_blank" rel="noopener">Ver ubicación en 5ta Av</a>
-      </div>
-      <p class="hero-wa-note">Te llevaremos a WhatsApp para confirmar tu reserva.</p>
-      <div class="trust-row" role="list">
-        <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Agencia física en 5ta Av (Centro)</span>
-        <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Asesoría personalizada (Xcaret y más tours)</span>
-        <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Respuesta rápida por WhatsApp</span>
-      </div>
+  <div style="position:relative;z-index:2;">
+    <div class="hero-badge">🌿 Agencia oficial Grupo Xcaret</div>
+    <h1 class="hero-title">
+      <span class="hero-pre">Tu próxima</span>
+      <em>aventura</em>
+    </h1>
+    <div class="hero-loc">
+      <span></span>
+      <span>5ta Avenida · Playa del Carmen · Riviera Maya</span>
+      <span></span>
     </div>
-
-    <div class="hero-visual" aria-hidden="true">
-      <div class="hv-card hv-1">
-        <img src="project/assets/parks/xcaret-plus.png" alt="" width="1458" height="996" fetchpriority="high" />
-        <div class="label">Xcaret Plus</div>
-      </div>
-      <div class="hv-card hv-2">
-        <img src="project/assets/parks/xichen-deluxe_TourCenoteXIMIY.jpg" alt="" width="1280" height="853" />
-        <div class="label">Xichén Deluxe</div>
-      </div>
-      <div class="hv-card hv-3">
-        <img src="project/assets/parks/xenses.jpg" alt="" width="1280" height="853" />
-        <div class="label">Xenses</div>
-      </div>
-      <div class="hv-badge b1">
-        <div class="big">3×2</div>
-        <div>Pagás 2<br/>parques</div>
-      </div>
-      <div class="hv-badge b2">
-        <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--green-light);color:var(--green);">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-        </span>
-        <div>Transporte<br/>incluido</div>
-      </div>
-    </div>
-  </div>
-
-  <svg class="wave-divider" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0 30 C 240 0, 480 60, 720 30 C 960 0, 1200 60, 1440 30 L1440 60 L0 60 Z" fill="#F5F7FA"/>
-  </svg>
-</section>
-
-<!-- ============ PARQUES XCARET ============ -->
-<section class="section" id="parques" aria-labelledby="parques-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Catálogo completo</span>
-      <h2 class="section-title" id="parques-title">Parques &amp; Experiencias <em style="font-style:normal;color:var(--green);">Grupo Xcaret</em></h2>
-      <p class="section-subtitle">Precio taquilla con transporte incluido desde Playa del Carmen. Escríbenos por WhatsApp para confirmar disponibilidad y precio exacto de tu fecha.</p>
-    </div>
-
-    <div class="parks-grid">
-
-      <!-- ── XCARET MÉXICO ───────────────────────────── -->
-
-      <!-- Xcaret Full Day -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🌿 Día completo</span>
-          <img src="project/assets/parks/xcaret-full-day.jpg" alt="Xcaret México Full Day — más de 50 atractivos naturales y culturales" width="1280" height="854" loading="lazy" />
-          <div class="park-name-overlay">Xcaret Básico</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>+50 atractivos naturales y culturales</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ríos subterráneos y arrecife de coral</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Mariposario y acuario</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Show Xcaret México Espectacular</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Niños 0–4 gratis</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,237</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xcaret%20B%C3%A1sico" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Xcaret Plus -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">⭐ Plus</span>
-          <img src="project/assets/parks/xcaret-plus.png" alt="Xcaret Plus — Full Day más buffet, bebidas y snorkel incluido" width="1458" height="996" loading="lazy" />
-          <div class="park-name-overlay">Xcaret Plus</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Todo lo del Básico incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Buffet + cerveza + bebidas sin alcohol</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Equipo de snorkel incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Acceso Área Plus</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Show México Espectacular</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,718</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xcaret%20Plus" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Xcaret Noche -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🌙 Nocturno</span>
-          <img src="project/assets/parks/xcaret-noche.jpg" alt="Xcaret Noche — ingreso al parque y show México Espectacular" width="1280" height="854" loading="lazy" />
-          <div class="park-name-overlay">Xcaret de Noche</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ingreso desde las 4:00 PM</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Xcaret México Espectacular</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Danzas folclóricas y prehispánicas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Mariachi en escena</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>+300 artistas en escenario</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,497</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xcaret%20Noche" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XEL-HÁ ────────────────────────────────── -->
-
-      <!-- Xel-Há -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🤿 Todo incluido</span>
-          <img src="project/assets/parks/xel-ha.jpg" alt="Xel-Há — parque acuático todo incluido con snorkel en laguna natural" width="1280" height="853" loading="lazy" />
-          <div class="park-name-overlay">Xel-Há Todo Incluido</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Laguna natural más grande del mundo</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Todo incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Snorkel, toboganes y hamacas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Comida incluida</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Bebidas ilimitadas</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,052</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xel-H%C3%A1" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XENOTES ─────────────────────────────── -->
-
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">💧 Cenotes</span>
-          <img src="project/assets/parks/tour-xenotes.png" alt="Xenotes — tour por 4 cenotes únicos en la selva maya" width="882" height="652" loading="lazy" />
-          <div class="park-name-overlay">Xenotes</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>4 cenotes únicos en la selva maya</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kayak, tirolesa y rappel</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Nado libre en aguas cristalinas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Actividad diferente en cada cenote</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,941</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xenotes" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XENSES ──────────────────────────────── -->
-
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🎭 Sensaciones</span>
-          <img src="project/assets/parks/xenses.jpg" alt="Xenses — parque de los sentidos con experiencias únicas" width="1280" height="853" loading="lazy" />
-          <div class="park-name-overlay">Xenses</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>+15 actividades que engañan los sentidos</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ilusiones ópticas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ríos de barro y vuelo</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Parque de agilidad</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,127</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xenses" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XPLOR ───────────────────────────────── -->
-
-      <!-- Xplor Día -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">⚡ Aventura · Día</span>
-          <img src="project/assets/parks/xplor.jpg" alt="Xplor — tirolesas, cuatrimoto y ríos subterráneos de día" width="1280" height="1119" loading="lazy" />
-          <div class="park-name-overlay">Xplor</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>14 tirolesas por la selva</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuatrimoto por la selva</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Balsas en ríos subterráneos</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Nado en cenotes</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,422</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xplor%20de%20d%C3%ADa" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Xplor Fuego Noche -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🔥 Aventura · Noche</span>
-          <img src="project/assets/parks/xplor-fuego.jpg" alt="Xplor Fuego — aventura nocturna en tirolesas y vehículos anfibios" width="1280" height="853" loading="lazy" />
-          <div class="park-name-overlay">Xplor Fuego</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tirolesas al atardecer y bajo las estrellas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vehículo anfibio nocturno</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Hamacuatizaje y ríos subterráneos</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toboganxote 5 en 1</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Buffet, snacks y bebidas incluidas</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Lun–Sáb 5:30–11:00 PM</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,052</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xplor%20Fuego%20nocturno" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XOXIMILCO ───────────────────────────── -->
-
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🎉 Fiesta nocturna</span>
-          <img src="project/assets/parks/xoximilco.png" alt="Xoximilco — fiesta mexicana en trajineras con gastronomía y mariachi" width="896" height="586" loading="lazy" />
-          <div class="park-name-overlay">Xoximilco</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Fiesta mexicana en trajineras</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Gastronomía típica mexicana</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tequila, mariachi y cumbia</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>El tour nocturno más festivo</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,867</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xoximilco" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── XICHEN ──────────────────────────────── -->
-
-      <!-- Xichen Clásico -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🏛 Arqueología · Clásico</span>
-          <img src="project/assets/parks/Tour-Xhich%C3%A9n-Itz%C3%A1-Cl%C3%A1sico-xcaret.png" alt="Xichén Itzá Clásico — visita guiada a la pirámide maya con cenote" width="886" height="578" loading="lazy" />
-          <div class="park-name-overlay">Xichén Clásico</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Autobús panorámico ida y vuelta</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Visita a Valladolid (Pueblo Mágico)</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Recorrido guiado en Chichén Itzá</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Nado en cenote incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Buffet con aguas frescas</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,052</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xichen%20Cl%C3%A1sico" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Xichen Deluxe -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🏛 Arqueología · Deluxe</span>
-          <img src="project/assets/parks/xichen-deluxe_TourCenoteXIMIY.jpg" alt="Xichén Itzá Deluxe — tour premium bilingüe con radio-guía y buffet gourmet" width="1280" height="853" loading="lazy" />
-          <div class="park-name-overlay">Xichén Deluxe</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Autobús + refrescos, agua y cervezas a bordo</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Desayuno ligero incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Guía bilingüe certificado con audioguía</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Nado en cenote (chaleco incluido)</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Buffet gastronomía yucateca</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,422</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20Xichen%20Deluxe" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── CATAMARANES ───────────────────────────── -->
-
-      <!-- Catamarán Xailing Light · Isla Mujeres -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">⛵ Catamarán · Día</span>
-          <img src="project/assets/parks/xialing-light-catamaran-isla-mujeres.png" alt="Catamarán Xailing Light — excursión a Isla Mujeres" width="1458" height="760" loading="lazy" />
-          <div class="park-name-overlay">Catamarán Light</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Excursión a Isla Mujeres</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Snorkel incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tiempo libre en la isla</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Bebidas a bordo</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,386</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20Catamaran%20Xailing%20Light%20Isla%20Mujeres" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Catamarán Xailing Deluxe · Isla Mujeres -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">⛵ Catamarán · Deluxe</span>
-          <img src="project/assets/parks/xialing_deluxe.jpg" alt="Catamarán Xailing Deluxe — excursión premium a Isla Mujeres" width="1280" height="959" loading="lazy" />
-          <div class="park-name-overlay">Catamarán Prime</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Excursión premium a Isla Mujeres</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Open bar a bordo</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Almuerzo incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Snorkel incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tiempo libre en la isla</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$3,126</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20Catamaran%20Xailing%20Deluxe%20Isla%20Mujeres" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- Fury Catamarán · Cozumel -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">⛵ Catamarán · Cozumel</span>
-          <img src="project/assets/parks/fury-catamara-xcaret-cozumel-walkme.jpg" alt="Fury Catamarán Cozumel — snorkel y playa en la isla" width="775" height="455" loading="lazy" />
-          <div class="park-name-overlay">Catamarán Fury Cozumel</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Excursión a Cozumel</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Snorkel en arrecife de coral</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tiempo en playa incluido</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Bebidas incluidas</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$1,664</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20Fury%20Catamaran%20Cozumel" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ── ATV XPERIENCE ─────────────────────────── -->
-
-      <!-- ATV Xperience Doble -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🏍 ATV · Aventura</span>
-          <img src="project/assets/parks/Tour%20ATV%20XPERIENCE%20DOBLE.jpg" alt="ATV Xperience Doble — recorrido en cuatrimoto por la selva maya" width="800" height="533" loading="lazy" />
-          <div class="park-name-overlay">ATV Xperience Doble</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuatrimoto doble por la selva maya</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Caminos de tierra y cenotes</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Experiencia off-road guiada</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ideal para parejas y amigos</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$1,831</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20ATV%20Xperience%20Doble" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-      <!-- ATV Xperience Sencilla -->
-      <article class="park-card">
-        <div class="park-media">
-          <span class="park-tag">🏍 ATV · Aventura</span>
-          <img src="project/assets/parks/Tour%20ATV%20XPERIENCE%20%20sencilla.jpg" alt="ATV Xperience Sencilla — recorrido en cuatrimoto individual por la selva" width="800" height="599" loading="lazy" />
-          <div class="park-name-overlay">ATV Xperience Sencilla</div>
-        </div>
-        <div class="park-body">
-          <ul class="park-features">
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuatrimoto individual por la selva maya</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Aventura off-road guiada</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Caminos de tierra y naturaleza</li>
-            <li><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Perfecto para ir solo</li>
-          </ul>
-          <div class="park-price-row">
-            <span class="from">Desde</span>
-            <span class="amount">$2,201</span>
-            <span class="ccy">MXN</span>
-            <span class="transport">🚐 transporte PDC</span>
-          </div>
-          <a class="park-cta" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20ATV%20Xperience%20Sencilla" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-            Cotizar por WhatsApp
-          </a>
-        </div>
-      </article>
-
-    </div>
-
-    <p class="parks-note">
-      <strong>Precios en MXN con transporte desde Playa del Carmen.</strong> Para salidas sin transporte, desde Cancún o Riviera Maya, <a href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20sin%20transporte" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;">escríbenos por WhatsApp</a>.<br/>
-      ¿Quieres combinar 2 o más parques? <a href="#combos" style="color:var(--green);font-weight:600;">Mira nuestros combos 3x2</a> o <a href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20varios%20parques" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;">cotiza tu paquete personalizado</a>.
-    </p>
-  </div>
-</section>
-
-<!-- ============ COMBOS ============ -->
-<section class="section" id="combos" aria-labelledby="combos-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Paquetes destacados</span>
-      <h2 class="section-title" id="combos-title">Nuestros Combos <em style="font-style:normal;color:var(--orange);">Xcaret 3x2</em></h2>
-      <p class="section-subtitle">Elige el combo perfecto para tu viaje. Precios por adulto, con transporte desde Playa del Carmen.</p>
-    </div>
-
-    <div class="combo-grid">
-
-      <!-- Combo 1 -->
-      <article class="combo-card">
-        <div class="combo-media">
-          <img src="project/assets/parks/Xcaret%20Plus%20%2B%20Xel-H%C3%A1%20Todo%20Incluido%20%2B%20Xenses-combo-1.png" alt="Combo Xcaret Plus + Xel-Há Todo Incluido + Xenses" width="644" height="550" loading="lazy" />
-        </div>
-        <div class="combo-body">
-          <div class="combo-title-row">
-            <h3>Aventura Clásica</h3>
-            <span class="combo-tag">Combo 1</span>
-          </div>
-          <div class="combo-price">
-            <span class="amount">$7,030</span>
-            <span class="currency">MXN</span>
-            <span class="per">/ adulto</span>
-          </div>
-          <div class="combo-includes">
-            <span class="label">Incluye 3 parques</span>
-            <ul>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xcaret Plus</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xel-Há Todo Incluido</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xenses</li>
-            </ul>
-          </div>
-          <div class="combo-benefits">
-            <span>🚐 Transporte</span>
-            <span>🍽 Almuerzo</span>
-            <span>🌿 Naturaleza</span>
-            <span>🏖 Agua</span>
-          </div>
-          <div class="combo-footer">
-            <a class="btn btn-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20el%20Combo%201%20Aventura%20Cl%C3%A1sica" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-              Reservar Combo 1
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- Combo 2 -->
-      <article class="combo-card">
-        <div class="combo-media">
-          <img src="project/assets/parks/Xcaret%20Plus%20%2B%20Xoximilco%20%2B%20Xenses-combo-2.png" alt="Combo Xcaret Plus + Xoximilco + Xenses" width="642" height="552" loading="lazy" />
-        </div>
-        <div class="combo-body">
-          <div class="combo-title-row">
-            <h3>Experiencias Premium</h3>
-            <span class="combo-tag">Combo 2</span>
-          </div>
-          <div class="combo-price">
-            <span class="amount">$6,660</span>
-            <span class="currency">MXN</span>
-            <span class="per">/ adulto</span>
-          </div>
-          <div class="combo-includes">
-            <span class="label">Incluye 3 parques</span>
-            <ul>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xcaret Plus</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xoximilco</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xenses</li>
-            </ul>
-          </div>
-          <div class="combo-benefits">
-            <span>🚐 Transporte</span>
-            <span>🌙 Tour nocturno</span>
-            <span>🎭 Cultural</span>
-            <span>🛶 Trajineras</span>
-          </div>
-          <div class="combo-footer">
-            <a class="btn btn-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20el%20Combo%202%20Experiencias%20Premium" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-              Reservar Combo 2
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- Combo 3 (featured) -->
-      <article class="combo-card featured">
-        <div class="combo-media">
-          <span class="featured-badge">🔥 Más aventura</span>
-          <img src="project/assets/parks/Xcaret%20Plus%20%2B%20Xplor%20%2B%20Xenses-combo-3.png" alt="Combo Xcaret Plus + Xplor + Xenses" width="646" height="552" loading="lazy" />
-        </div>
-        <div class="combo-body">
-          <div class="combo-title-row">
-            <h3>Aventurera Total</h3>
-            <span class="combo-tag" style="background:#FFF0E6;color:var(--orange);">Combo 3</span>
-          </div>
-          <div class="combo-price">
-            <span class="amount">$7,585</span>
-            <span class="currency">MXN</span>
-            <span class="per">/ adulto</span>
-          </div>
-          <div class="combo-includes">
-            <span class="label">Incluye 3 parques</span>
-            <ul>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xcaret Plus</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xplor</li>
-              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Xenses</li>
-            </ul>
-          </div>
-          <div class="combo-benefits">
-            <span>🚐 Transporte</span>
-            <span>🎢 Tirolesas</span>
-            <span>🚙 Cuatriciclos</span>
-            <span>💧 Cenotes</span>
-          </div>
-          <div class="combo-footer">
-            <a class="btn btn-orange" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20reservar%20el%20Combo%203%20Aventurera%20Total" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-              Reservar Combo 3
-            </a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-
-    <p class="combos-note">
-      Precios con transporte desde Playa del Carmen. Sujeto a disponibilidad.<br/>
-      ¿Viajas desde Cancún, Tulum o Riviera Maya? <a href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20cotizar%20desde%20mi%20ciudad" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline;">Escríbenos para cotizar</a>.
-    </p>
-  </div>
-</section>
-
-<!-- ============ PERSONALIZADO ============ -->
-<section class="section personalized" id="personalizado" aria-labelledby="pers-title">
-  <div class="container personalized-inner">
-    <div>
-      <span class="discount-tag"><span class="num">20%</span> de descuento</span>
-      <h2 id="pers-title"><span class="script">Personaliza</span><br/>tu Experiencia</h2>
-      <p class="lead">Arma tu paquete ideal combinando parques y tours. Cuantas más experiencias eliges, más ahorras.</p>
-
-      <ul class="benefit-list">
-        <li>
-          <span class="ico" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
-          Elige 2 o más experiencias del catálogo
-        </li>
-        <li>
-          <span class="ico" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
-          Hasta 4 parques o tours en un mismo paquete
-        </li>
-        <li>
-          <span class="ico" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
-          Válido para grupos, parejas y familias
-        </li>
-        <li>
-          <span class="ico" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
-          20% de descuento automático aplicado
-        </li>
-      </ul>
-
-      <div class="personalized-actions">
-        <a class="btn btn-wa-light" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20cotizar%20mi%20paquete%20personalizado%2020%25" target="_blank" rel="noopener">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#00A651" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-          Cotizar mi Paquete Personalizado
-        </a>
-        <span class="personalized-trust">Te respondemos en minutos. Sin costo de asesoría. Precio oficial garantizado.</span>
-      </div>
-    </div>
-
-    <div class="pers-visual" aria-hidden="true">
-      <div class="pers-tile pt-1">
-        <img src="project/assets/parks/xcaret-noche.jpg" alt="" width="1280" height="854" loading="lazy" />
-        <div class="meta">Xcaret Noche <span class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span></div>
-      </div>
-      <div class="pers-tile pt-2">
-        <img src="project/assets/parks/tour-xenotes.png" alt="" width="882" height="652" loading="lazy" />
-        <div class="meta">Xenotes <span class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span></div>
-      </div>
-      <div class="pers-tile pt-3">
-        <img src="project/assets/parks/xplor.jpg" alt="" width="1280" height="1119" loading="lazy" />
-        <div class="meta">Xplor <span class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span></div>
-      </div>
-      <div class="pers-tile pt-4">
-        <img src="project/assets/parks/xoximilco.png" alt="" width="896" height="586" loading="lazy" />
-        <div class="meta">Xoximilco <span class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span></div>
-      </div>
-      <div class="pers-stamp">
-        −20%
-        <small>combo<br/>personalizado</small>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ E-BIKES ============ -->
-<section class="section" id="ebikes" aria-labelledby="ebikes-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Movilidad en la 5ta avenida</span>
-      <h2 class="section-title" id="ebikes-title">Renta de E-Bikes en Playa del Carmen</h2>
-      <p class="section-subtitle">Muévete fácil por Playa del Carmen con renta por hora, día o 24 horas. Bici eléctrica de última generación.</p>
-    </div>
-
-    <div class="bike-grid">
-
-      <article class="bike-card">
-        <div class="icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        </div>
-        <h3>Por Hora</h3>
-        <div class="bike-price"><span class="amount">$150</span><span class="ccy">MXN</span></div>
-        <div class="duration">1 hora de uso · ideal para paseos rápidos</div>
-        <a class="btn btn-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20rentar%20e-bike%20por%20hora" target="_blank" rel="noopener">Reservar</a>
-      </article>
-
-      <article class="bike-card popular">
-        <span class="popular-badge">⭐ Popular</span>
-        <div class="icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        </div>
-        <h3>Por Día</h3>
-        <div class="bike-price"><span class="amount">$400</span><span class="ccy">MXN</span></div>
-        <div class="duration">10:00 AM – 7:00 PM · 9 horas completas</div>
-        <a class="btn btn-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20rentar%20e-bike%20por%20d%C3%ADa" target="_blank" rel="noopener">Reservar</a>
-      </article>
-
-      <article class="bike-card">
-        <div class="icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
-        </div>
-        <h3>24 Horas</h3>
-        <div class="bike-price"><span class="amount">$500</span><span class="ccy">MXN</span></div>
-        <div class="duration">24 horas seguidas de uso libre</div>
-        <a class="btn btn-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours,%20quiero%20rentar%20e-bike%2024hs" target="_blank" rel="noopener">Reservar</a>
-      </article>
-
-    </div>
-
-    <div class="bike-includes">
-      <h4>¿Qué incluye?</h4>
-      <ul>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>E-bike de última generación</li>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Casco de seguridad</li>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Candado de seguridad</li>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Mapa de rutas recomendadas</li>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Asistencia por WhatsApp</li>
-        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Salida desde 5ta Av entre 10 y 12</li>
-      </ul>
-    </div>
-    <p class="bike-note">Disponibilidad sujeta a confirmación.</p>
-  </div>
-</section>
-
-<!-- ============ CÓMO FUNCIONA ============ -->
-<section class="section" id="how" aria-labelledby="how-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Simple y rápido por WhatsApp</span>
-      <h2 class="section-title" id="how-title">¿Cómo funciona reservar con Walkme?</h2>
-      <p class="section-subtitle">En 4 pasos simples por WhatsApp. Te respondemos en minutos.</p>
-    </div>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-num" aria-hidden="true">1</div>
-        <h3>Elige tu Experiencia</h3>
-        <p>Mira los paquetes y elige el que más te guste, o pídenos una recomendación.</p>
-      </div>
-      <div class="step">
-        <div class="step-num" aria-hidden="true">2</div>
-        <h3>Escríbenos por WhatsApp</h3>
-        <p>Contáctanos con tus datos, fechas de viaje y cantidad de personas.</p>
-      </div>
-      <div class="step">
-        <div class="step-num" aria-hidden="true">3</div>
-        <h3>Confirmamos Disponibilidad</h3>
-        <p>Te confirmamos en minutos si hay lugar y enviamos el resumen detallado.</p>
-      </div>
-      <div class="step">
-        <div class="step-num" aria-hidden="true">4</div>
-        <h3>¡Reserva y Disfruta!</h3>
-        <p>Realiza tu pago seguro y prepárate para vivir tu experiencia.</p>
-      </div>
-    </div>
-
-    <div class="how-explain" role="note">
-      Nuestro equipo te ayuda a elegir la mejor opción según tu fecha, hotel, presupuesto y tipo de viaje.
-      Respuesta rápida garantizada de lunes a viernes de 10:00 AM a 7:00 PM. Sábados y domingos atendemos por WhatsApp bajo cita.
-    </div>
-  </div>
-</section>
-
-<!-- ============ CONFIANZA ============ -->
-<section class="section" id="confianza" aria-labelledby="trust-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">¿Por qué Walkme?</span>
-      <h2 class="section-title" id="trust-title">Tu agencia local en Playa del Carmen</h2>
-      <p class="section-subtitle">Operadores autorizados, atención humana y precios garantizados — sin sorpresas.</p>
-    </div>
-    <div class="trust-grid">
-      <article class="trust-card">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h2M9 13h2M13 9h2M13 13h2M9 17h6"/></svg>
-        </div>
-        <div>
-          <h3>Agencia Oficial Grupo Xcaret</h3>
-          <p>Revendedora autorizada con precios oficiales garantizados.</p>
-        </div>
-      </article>
-      <article class="trust-card alt">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
-        </div>
-        <div>
-          <h3>Atención personalizada</h3>
-          <p>Equipo humano real que te asesora sin complicaciones, paso a paso.</p>
-        </div>
-      </article>
-      <article class="trust-card alt2">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <div>
-          <h3>Oficina en Playa del Carmen</h3>
-          <p>5ta Av entre 10 y 12. Presencia local y respuesta rápida por WhatsApp.</p>
-        </div>
-      </article>
-      <article class="trust-card">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <div>
-          <h3>Experiencias seleccionadas</h3>
-          <p>Solo ofrecemos parques y tours de calidad, validados por nuestro equipo.</p>
-        </div>
-      </article>
-      <article class="trust-card alt">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        </div>
-        <div>
-          <h3>Asesoría por WhatsApp</h3>
-          <p>Contáctanos directo por WhatsApp, respondemos rápido y con asesoría real.</p>
-        </div>
-      </article>
-      <article class="trust-card alt2">
-        <div class="trust-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        </div>
-        <div>
-          <h3>Te ayudamos a elegir</h3>
-          <p>Recomendaciones a medida según tipo de viaje, grupo y temporada.</p>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FAQ ============ -->
-<section class="section" id="faq" aria-labelledby="faq-title">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Resolvemos tus dudas</span>
-      <h2 class="section-title" id="faq-title">Preguntas frecuentes</h2>
-      <p class="section-subtitle">Todo lo que necesitas saber antes de reservar.</p>
-    </div>
-    <div class="faq-list">
-
-      <details class="faq" open>
-        <summary>¿Los precios incluyen transporte?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Sí. Todos los precios incluyen transporte desde Playa del Carmen. Si viajas desde Cancún, Tulum u otro punto, escríbenos para cotizar el suplemento.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Desde dónde sale el transporte?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">El transporte sale desde Playa del Carmen, con puntos de recogida en la zona. Confirmaremos contigo el punto exacto antes de la fecha del tour.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Puedo reservar desde Cancún o Tulum?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Sí. Contáctanos por WhatsApp y cotizaremos el transporte adicional desde tu ubicación.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Los precios están sujetos a disponibilidad?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Sí. Todos los precios son sujetos a disponibilidad. Te confirmaremos en minutos si hay lugar en tu fecha.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Puedo combinar parques y tours?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Claro. Ese es el objetivo del paquete personalizado 20%. Elige 2 o más experiencias y recibes 20% de descuento.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Cómo funciona el 20% de descuento?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Sencillo: combinas 2 o más experiencias, y recibes 20% de descuento automático. Máximo 4 parques/tours por paquete. Contáctanos para cotizar tu combo.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Cómo reservo por WhatsApp?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Haz clic en cualquier botón "Reservar por WhatsApp" o en el botón flotante verde. Te abrirá WhatsApp con nuestro número. Cuéntanos qué paquete quieres y listo.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Cuáles son las tarifas de e-bikes?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Por hora: $150 MXN · Por día (10 AM – 7 PM): $400 MXN · 24 horas: $500 MXN.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿La renta de e-bike es por hora o por día?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Ofrecemos ambas opciones: por hora, por día (9 horas) o 24 horas. Elige la que mejor se ajuste a tu plan.</div>
-      </details>
-
-      <details class="faq">
-        <summary>¿Qué pasa si no hay disponibilidad?<span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
-        <div class="answer">Si no hay lugar en tu fecha, te ofrecemos alternativas de fechas cercanas o paquetes similares. Nuestro equipo te ayuda a encontrar la mejor opción.</div>
-      </details>
-
-    </div>
-  </div>
-</section>
-
-<!-- ============ CTA FINAL ============ -->
-<section class="section cta-final" aria-labelledby="cta-final-title">
-  <div class="container cta-final-inner">
-    <h2 id="cta-final-title"><span class="script-mix cta-mix">¿</span><span class="script">Listo</span><br/>para reservar tu experiencia?</h2>
-    <p class="lead">Escríbenos por WhatsApp y te ayudamos a elegir el mejor paquete para tu viaje.</p>
-    <div class="btn-wrap">
-      <a class="btn btn-wa-light" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours%2C%20quiero%20reservar.%20Ya%20vi%20sus%20opciones%20en%20la%20web" target="_blank" rel="noopener">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="#00A651" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/></svg>
-        Hablar con Walkme Tours
+    <p class="hero-sub">Tours de Grupo Xcaret, experiencias por la Riviera Maya y renta de bicicletas eléctricas. Reserva en minutos por WhatsApp.</p>
+    <div class="hero-ctas">
+      <a class="btn-wa" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20info%20sobre%20tours" target="_blank" rel="noopener">
+        <svg width="18" height="18"><use href="#wa-icon"/></svg>
+        Escribir por WhatsApp
       </a>
-    </div>
-    <div class="trust-row" role="list">
-      <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Respuesta en minutos</span>
-      <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Asesoría sin costo</span>
-      <span role="listitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Precios oficiales</span>
+      <a class="btn-ghost" href="xcaret.html">Ver experiencias</a>
     </div>
   </div>
 </section>
-</main>
 
-<!-- ============ FOOTER ============ -->
-<footer>
-  <div class="container footer-inner">
-    <div class="footer-col">
-      <div class="footer-brand-logo">
-        <a href="#top"><img src="project/assets/walkme-logo.png" alt="Walkme Tours" width="2056" height="1525" loading="lazy" /></a>
-      </div>
-      <p>Agencia especializada en paquetes Xcaret y experiencias en Playa del Carmen. Reserva con asesoría humana, transporte incluido y precios oficiales.</p>
+<!-- TRUST STRIP -->
+<section class="trust">
+  <div class="trust-item">
+    <div class="trust-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
     </div>
-
-    <div class="footer-col">
-      <h4>Links útiles</h4>
-      <ul>
-        <li><a href="#parques">Parques Xcaret</a></li>
-        <li><a href="#combos">Combos 3x2</a></li>
-        <li><a href="#personalizado">Paquete Personalizado</a></li>
-        <li><a href="#ebikes">E-Bikes</a></li>
-        <li><a href="#faq">FAQ</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>Contacto</h4>
-      <div class="footer-contact-row">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5-1.3c1.5.8 3.2 1.3 5 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
-        <span><a href="https://wa.me/525639748122" target="_blank" rel="noopener">+52 56 3974 8122</a></span>
-      </div>
-      <div class="footer-contact-row">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        <span><a href="mailto:walkmetravel@gmail.com">walkmetravel@gmail.com</a></span>
-      </div>
-      <div class="footer-contact-row">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span>5ta Av entre 10 y 12<br/>Playa del Carmen, Q. Roo<br/><small style="opacity:.7;">Lun–Vie: 10:00 AM – 7:00 PM · Fines de semana: bajo cita</small></span>
-      </div>
-    </div>
-
-    <div class="footer-col">
-      <h4>Síguenos</h4>
-      <div class="social-list">
-        <a href="https://www.instagram.com/walkme_travel" target="_blank" rel="noopener" aria-label="Instagram @walkme_travel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37a4 4 0 1 1-7.93 1.16A4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-        </a>
-        <a href="https://www.facebook.com/profile.php?id=61575660364881" target="_blank" rel="noopener" aria-label="Facebook Walkme Travel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H8v-2.9h2.4V9.4c0-2.4 1.4-3.7 3.6-3.7 1 0 2.1.2 2.1.2v2.3h-1.2c-1.2 0-1.5.7-1.5 1.5V12h2.6l-.4 2.9h-2.2v7A10 10 0 0 0 22 12z"/></svg>
-        </a>
-      </div>
-      <div style="margin-top:18px;font-size:13px;line-height:1.6;">
-        <div>@walkme_travel</div>
-        <div style="opacity:.7;">Walkme Travel</div>
-      </div>
+    <div class="trust-txt">
+      <strong>Agencia física en 5ta Avenida</strong>
+      <span>Pasa a vernos en Playa del Carmen, frente al mar</span>
     </div>
   </div>
-
-  <div class="container">
-    <div class="footer-bottom">
-      <div>© 2026 Walkme Tours. Todos los derechos reservados.</div>
-      <div>Hecho con cariño en Playa del Carmen 🐚</div>
+  <div class="trust-item">
+    <div class="trust-icon">
+      <svg width="20" height="20"><use href="#wa-icon"/></svg>
     </div>
+    <div class="trust-txt">
+      <strong>Atención por WhatsApp</strong>
+      <span>Respondemos en minutos, español o inglés</span>
+    </div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="trust-txt">
+      <strong>Reservas rápidas</strong>
+      <span>Te enviamos confirmación y link de pago</span>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER TEMPORADA TIBURÓN BALLENA -->
+<section class="section section--green" id="tiburon-ballena">
+  <div class="tibu-grid">
+    <div class="tibu-info">
+      <p class="s-label" style="letter-spacing:2px;">Temporada abierta · Junio a septiembre</p>
+      <h2 class="s-title">Nada con el Tiburon Ballena</h2>
+      <p class="s-intro" style="margin:0 0 20px;max-width:560px;">Avistamiento garantizado · Adultos $4,052 MXN · Niños $3,496 MXN · Transporte desde Playa del Carmen incluido.</p>
+      <div class="hero-ctas">
+        <a class="btn-wa" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20reservar%20Whale%20Shark%20Discovery%20(Tibur%C3%B3n%20Ballena)" target="_blank" rel="noopener">
+          <svg width="18" height="18"><use href="#wa-icon"/></svg> Reserva tu lugar
+        </a>
+        <a class="btn-ghost" href="tours.html#tiburon-ballena">Ver detalles</a>
+      </div>
+    </div>
+    <div class="tibu-video-wrap">
+      <video class="tibu-phone" autoplay muted loop playsinline poster="assets/img/tiburon-ballena-historia-poster.jpg">
+        <source src="assets/video/tiburon-ballena-historia.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- DESTACADAS XCARET -->
+<section class="section section--cream" id="experiencias">
+  <div class="official-badge">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    Agencia oficial Grupo Xcaret
+  </div>
+  <p class="s-label">Destacadas · Parques y experiencias</p>
+  <h2 class="s-title">Xcaret</h2>
+  <p class="s-intro">Selección de las experiencias más buscadas del Grupo Xcaret. Cotiza precio y disponibilidad por WhatsApp.</p>
+
+  <div class="tours-grid">
+
+    <article class="t-card" data-quote data-name="Xcaret Plus" data-adult="3718">
+      <div class="t-img t-img-xcaret" style="background-image:url('assets/img/tour-xcaret-plus-playa-del-carmen.jpg');background-size:cover;background-position:center;" role="img" aria-label="Área Xcaret Plus con ríos subterráneos"><div class="t-cat-tag">Xcaret</div></div>
+      <div class="t-body">
+        <div class="t-name">Xcaret Plus</div>
+        <ul class="t-bullets">
+          <li>Ríos subterráneos + arrecife</li>
+          <li>Show México Espectacular</li>
+          <li>Comida buffet incluida</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20disponibilidad%20para%20Xcaret%20Plus" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card" data-quote data-name="Xel-Há All Inclusive" data-adult="3052">
+      <div class="t-img t-img-ocean" style="background-image:url('assets/img/parque-xel-ha-snorkel-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Snorkel en la caleta de Xel-Há"><div class="t-cat-tag">Xel-Há</div></div>
+      <div class="t-body">
+        <div class="t-name">Xel-Há All Inclusive</div>
+        <ul class="t-bullets">
+          <li>Snorkel y toboganes</li>
+          <li>Comida y bebidas ilimitadas</li>
+          <li>Zip-bike y río flotante</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20disponibilidad%20para%20Xel-H%C3%A1" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card" data-quote data-name="Xplor" data-adult="3422">
+      <div class="t-img t-img-arch" style="background-image:url('assets/img/tour-xplor-tirolesas-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Tirolesas sobre la selva en Xplor"><div class="t-cat-tag">Xplor</div><div class="t-promo">Aventura</div></div>
+      <div class="t-body">
+        <div class="t-name">Xplor</div>
+        <ul class="t-bullets">
+          <li>Tirolesas sobre la selva</li>
+          <li>Anfibios 4×4</li>
+          <li>Rafting en ríos subterráneos</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20disponibilidad%20para%20Xplor" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card" data-quote data-name="Tour Xenotes" data-adult="2941">
+      <div class="t-img t-img-jungle" style="background-image:url('assets/img/tour-xenotes-cenotes-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Cenotes y kayak en Tour Xenotes"><div class="t-cat-tag">Xenotes</div></div>
+      <div class="t-body">
+        <div class="t-name">Tour Xenotes</div>
+        <ul class="t-bullets">
+          <li>4 tipos de cenotes en un día</li>
+          <li>Kayak, snorkel, tirolesa, rappel</li>
+          <li>Edad mínima: 6 años</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20disponibilidad%20para%20Tour%20Xenotes" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </article>
+
+  </div>
+
+  <div style="margin-top:36px;">
+    <a class="btn-green" href="xcaret.html">
+      Ver todas las experiencias Xcaret
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- DESTACADAS TOURS -->
+<section class="section section--yellow">
+  <p class="s-label">Destacadas · Tours en Riviera Maya</p>
+  <h2 class="s-title">Tours</h2>
+  <p class="s-intro" style="color:rgba(13,46,26,0.75);">Cenotes, Tulum, Chichén Itzá, snorkel y aventura. Salida desde Playa del Carmen.</p>
+
+  <div class="tours-grid">
+
+    <article class="t-card">
+      <div class="t-img t-img-arch" style="background-image:url('assets/img/tulum-cenote-turquesa.jpg');background-size:cover;background-position:center;" role="img" aria-label="Cenote turquesa subterráneo en Tulum"><div class="t-cat-tag">Tulum</div></div>
+      <div class="t-body">
+        <div class="t-name">Tulum &amp; Cenote</div>
+        <ul class="t-bullets">
+          <li>Ruinas de Tulum frente al mar</li>
+          <li>Snorkel y nado en cenote</li>
+          <li>Transporte con A/A incluido</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20cotizar%20Tulum%20y%20Cenote" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Cotizar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card">
+      <div class="t-img t-img-arch" style="background-image:url('assets/img/chichen-itza-clasico-piramide.jpg');background-size:cover;background-position:center;" role="img" aria-label="Pirámide de Chichén Itzá"><div class="t-cat-tag">Chichén Itzá</div></div>
+      <div class="t-body">
+        <div class="t-name">Chichén Itzá Clásico</div>
+        <ul class="t-bullets">
+          <li>Zona arqueológica de Chichén Itzá</li>
+          <li>Hacienda, cenote y comida tradicional</li>
+          <li>Valladolid colonial</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20cotizar%20Chich%C3%A9n%20Itz%C3%A1%20Cl%C3%A1sico" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Cotizar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card">
+      <div class="t-img t-img-ocean" style="background-image:url('assets/img/snorkel-discovery-tortuga-akumal.jpg');background-size:cover;background-position:center;" role="img" aria-label="Tortuga marina nadando en Akumal"><div class="t-cat-tag">Akumal</div></div>
+      <div class="t-body">
+        <div class="t-name">Snorkel Discovery</div>
+        <ul class="t-bullets">
+          <li>Snorkel con tortugas en Bahía de Akumal</li>
+          <li>Recorrido guiado y snorkel en cenote</li>
+          <li>Equipo completo incluido</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20cotizar%20Snorkel%20Discovery" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Cotizar por WhatsApp
+      </a>
+    </article>
+
+    <article class="t-card">
+      <div class="t-img t-img-sea" style="background-image:url('assets/img/paradise-island-isla-contoy-mujeres.jpg');background-size:cover;background-position:center;" role="img" aria-label="Vista aérea de Isla Contoy con muelle y lancha"><div class="t-cat-tag">Isla Contoy</div></div>
+      <div class="t-body">
+        <div class="t-name">Paradise Island</div>
+        <ul class="t-bullets">
+          <li>Isla Contoy: snorkel en área protegida</li>
+          <li>Isla Mujeres: playa y tiempo libre</li>
+          <li>Comida y bebidas incluidas</li>
+        </ul>
+      </div>
+      <a class="t-btn" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20cotizar%20Paradise%20Island" target="_blank" rel="noopener">
+        <svg width="14" height="14"><use href="#wa-icon"/></svg>
+        Cotizar por WhatsApp
+      </a>
+    </article>
+
+  </div>
+
+  <div style="margin-top:36px;">
+    <a class="btn-green" href="tours.html">
+      Ver todos los tours
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- BIKES PROMO -->
+<section class="section section--cream">
+  <div class="bike-promo">
+    <div>
+      <p class="s-label">WalkMe Bikes</p>
+      <h2 class="s-title">Renta tu<br>bici electrica</h2>
+      <p>Explora la 5ta Avenida y la Riviera Maya por libre. Reserva en línea, recoge en agencia y nosotros nos encargamos del resto.</p>
+      <div class="bike-promo-ctas">
+        <a class="btn-y" href="bikes.html">Reservar mi bici</a>
+        <a class="btn-ghost" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20info%20de%20bikes" target="_blank" rel="noopener" style="border-color:rgba(255,255,255,0.4);">Consultar disponibilidad</a>
+      </div>
+    </div>
+    <div class="bike-promo-img">
+      <img src="assets/img/icono-bicicleta-walkme.svg" alt="Icono de bicicleta WalkMe">
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO RESERVAR -->
+<section class="section section--yellow">
+  <p class="s-label">Cómo reservar</p>
+  <h2 class="s-title">En <span class="num-fix">3</span> pasos</h2>
+  <div class="pasos-grid">
+    <div class="paso">
+      <div class="paso-n">1</div>
+      <div class="paso-t">Elige tu experiencia</div>
+      <div class="paso-d">Explora Grupo Xcaret, tours en Riviera Maya o renta de bicicletas.</div>
+    </div>
+    <div class="paso">
+      <div class="paso-n">2</div>
+      <div class="paso-t">Consulta por WhatsApp</div>
+      <div class="paso-d">Pregunta disponibilidad, fechas y precios. Respondemos en minutos.</div>
+    </div>
+    <div class="paso">
+      <div class="paso-n">3</div>
+      <div class="paso-t">Confirma y paga</div>
+      <div class="paso-d">Te enviamos confirmación y link de pago. Listo, a vivir la aventura.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-top">
+    <div class="f-logo">
+      <img src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe Travel">
+      <p>Agencia de tours en 5ta Avenida, Playa del Carmen. Agencia oficial Grupo Xcaret.</p>
+    </div>
+    <div class="f-col">
+      <h4>Experiencias</h4>
+      <a href="xcaret.html">Grupo Xcaret</a>
+      <a href="tours.html">Tours Riviera Maya</a>
+      <a href="bikes.html">Renta de bicicletas</a>
+    </div>
+    <div class="f-col">
+      <h4>Contacto</h4>
+      <a href="https://wa.me/525639748122" target="_blank" rel="noopener">WhatsApp · +52 56 3974 8122</a>
+      <a href="mailto:walkmetravel@gmail.com">walkmetravel@gmail.com</a>
+      <a href="https://maps.app.goo.gl/DWLhRbmXJ1zfDa6P7" target="_blank" rel="noopener">5ta Av entre Calle 10 y 12, Playa del Carmen</a><span style="display:block;font-size:13px;color:#888;">Lun–Vie 10 AM – 7 PM · Fines de semana bajo cita</span>
+    </div>
+    <div class="f-col">
+      <h4>Idioma</h4>
+      <a href="index.html">Español</a>
+      <a href="index-en.html">English</a>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <span>© 2026 WalkMe Travel · Playa del Carmen, México</span>
+    <span>Agencia oficial Grupo Xcaret</span>
   </div>
 </footer>
 
-<!-- Floating WhatsApp FAB -->
-<a class="fab-wa" href="https://wa.me/525639748122?text=Hola%20Walkme%20Tours%2C%20quiero%20informaci%C3%B3n%20y%20reservar%20un%20tour" target="_blank" rel="noopener" aria-label="Reservar por WhatsApp">
-  <span class="tip" aria-hidden="true">Reserva por WhatsApp</span>
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9s-.5-.1-.6.1-.7.9-.9 1.1-.3.1-.6 0c-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.8-2.1-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5-1.3c1.5.8 3.2 1.3 5 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
+<!-- WA FAB -->
+<a class="wa-fab" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20quiero%20info%20sobre%20tours" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <span class="wa-fab-ring"></span>
+  <svg width="30" height="30" style="color:white;position:relative;z-index:1;"><use href="#wa-icon"/></svg>
 </a>
 
-<script>
-(function () {
-  /* Mobile nav */
-  const toggle = document.getElementById('mobile-toggle');
-  const menu   = document.getElementById('mobile-menu');
-
-  toggle.addEventListener('click', () => {
-    const open = menu.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', open);
-  });
-
-  /* Close on outside click */
-  document.addEventListener('click', (e) => {
-    if (!toggle.contains(e.target) && !menu.contains(e.target)) {
-      menu.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  /* Close on ESC */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      menu.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-})();
-
-function closeMobileMenu() {
-  const menu   = document.getElementById('mobile-menu');
-  const toggle = document.getElementById('mobile-toggle');
-  menu.classList.remove('open');
-  toggle.setAttribute('aria-expanded', 'false');
-}
-</script>
-
+<script src="assets/nav.js"></script>
+<script src="assets/cotizador.js"></script>
 </body>
 </html>
