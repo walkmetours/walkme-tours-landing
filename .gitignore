@@ -1,0 +1,23 @@
+# Páginas legacy / internas, no se publican
+index v1.html
+index-legacy.html
+admin.html
+.thumbnail
+
+# Material fuente y de trabajo interno, no se publica
+_ENTREGAS/
+xcaret-pag-web-walkme/
+marketing/
+BITACORA.md
+PLAN-VISUAL-3-DIAS.md
+PLAN-SEO.md
+.claude/
+
+# uploads/: solo se publican logo + las 2 fuentes que usan las páginas
+uploads/*
+!uploads/WALKME_LOGO_FVERDE.png
+!uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf
+!uploads/Travel Soulmates Weight - OTF-4b584a0a.otf
+
+# Sistema
+.DS_Store
