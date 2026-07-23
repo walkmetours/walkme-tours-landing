@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://www.walkmetours.com/</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/index-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/index-en.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/index-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/xcaret.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/xcaret.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/xcaret-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/xcaret.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/xcaret-en.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/xcaret-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/xcaret.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/xcaret.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/tours.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/tours.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/tours-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/tours.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/tours-en.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/tours-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/tours.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/tours.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/bikes.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/bikes.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/bikes-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/bikes.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/bikes-en.html</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/bikes-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/bikes.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/bikes.html"/>
+  </url>
+</urlset>
