@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" data-currency="MXN">
 <head>
+  <script>document.documentElement.classList.add('js')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WalkMe Tours · Agencia de tours en Playa del Carmen</title>
@@ -35,6 +36,9 @@
       <svg width="16" height="16"><use href="#wa-icon"/></svg>
       <span>WhatsApp</span>
     </a>
+    <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
 </nav>
 
@@ -65,7 +69,7 @@
 
 <!-- TRUST STRIP -->
 <section class="trust">
-  <div class="trust-item">
+  <div class="trust-item" data-reveal data-reveal-d="0">
     <div class="trust-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
     </div>
@@ -74,7 +78,7 @@
       <span>Pasa a vernos en Playa del Carmen, frente al mar</span>
     </div>
   </div>
-  <div class="trust-item">
+  <div class="trust-item" data-reveal data-reveal-d="1">
     <div class="trust-icon">
       <svg width="20" height="20"><use href="#wa-icon"/></svg>
     </div>
@@ -83,7 +87,7 @@
       <span>Respondemos en minutos, español o inglés</span>
     </div>
   </div>
-  <div class="trust-item">
+  <div class="trust-item" data-reveal data-reveal-d="2">
     <div class="trust-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
@@ -97,7 +101,7 @@
 <!-- BANNER TEMPORADA TIBURÓN BALLENA -->
 <section class="section section--green" id="tiburon-ballena">
   <div class="tibu-grid">
-    <div class="tibu-info">
+    <div class="tibu-info" data-reveal>
       <p class="s-label" style="letter-spacing:2px;">Temporada abierta · Junio a septiembre</p>
       <h2 class="s-title">Nada con el Tiburon Ballena</h2>
       <p class="s-intro" style="margin:0 0 20px;max-width:560px;">Avistamiento garantizado · Adultos $4,052 MXN · Niños $3,496 MXN · Transporte desde Playa del Carmen incluido.</p>
@@ -108,7 +112,7 @@
         <a class="btn-ghost" href="tours.html#tiburon-ballena">Ver detalles</a>
       </div>
     </div>
-    <div class="tibu-video-wrap">
+    <div class="tibu-video-wrap" data-reveal data-reveal-d="1">
       <video class="tibu-phone" autoplay muted loop playsinline poster="assets/img/tiburon-ballena-historia-poster.jpg">
         <source src="assets/video/tiburon-ballena-historia.mp4" type="video/mp4">
       </video>
@@ -128,7 +132,7 @@
 
   <div class="tours-grid">
 
-    <article class="t-card" data-quote data-name="Xcaret Plus" data-adult="3718">
+    <article class="t-card" data-quote data-name="Xcaret Plus" data-adult="3718" data-reveal data-reveal-d="0">
       <div class="t-img t-img-xcaret" style="background-image:url('assets/img/tour-xcaret-plus-playa-del-carmen.jpg');background-size:cover;background-position:center;" role="img" aria-label="Área Xcaret Plus con ríos subterráneos"><div class="t-cat-tag">Xcaret</div></div>
       <div class="t-body">
         <div class="t-name">Xcaret Plus</div>
@@ -144,7 +148,7 @@
       </a>
     </article>
 
-    <article class="t-card" data-quote data-name="Xel-Há All Inclusive" data-adult="3052">
+    <article class="t-card" data-quote data-name="Xel-Há All Inclusive" data-adult="3052" data-reveal data-reveal-d="1">
       <div class="t-img t-img-ocean" style="background-image:url('assets/img/parque-xel-ha-snorkel-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Snorkel en la caleta de Xel-Há"><div class="t-cat-tag">Xel-Há</div></div>
       <div class="t-body">
         <div class="t-name">Xel-Há All Inclusive</div>
@@ -160,7 +164,7 @@
       </a>
     </article>
 
-    <article class="t-card" data-quote data-name="Xplor" data-adult="3422">
+    <article class="t-card" data-quote data-name="Xplor" data-adult="3422" data-reveal data-reveal-d="2">
       <div class="t-img t-img-arch" style="background-image:url('assets/img/tour-xplor-tirolesas-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Tirolesas sobre la selva en Xplor"><div class="t-cat-tag">Xplor</div><div class="t-promo">Aventura</div></div>
       <div class="t-body">
         <div class="t-name">Xplor</div>
@@ -176,7 +180,7 @@
       </a>
     </article>
 
-    <article class="t-card" data-quote data-name="Tour Xenotes" data-adult="2941">
+    <article class="t-card" data-quote data-name="Tour Xenotes" data-adult="2941" data-reveal data-reveal-d="3">
       <div class="t-img t-img-jungle" style="background-image:url('assets/img/tour-xenotes-cenotes-riviera-maya.jpg');background-size:cover;background-position:center;" role="img" aria-label="Cenotes y kayak en Tour Xenotes"><div class="t-cat-tag">Xenotes</div></div>
       <div class="t-body">
         <div class="t-name">Tour Xenotes</div>
@@ -210,7 +214,7 @@
 
   <div class="tours-grid">
 
-    <article class="t-card">
+    <article class="t-card" data-quote data-name="Tulum &amp; Cenote" data-adult="2016" data-child="1646" data-reveal data-reveal-d="0">
       <div class="t-img t-img-arch" style="background-image:url('assets/img/tulum-cenote-turquesa.jpg');background-size:cover;background-position:center;" role="img" aria-label="Cenote turquesa subterráneo en Tulum"><div class="t-cat-tag">Tulum</div></div>
       <div class="t-body">
         <div class="t-name">Tulum &amp; Cenote</div>
@@ -226,7 +230,7 @@
       </a>
     </article>
 
-    <article class="t-card">
+    <article class="t-card" data-quote data-name="Chichén Itzá Clásico" data-adult="2498" data-child="1572" data-reveal data-reveal-d="1">
       <div class="t-img t-img-arch" style="background-image:url('assets/img/chichen-itza-clasico-piramide.jpg');background-size:cover;background-position:center;" role="img" aria-label="Pirámide de Chichén Itzá"><div class="t-cat-tag">Chichén Itzá</div></div>
       <div class="t-body">
         <div class="t-name">Chichén Itzá Clásico</div>
@@ -242,7 +246,7 @@
       </a>
     </article>
 
-    <article class="t-card">
+    <article class="t-card" data-quote data-name="Snorkel Discovery" data-adult="1832" data-child="1462" data-reveal data-reveal-d="2">
       <div class="t-img t-img-ocean" style="background-image:url('assets/img/snorkel-discovery-tortuga-akumal.jpg');background-size:cover;background-position:center;" role="img" aria-label="Tortuga marina nadando en Akumal"><div class="t-cat-tag">Akumal</div></div>
       <div class="t-body">
         <div class="t-name">Snorkel Discovery</div>
@@ -258,7 +262,7 @@
       </a>
     </article>
 
-    <article class="t-card">
+    <article class="t-card" data-quote data-name="Paradise Island" data-adult="3126" data-child="2942" data-reveal data-reveal-d="3">
       <div class="t-img t-img-sea" style="background-image:url('assets/img/paradise-island-isla-contoy-mujeres.jpg');background-size:cover;background-position:center;" role="img" aria-label="Vista aérea de Isla Contoy con muelle y lancha"><div class="t-cat-tag">Isla Contoy</div></div>
       <div class="t-body">
         <div class="t-name">Paradise Island</div>
@@ -286,7 +290,7 @@
 
 <!-- BIKES PROMO -->
 <section class="section section--cream">
-  <div class="bike-promo">
+  <div class="bike-promo" data-reveal>
     <div>
       <p class="s-label">WalkMe Bikes</p>
       <h2 class="s-title">Renta tu<br>bici electrica</h2>
@@ -307,17 +311,17 @@
   <p class="s-label">Cómo reservar</p>
   <h2 class="s-title">En <span class="num-fix">3</span> pasos</h2>
   <div class="pasos-grid">
-    <div class="paso">
+    <div class="paso" data-reveal data-reveal-d="0">
       <div class="paso-n">1</div>
       <div class="paso-t">Elige tu experiencia</div>
       <div class="paso-d">Explora Grupo Xcaret, tours en Riviera Maya o renta de bicicletas.</div>
     </div>
-    <div class="paso">
+    <div class="paso" data-reveal data-reveal-d="1">
       <div class="paso-n">2</div>
       <div class="paso-t">Consulta por WhatsApp</div>
       <div class="paso-d">Pregunta disponibilidad, fechas y precios. Respondemos en minutos.</div>
     </div>
-    <div class="paso">
+    <div class="paso" data-reveal data-reveal-d="2">
       <div class="paso-n">3</div>
       <div class="paso-t">Confirma y paga</div>
       <div class="paso-d">Te enviamos confirmación y link de pago. Listo, a vivir la aventura.</div>
@@ -363,6 +367,8 @@
 </a>
 
 <script src="assets/nav.js"></script>
+<script src="assets/hero-letters.js"></script>
 <script src="assets/cotizador.js"></script>
+<script src="assets/reveal.js"></script>
 </body>
 </html>

@@ -12,6 +12,8 @@ BITACORA.md
 PLAN-VISUAL-3-DIAS.md
 PLAN-SEO.md
 .claude/
+.agents/
+skills-lock.json
 
 # uploads/: solo se publican logo + las 2 fuentes que usan las páginas
 uploads/*
