@@ -119,6 +119,7 @@ nav.nav--solid {
   display: inline-block;
   animation: heroLetterIn .5s cubic-bezier(0.23,1,0.32,1) both;
 }
+.hero-title .hl.settled { animation: none; transform: none; }
 @keyframes heroLetterIn {
   from { opacity: 0; transform: perspective(400px) rotateX(-90deg); }
   to   { opacity: 1; transform: perspective(400px) rotateX(0deg); }

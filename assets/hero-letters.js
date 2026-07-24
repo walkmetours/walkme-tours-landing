@@ -18,6 +18,9 @@
         span.className = 'hl';
         span.textContent = ch;
         span.style.animationDelay = (index * STEP_MS) + 'ms';
+        span.addEventListener('animationend', function () {
+          this.classList.add('settled');
+        }, { once: true });
         index++;
       }
       el.appendChild(span);
