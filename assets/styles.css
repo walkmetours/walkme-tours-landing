@@ -186,10 +186,10 @@ nav.nav--solid {
 /* ───── TRUST STRIP ───── */
 .trust {
   background: var(--green); padding: 36px 48px;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.trust-item { display: flex; align-items: center; gap: 14px; }
+.trust-item { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
 .trust-icon {
   width: 44px; height: 44px; border-radius: 12px;
   background: rgba(242,222,74,0.12); color: var(--yellow);
