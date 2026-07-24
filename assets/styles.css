@@ -427,6 +427,14 @@ nav.nav--solid {
   display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 48px;
   align-items: center; max-width: 1080px; margin: 0 auto; text-align: left;
 }
+.tibu-grid--align-top { align-items: start; }
+.tibu-price-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 20px; }
+.tibu-disclaimer { font-size: 13px; color: rgba(255,255,255,0.75); }
+.tibu-includes {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 8px 24px;
+  font-size: 15px; color: rgba(255,255,255,0.9);
+}
 .tibu-season-badge {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--orange); color: white;
@@ -453,7 +461,7 @@ nav.nav--solid {
 @media (max-width: 900px) {
   .tibu-grid { grid-template-columns: 1fr; text-align: center; }
   .tibu-video-wrap { order: -1; margin-bottom: 8px; }
-  .tibu-stats { justify-content: center; }
+  .tibu-stats, .tibu-price-row { justify-content: center; }
   .tibu-why { margin-left: auto; margin-right: auto; }
 }
 

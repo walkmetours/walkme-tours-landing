@@ -18,6 +18,7 @@ skills-lock.json
 # uploads/: solo se publican logo + las 2 fuentes que usan las páginas
 uploads/*
 !uploads/WALKME_LOGO_FVERDE.png
+!uploads/WALKME_LOGO_REDONDO.png
 !uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf
 !uploads/Travel Soulmates Weight - OTF-4b584a0a.otf
 
