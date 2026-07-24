@@ -73,4 +73,22 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/bikes.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/bikes.html"/>
   </url>
+  <url>
+    <loc>https://www.walkmetours.com/quienes-somos.html</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/quienes-somos.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/quienes-somos-en.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/quienes-somos.html"/>
+  </url>
+  <url>
+    <loc>https://www.walkmetours.com/quienes-somos-en.html</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.walkmetours.com/quienes-somos-en.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.walkmetours.com/quienes-somos.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.walkmetours.com/quienes-somos.html"/>
+  </url>
 </urlset>
