@@ -624,3 +624,113 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 }
 .faq-item[open] summary::after { content: '−'; }
 .faq-item p { padding: 0 0 18px; color: var(--green); opacity: 0.8; line-height: 1.5; }
+
+/* ───── FICHAS · badge de video + modal de detalle ───── */
+/* Badge de play sobre .t-img (el cotizador nunca toca .t-img) */
+.t-play {
+  position: absolute; bottom: 10px; right: 10px; z-index: 2;
+  width: 44px; height: 44px; border-radius: 50%; padding: 0;
+  background: rgba(13,46,26,0.55); backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255,255,255,0.55); color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s cubic-bezier(0.23,1,0.32,1), background .2s;
+}
+.t-play svg { width: 16px; height: 16px; margin-left: 2px; }
+.t-play:hover { background: var(--orange); transform: scale(1.08); }
+.t-play:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+/* Overlay del modal (mismo lenguaje que .qmodal) */
+.tmodal {
+  position: fixed; inset: 0; z-index: 600;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none;
+  transition: opacity .2s cubic-bezier(0.23,1,0.32,1);
+}
+.tmodal.open { opacity: 1; pointer-events: all; transition: opacity .28s cubic-bezier(0.32,0.72,0,1); }
+.tmodal-bg { position: absolute; inset: 0; background: rgba(13,46,26,0.55); backdrop-filter: blur(6px); }
+.tmodal-box {
+  position: relative; background: #fff; border-radius: 24px;
+  width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; outline: none;
+  padding: 0 0 28px;
+  transform: translateY(16px) scale(.97); opacity: 0;
+  transition: transform .2s cubic-bezier(0.23,1,0.32,1), opacity .2s cubic-bezier(0.23,1,0.32,1);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+}
+.tmodal.open .tmodal-box {
+  transform: translateY(0) scale(1); opacity: 1;
+  transition: transform .32s cubic-bezier(0.32,0.72,0,1), opacity .28s cubic-bezier(0.32,0.72,0,1);
+}
+.tmodal-close {
+  position: absolute; top: 14px; right: 14px; z-index: 3;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.92); border: none; cursor: pointer;
+  font-size: 22px; line-height: 1; color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: background .2s;
+}
+.tmodal-close:hover { background: #fff; }
+
+/* Video del detalle: 16:9, póster + play manual (preload=none en el HTML) */
+.t-detail-video {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: var(--green); border-radius: 24px 24px 0 0; overflow: hidden;
+}
+.t-detail-video video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--green); }
+.t-detail-play {
+  position: absolute; inset: 0; margin: auto;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(13,46,26,0.6); backdrop-filter: blur(4px);
+  border: 2px solid rgba(255,255,255,0.7); color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s cubic-bezier(0.23,1,0.32,1), background .2s;
+}
+.t-detail-play svg { width: 24px; height: 24px; margin-left: 3px; }
+.t-detail-play:hover { background: var(--orange); transform: scale(1.08); }
+.t-detail-video.playing .t-detail-play { display: none; }
+
+.t-detail-head { padding: 20px 26px 0; }
+.t-detail-eyebrow {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--orange); font-weight: bold; margin-bottom: 4px;
+}
+.t-detail-name {
+  font-family: 'GTEesti', sans-serif; font-size: 30px; line-height: 1.05;
+  color: var(--green); margin-bottom: 10px; padding-right: 30px;
+}
+.t-detail-lead { font-size: 14.5px; color: #555; line-height: 1.6; padding: 0 26px; margin-bottom: 18px; }
+.t-detail-specs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 0 26px; margin-bottom: 20px;
+}
+.t-spec { background: var(--cream); border-radius: 12px; padding: 11px 14px; }
+.t-spec-l { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 3px; }
+.t-spec-v { display: block; font-size: 13px; color: var(--green); font-weight: bold; line-height: 1.35; }
+.t-detail-section { padding: 0 26px; margin-bottom: 20px; }
+.t-detail-section h4 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--green); margin-bottom: 10px; font-weight: bold;
+}
+.t-detail-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.t-detail-list li { font-size: 13.5px; color: #555; line-height: 1.45; display: flex; gap: 8px; }
+.t-detail-list li::before { content: '✓'; color: var(--wa); font-weight: bold; flex-shrink: 0; }
+.t-detail-list.is-no li::before { content: '·'; color: #bbb; font-weight: bold; }
+/* FAQ dentro del modal reusa .faq-item, con fondo crema para contraste */
+.t-detail-section .faq-list { gap: 8px; }
+.t-detail-section .faq-item { background: var(--cream); }
+.t-detail-section .faq-item summary { font-size: 14.5px; padding: 14px 0; }
+.t-detail-section .faq-item p { font-size: 13.5px; }
+.t-detail-cta {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 4px 26px 0; background: var(--wa); color: #fff; text-decoration: none;
+  padding: 15px; border-radius: 32px; font-weight: bold; font-size: 15px;
+  transition: transform .2s;
+}
+.t-detail-cta:hover { transform: scale(1.02); }
+.t-detail-cta svg { width: 18px; height: 18px; }
+@media (max-width: 600px) {
+  .tmodal-box { border-radius: 20px; max-height: 94vh; }
+  .t-detail-video { border-radius: 20px 20px 0 0; }
+  .t-detail-name { font-size: 26px; }
+  .t-detail-head, .t-detail-lead, .t-detail-section, .t-detail-cta { padding-left: 18px; padding-right: 18px; }
+  .t-detail-cta { margin-left: 18px; margin-right: 18px; }
+}

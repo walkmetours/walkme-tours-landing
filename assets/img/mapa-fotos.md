@@ -28,8 +28,31 @@ explícito.
 | combo-xcaret-plus-xplor-xenses.jpg | …-combo-3.png | Combo 3 | Combo Xcaret Plus, Xplor y Xenses | Xcaret Plus, Xplor and Xenses combo |
 | banner-promo-3x2-combos-xcaret.jpg | paquetes-20-%-xcaret.png | (banner promo, sección combos) | Promoción 3x2 en combos Xcaret | 3x2 promo on Xcaret combos |
 
-**Pendiente**: `xichen-delux.mp4` (video de Xichén Itzá Deluxe) — no procesado hoy,
-el script solo maneja fotos. Queda como mejora futura fuera de alcance del Día 1.
+## Videos Xcaret · fichas ampliadas (2026-07-25, a largo COMPLETO)
+
+Reencodeados de `_ENTREGAS/videos-xcaret/` a `assets/video/` con ffmpeg (H.264, máx
+960px, **largo completo**, **sin audio**, `+faststart`). Póster = la foto que ya usa
+la tarjeta (no se crearon pósters nuevos). En el HTML van con `preload="none"` + clic
+para reproducir: el video no se descarga hasta que el usuario da play, y se sirve por
+rangos (streaming), así que el largo NO afecta la carga de la página. Primero se
+recortaron a 22s, pero el dueño los pidió completos (mismo día).
+
+| Video en assets/video/ | Origen (_ENTREGAS/videos-xcaret/) | Tarjeta | Dur | Peso |
+|---|---|---|---|---|
+| xcaret-plus-playa-del-carmen.mp4 | xcaret.mp4 | Xcaret Plus | 1:03 | 5.0 MB |
+| parque-xel-ha-snorkel-riviera-maya.mp4 | xelha.mp4 | Xel-Há | 1:09 | 7.0 MB |
+| tour-xplor-tirolesas-riviera-maya.mp4 | xplor.mp4 | Xplor | 1:11 | 5.2 MB |
+| tour-xplor-fuego-nocturno.mp4 | xplor-fuego.mp4 | Xplor Fuego | 1:14 | 5.9 MB |
+| parque-xenses-ilusiones-opticas.mp4 | xenses.mp4 | Xenses | 1:01 | 6.6 MB |
+| tour-xoximilco-trajineras-noche.mp4 | xoximilco.mp4 | Xoximilco | 0:55 | 5.5 MB |
+| tour-xenotes-cenotes-riviera-maya.mp4 | xenotes.mp4 | Tour Xenotes | 1:05 | 6.8 MB |
+| tour-chichen-itza-deluxe-cenote.mp4 | xichen-delux-.mp4 | Xichén Itzá Deluxe | 1:04 | 4.6 MB |
+| catamaran-xailing-isla-mujeres.mp4 | xialing-catamaran-isla-mujeres-delux-light.mp4 | Xailing Prime | 1:17 | 5.1 MB |
+| catamaran-fury-cozumel.mp4 | FURY.mp4 | Catamarán Fury Cozumel | 0:59 | 5.7 MB |
+
+Sin usar todavía: `xcaret-Reel Parques Xcaret-hero.mp4` (193 MB, reel del grupo) queda
+como opción de hero futura si se comprime agresivo. `xichen-delux.mp4` (copia en la
+carpeta fuente de fotos) equivale a `xichen-delux-.mp4`; se usó la de `_ENTREGAS`.
 
 ## Hero Xcaret (2026-07-17, versión final)
 
