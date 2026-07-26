@@ -688,6 +688,13 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 .t-detail-play:hover { background: var(--orange); transform: scale(1.08); }
 .t-detail-video.playing .t-detail-play { display: none; }
 
+/* Foto fija (tarjetas sin video): mismo marco 16:9 que el video */
+.t-detail-photo {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: var(--green); border-radius: 24px 24px 0 0; overflow: hidden;
+}
+.t-detail-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .t-detail-head { padding: 20px 26px 0; }
 .t-detail-eyebrow {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
@@ -729,7 +736,7 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 .t-detail-cta svg { width: 18px; height: 18px; }
 @media (max-width: 600px) {
   .tmodal-box { border-radius: 20px; max-height: 94vh; }
-  .t-detail-video { border-radius: 20px 20px 0 0; }
+  .t-detail-video, .t-detail-photo { border-radius: 20px 20px 0 0; }
   .t-detail-name { font-size: 26px; }
   .t-detail-head, .t-detail-lead, .t-detail-section, .t-detail-cta { padding-left: 18px; padding-right: 18px; }
   .t-detail-cta { margin-left: 18px; margin-right: 18px; }
