@@ -49,6 +49,7 @@ recortaron a 22s, pero el dueño los pidió completos (mismo día).
 | tour-chichen-itza-deluxe-cenote.mp4 | xichen-delux-.mp4 | Xichén Itzá Deluxe | 1:04 | 4.6 MB |
 | catamaran-xailing-isla-mujeres.mp4 | xialing-catamaran-isla-mujeres-delux-light.mp4 | Xailing Prime | 1:17 | 5.1 MB |
 | catamaran-fury-cozumel.mp4 | FURY.mp4 | Catamarán Fury Cozumel | 0:59 | 5.7 MB |
+| tour-atv-sencillo-selva-maya.mp4 | atvs-xcaret.mp4 | ATV Xperience Sencilla | 1:42 | 7.3 MB (854px, 2-pass, alto movimiento) |
 
 Sin usar todavía: `xcaret-Reel Parques Xcaret-hero.mp4` (193 MB, reel del grupo) queda
 como opción de hero futura si se comprime agresivo. `xichen-delux.mp4` (copia en la
