@@ -1,7 +1,11 @@
 /* ========================================
    WalkMe · Cotizador
    - Lee precios desde data-adult/data-child de cada .t-card[data-quote]
-   - Calcula total solo si zona = Playa del Carmen
+   - Precio por zona de salida (contrato Cabo Safe 2026):
+       data-adult/data-child          → Playa del Carmen (base, es lo que se muestra en la ficha)
+       data-adult-rm/data-child-rm    → Riviera Maya   (opcional)
+       data-adult-cun/data-child-cun  → Cancún         (opcional)
+     Si la zona elegida no tiene precio para ese producto → cotización personalizada
    - Abre WhatsApp con mensaje prellenado
    - Bilingüe (lee document.documentElement.lang)
    - Moneda configurable vía <html data-currency="USD|MXN">
@@ -11,7 +15,6 @@
   const lang = (HTML.lang || 'es').toLowerCase().startsWith('en') ? 'en' : 'es';
   const currency = HTML.dataset.currency || 'USD';
   const WA = '525639748122';
-  const PDC_ZONE = lang === 'en' ? 'Playa del Carmen' : 'Playa del Carmen';
 
   const STR = {
     es: {
@@ -19,13 +22,13 @@
       childTBC: 'Precio de menor sujeto a confirmación',
       note1: 'Precio con transporte desde Playa del Carmen',
       note2: 'Desde Cancún, Tulum u otra zona: cotización personalizada',
+      note2Zone: 'Desde Riviera Maya o Cancún el precio cambia: calcúlalo al cotizar',
       btn: 'Calcular y consultar por WhatsApp',
       eyebrow: 'Cotizar experiencia',
       fDate: 'Fecha deseada', fAdults: 'Adultos', fChildren: 'Menores de 11 años',
       fZone: 'Zona de salida', fHotel: 'Hotel o punto de encuentro', fName: 'Nombre',
-      zonePDC: 'Playa del Carmen', zoneCUN: 'Cancún', zoneTUL: 'Tulum',
-      zoneOther: 'Riviera Maya / otra zona',
-      totalLbl: 'Total estimado', incluye: 'Incluye transporte desde Playa del Carmen.',
+      zonePDC: 'Playa del Carmen', zoneRM: 'Riviera Maya', zoneCUN: 'Cancún',
+      totalLbl: 'Total estimado', incluye: z => `Incluye transporte desde ${z}.`,
       custom: 'Esta salida requiere cotización personalizada. Te confirmamos el total por WhatsApp.',
       childPending: 'Precio de menor sujeto a confirmación.',
       submit: 'Enviar consulta por WhatsApp',
@@ -44,13 +47,13 @@
       childTBC: 'Child price to be confirmed',
       note1: 'Price with transport from Playa del Carmen',
       note2: 'From Cancún, Tulum or another zone: custom quote',
+      note2Zone: 'From Riviera Maya or Cancún the price changes: calculate it in the quote form',
       btn: 'Calculate & ask on WhatsApp',
       eyebrow: 'Quote experience',
       fDate: 'Desired date', fAdults: 'Adults', fChildren: 'Children under 11',
       fZone: 'Departure zone', fHotel: 'Hotel or meeting point', fName: 'Name',
-      zonePDC: 'Playa del Carmen', zoneCUN: 'Cancún', zoneTUL: 'Tulum',
-      zoneOther: 'Riviera Maya / other area',
-      totalLbl: 'Estimated total', incluye: 'Includes transport from Playa del Carmen.',
+      zonePDC: 'Playa del Carmen', zoneRM: 'Riviera Maya', zoneCUN: 'Cancún',
+      totalLbl: 'Estimated total', incluye: z => `Includes transport from ${z}.`,
       custom: 'This departure needs a custom quote. We confirm the total on WhatsApp.',
       childPending: 'Child price to be confirmed.',
       submit: 'Send inquiry on WhatsApp',
@@ -68,11 +71,35 @@
   const t = STR[lang];
   const fmt = n => '$' + Number(n).toLocaleString(lang === 'en' ? 'en-US' : 'es-MX');
 
+  /* Lee un par adulto/menor del dataset. Devuelve null si esa zona no tiene precio. */
+  function readPrices(ds, suffix) {
+    const adultRaw = ds['adult' + suffix];
+    if (adultRaw === undefined || adultRaw === '') return null;
+    const childRaw = ds['child' + suffix];
+    return {
+      adult: parseFloat(adultRaw),
+      child: (childRaw === undefined || childRaw === '') ? null : parseFloat(childRaw)
+    };
+  }
+
+  /* Precios por zona de una tarjeta. Playa del Carmen es la base y siempre existe. */
+  function readZones(card) {
+    return {
+      [t.zonePDC]: readPrices(card.dataset, ''),
+      [t.zoneRM]:  readPrices(card.dataset, 'Rm'),
+      [t.zoneCUN]: readPrices(card.dataset, 'Cun')
+    };
+  }
+
   /* ---- Render visible price block on each [data-quote] card ---- */
   document.querySelectorAll('.t-card[data-quote]').forEach(card => {
+    // La ficha muestra SIEMPRE y SOLO el precio desde Playa del Carmen.
+    // Riviera Maya y Cancún viven únicamente dentro del modal del cotizador.
     const adult = parseFloat(card.dataset.adult);
     const childRaw = card.dataset.child;
     const child = (childRaw === undefined || childRaw === '') ? null : parseFloat(childRaw);
+    const zones = readZones(card);
+    const hasZonePricing = !!(zones[t.zoneRM] || zones[t.zoneCUN]);
 
     // remove any pre-existing CTA buttons
     card.querySelectorAll('.t-btn, .t-btn-quote').forEach(el => el.remove());
@@ -95,7 +122,7 @@
       </div>
       <div class="t-notes">
         <div class="t-note-pdc">${t.note1}</div>
-        <div class="t-note-other">${t.note2}</div>
+        <div class="t-note-other">${hasZonePricing ? t.note2Zone : t.note2}</div>
       </div>
     `;
     body.appendChild(quote);
@@ -137,9 +164,8 @@
           <label for="qm-zone">${t.fZone}</label>
           <select id="qm-zone" required>
             <option value="${t.zonePDC}">${t.zonePDC}</option>
+            <option value="${t.zoneRM}">${t.zoneRM}</option>
             <option value="${t.zoneCUN}">${t.zoneCUN}</option>
-            <option value="${t.zoneTUL}">${t.zoneTUL}</option>
-            <option value="${t.zoneOther}">${t.zoneOther}</option>
           </select>
         </div>
         <div class="qm-field">
@@ -173,15 +199,16 @@
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
 
-  // Current experience state
-  let current = { name: '—', adult: 0, child: null };
+  // Current experience state — zones: { [nombre de zona]: {adult, child} | null }
+  let current = { name: '—', zones: {} };
 
   function openModal(card) {
     current = {
       name: card.dataset.name,
-      adult: parseFloat(card.dataset.adult),
-      child: card.dataset.child ? parseFloat(card.dataset.child) : null
+      zones: readZones(card)
     };
+    // Cada tarjeta puede tener zonas distintas; siempre reabrir en Playa del Carmen.
+    modal.querySelector('#qm-zone').value = t.zonePDC;
     modal.querySelector('#qm-name').textContent = current.name;
     updateTotal();
     modal.classList.add('open');
@@ -203,33 +230,35 @@
     const adults = parseInt(modal.querySelector('#qm-adults').value) || 0;
     const children = parseInt(modal.querySelector('#qm-children').value) || 0;
     const zone = modal.querySelector('#qm-zone').value;
-    const isPDC = (zone === t.zonePDC);
-    const childMissing = (current.child === null && children > 0);
+    // Si el producto no tiene tarifa para esa zona → cotización personalizada
+    const prices = current.zones[zone] || null;
+    const hasPrice = prices !== null;
+    const childMissing = hasPrice && prices.child === null && children > 0;
     let total = null;
-    if (isPDC && !childMissing) {
-      total = adults * current.adult + children * (current.child || 0);
+    if (hasPrice && !childMissing) {
+      total = adults * prices.adult + children * (prices.child || 0);
     }
-    return { adults, children, zone, isPDC, childMissing, total };
+    return { adults, children, zone, prices, hasPrice, childMissing, total };
   }
 
   function updateTotal() {
     const totalEl = modal.querySelector('#qm-total');
     const s = getTotalState();
-    if (!s.isPDC) {
+    if (!s.hasPrice) {
       totalEl.className = 'qm-total custom';
       totalEl.innerHTML = `<div class="qm-total-note">${t.custom}</div>`;
     } else if (s.childMissing) {
-      const adultSubtotal = s.adults * current.adult;
+      const adultSubtotal = s.adults * s.prices.adult;
       totalEl.className = 'qm-total';
       totalEl.innerHTML = `
         <div class="qm-total-row main"><span>${t.totalLbl} (${t.adult.toLowerCase()})</span><span class="qm-total-val">${fmt(adultSubtotal)} ${currency}</span></div>
-        <div class="qm-total-note">${t.childPending} ${t.incluye}</div>
+        <div class="qm-total-note">${t.childPending} ${t.incluye(s.zone)}</div>
       `;
     } else {
       totalEl.className = 'qm-total pdc';
       totalEl.innerHTML = `
         <div class="qm-total-row main"><span>${t.totalLbl}</span><span class="qm-total-val">${fmt(s.total)} ${currency}</span></div>
-        <div class="qm-total-note">${t.incluye}</div>
+        <div class="qm-total-note">${t.incluye(s.zone)}</div>
       `;
     }
   }
@@ -247,11 +276,11 @@
     }
     const s = getTotalState();
     let priceLine, quoteLine;
-    if (!s.isPDC) {
+    if (!s.hasPrice) {
       priceLine = t.customQuote;
       quoteLine = t.msgYes;
     } else if (s.childMissing) {
-      priceLine = `${fmt(s.adults * current.adult)} ${currency} (${t.adult.toLowerCase()}) · ${t.childPending}`;
+      priceLine = `${fmt(s.adults * s.prices.adult)} ${currency} (${t.adult.toLowerCase()}) · ${t.childPending}`;
       quoteLine = t.msgNo;
     } else {
       priceLine = `${fmt(s.total)} ${currency}`;
