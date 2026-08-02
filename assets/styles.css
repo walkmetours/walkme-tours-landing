@@ -878,3 +878,52 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 @media (prefers-reduced-motion: reduce) {
   .pkg-item, .pkg-box, .pkg-box svg, .pkg-cta { transition: none; }
 }
+
+/* ═════════ HERO DE MARCA · home (WalkMe camina) ═════════
+   Espejea el logo: "Walk" rosa, "Me" amarillo y el sendero naranja.
+   Solo anima transform/opacity, asi que no provoca reflow ni salto de layout.
+   El bloque global de prefers-reduced-motion ya anula todo esto. */
+.hero-title--brand { margin-bottom: 20px; }
+.hero-brand {
+  display: block;
+  font-family: 'TravelSoul', serif;
+  font-size: clamp(62px, 13vw, 168px);
+  line-height: 0.88;
+  letter-spacing: -0.015em;
+}
+/* Especificidad con el elemento para ganarle a `.hero-title em`, que pinta todo de rosa */
+.hero-brand em { font-style: normal; display: inline-block; }
+.hero-brand em.hero-walk { color: var(--pink); }
+.hero-brand em.hero-me   { color: var(--yellow); }
+
+/* Cada letra entra recta: baja en linea y aparece, sin inclinacion ni rebote. */
+.hero-title--brand .hero-brand .hl {
+  transform-origin: 50% 100%;
+  animation: heroStepIn .42s ease-out both;
+}
+@keyframes heroStepIn {
+  from { opacity: 0; transform: translateY(-32%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Linea de apoyo: chica y siempre en un solo renglon */
+.hero-kicker {
+  display: block;
+  font-family: 'GTEesti', sans-serif;
+  font-size: clamp(11px, 1.5vw, 14px);
+  font-weight: bold;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255,255,255,0.78);
+  margin-top: 24px;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+  animation: heroKickerIn .5s ease-out .5s both;
+}
+@keyframes heroKickerIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .hero-kicker { letter-spacing: 0.12em; }
+}
