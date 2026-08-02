@@ -183,6 +183,15 @@ nav.nav--solid {
 }
 .section--green .s-intro { color: rgba(255,255,255,0.7); }
 
+/* ───── ANCHO DE CONTENIDO ─────
+   Caja centrada compartida por el encabezado (s-label/s-title/s-intro) y su
+   bloque de contenido, para que ambos arranquen en el mismo pixel. */
+:root { --content: 1400px; }
+.s-wrap       { max-width: var(--content); margin-left: auto; margin-right: auto; }
+.s-wrap--760  { max-width: 760px; }   /* FAQ (.faq-list) */
+.s-wrap--1000 { max-width: 1000px; }  /* Arma tu paquete (.pkg) */
+.s-wrap--1060 { max-width: 1060px; }  /* .tours-grid--3col */
+
 /* ───── TRUST STRIP ───── */
 .trust {
   background: var(--green); padding: 36px 48px;
@@ -862,7 +871,7 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 .pkg-note { font-size: 12px; color: var(--cream); opacity: .68; line-height: 1.55; margin-top: 12px; }
 
 @media (max-width: 900px) {
-  .pkg { grid-template-columns: 1fr; max-width: 560px; }
+  .pkg { grid-template-columns: 1fr; max-width: 560px; margin-left: 0; margin-right: 0; }
   .pkg-pick, .pkg-sum { padding: 28px 22px; }
   .pkg-sum-in { position: static; }
 }
