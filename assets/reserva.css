@@ -119,6 +119,88 @@
 .wz-res-row strong { color: var(--green); text-align: right; overflow-wrap: anywhere; }
 .wz-wa-full { text-decoration: none; }
 
+/* Paso 3 · documentos */
+.wz-intro { font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 16px; }
+.wz-doc {
+  border: 1.5px solid #ddd6c4; border-radius: 16px;
+  padding: 14px; margin-bottom: 14px; background: white;
+}
+.wz-doc.ok { border-color: var(--green); background: #f4f9f4; }
+.wz-doc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.wz-doc-head strong { display: block; font-size: 15px; color: var(--green); }
+.wz-doc-head span { font-size: 12.5px; color: #777; line-height: 1.4; }
+.wz-doc-badge { font-size: 12px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.wz-doc-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+  background: var(--green); color: var(--yellow); font-size: 14px; font-weight: 700;
+}
+.wz-doc.ok .wz-doc-btn { background: white; color: var(--green); border: 1.5px solid var(--green); }
+.wz-doc-status { font-size: 13px; color: var(--orange); margin-top: 8px; font-weight: 600; }
+
+/* Paso 4 · contrato y firma */
+.wz-contrato {
+  max-height: 300px; overflow-y: auto;
+  border: 1.5px solid #ddd6c4; border-radius: 16px;
+  padding: 16px; background: var(--cream);
+  font-size: 13px; line-height: 1.65; color: #444;
+}
+.wz-contrato h4, .ct-doc h4 { font-size: 16px; color: var(--green); margin: 0 0 10px; }
+.wz-contrato p, .ct-doc p { margin: 0 0 10px; }
+.ct-doc a { color: var(--orange); }
+.ct-borrador {
+  display: inline-block; background: #fff3eb; color: #a66a00;
+  border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.wz-accept {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin: 14px 0; font-size: 13.5px; line-height: 1.5; color: #444; cursor: pointer;
+}
+.wz-accept input { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; accent-color: var(--green); }
+.wz-accept a { color: var(--orange); }
+.wz-firma-wrap { margin-top: 6px; }
+.wz-firma-lbl { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #8a8676; font-weight: 700; margin: 0 0 6px; }
+.wz-firma {
+  width: 100%; height: 170px; display: block;
+  border: 1.5px dashed #b9b29a; border-radius: 16px; background: white;
+}
+.wz-firma-clear {
+  margin-top: 8px; padding: 8px 16px; border-radius: 999px;
+  border: 1.5px solid #ddd6c4; background: white; color: #777;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+
+/* Paso 5 · pago */
+.wz-pay {
+  display: flex; flex-direction: column; gap: 2px; width: 100%;
+  text-align: left; padding: 16px 18px; margin-bottom: 12px;
+  border: 1.5px solid #ddd6c4; border-radius: 16px; background: white; cursor: pointer;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.wz-pay:hover:not(:disabled) { border-color: var(--green); transform: scale(1.01); }
+.wz-pay:disabled { opacity: 0.55; cursor: wait; }
+.wz-pay-t { font-size: 16px; font-weight: 800; color: var(--green); }
+.wz-pay-s { font-size: 13px; color: #777; }
+
+/* Cupón (gracias.html) */
+.wz-cupon-codigo {
+  font-size: 34px; font-weight: 800; letter-spacing: 3px;
+  color: var(--green); text-align: center; margin: 8px 0 4px;
+  overflow-wrap: anywhere;
+}
+.wz-cupon-estado {
+  text-align: center; font-size: 14px; font-weight: 700;
+  border-radius: 999px; padding: 8px 18px; margin: 0 auto 18px;
+  display: table;
+}
+.wz-cupon-estado.pagada { background: #e8f6e8; color: #1c6b2d; }
+.wz-cupon-estado.pendiente { background: #fff3d6; color: #a66a00; }
+.wz-cupon-estado.verificando { background: var(--cream); color: #777; }
+.wz-qr { display: flex; justify-content: center; margin: 18px 0; }
+.wz-qr img, .wz-qr canvas { border: 8px solid white; border-radius: 12px; box-shadow: 0 4px 18px rgba(13,46,26,0.12); }
+.wz-cupon-nota { font-size: 13px; color: #777; text-align: center; line-height: 1.6; margin: 14px 0; }
+
 @media (min-width: 640px) {
   .wz-card { padding: 28px 30px 96px; }
   .wz-p-lbl { font-size: 10px; }

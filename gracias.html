@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reserva en línea | WalkMe Tours</title>
-  <meta name="description" content="Reserva tu tour en línea con WalkMe: elige experiencia, fecha y paga seguro desde tu celular.">
-  <!-- noindex hasta el lanzamiento oficial del flujo de reserva (quitar en fase 9) -->
+  <title>Tu cupón de reserva | WalkMe Tours</title>
+  <meta name="description" content="Cupón de confirmación de tu reserva con WalkMe Tours.">
   <meta name="robots" content="noindex">
-  <link rel="canonical" href="reserva.html">
-  <link rel="alternate" hreflang="es" href="reserva.html">
-  <link rel="alternate" hreflang="en" href="reserva-en.html">
+  <link rel="canonical" href="gracias.html">
+  <link rel="alternate" hreflang="es" href="gracias.html">
+  <link rel="alternate" hreflang="en" href="gracias-en.html">
   <link rel="stylesheet" href="assets/styles.css?v=20260802">
   <link rel="stylesheet" href="assets/reserva.css?v=20260812">
 </head>
@@ -30,10 +29,10 @@
   </ul>
   <div class="nav-right">
     <div class="lang-toggle">
-      <a class="active" href="reserva.html">ES</a>
-      <a href="reserva-en.html">EN</a>
+      <a class="active" href="gracias.html">ES</a>
+      <a href="gracias-en.html">EN</a>
     </div>
-    <a class="nav-wa" href="https://wa.me/525639748122?text=Hola%20WalkMe%2C%20necesito%20ayuda%20con%20mi%20reserva" target="_blank" rel="noopener">
+    <a class="nav-wa" href="https://wa.me/525639748122" target="_blank" rel="noopener">
       <svg width="16" height="16"><use href="#wa-icon"/></svg>
       <span>WhatsApp</span>
     </a>
@@ -44,56 +43,25 @@
 </nav>
 
 <header class="wz-hero">
-  <h1>Reserva online</h1>
-  <p>Elige tu experiencia, completa tus datos y paga seguro desde tu celular. En minutos tienes tu cupón de confirmación.</p>
+  <h1 id="cupon-titulo">Tu reserva</h1>
+  <p>Este es tu cupón. Guarda una captura o el enlace de tu correo.</p>
 </header>
 
-<main class="wz-shell" id="wz">
-  <div class="wz-card">
-    <p class="wz-stepof" id="wz-stepof"></p>
-    <div class="wz-progress" id="wz-progress"></div>
-    <div id="wz-body"></div>
-    <div class="wz-nav" id="wz-nav">
-      <button class="wz-back" id="wz-back" type="button">Atrás</button>
-      <button class="qm-submit" id="wz-next" type="button"><span>Continuar</span></button>
-    </div>
+<main class="wz-shell">
+  <div class="wz-card" style="padding-bottom:28px;" id="cupon">
+    <p class="wz-cupon-nota">Cargando…</p>
   </div>
 </main>
 
 <footer>
-  <div class="f-top">
-    <div class="f-logo">
-      <img src="uploads/WALKME_LOGO_REDONDO.png" alt="WalkMe Travel">
-      <p>Tours en Playa del Carmen y Riviera Maya. Reservas por WhatsApp.</p>
-    </div>
-    <div class="f-col">
-      <h4>Experiencias</h4>
-      <a href="xcaret.html">Grupo Xcaret</a>
-      <a href="tours.html">Tours Riviera Maya</a>
-      <a href="bikes.html">Renta de bicicletas</a>
-      <a href="quienes-somos.html">Quiénes somos</a>
-    </div>
-    <div class="f-col">
-      <h4>Contacto</h4>
-      <a href="https://wa.me/525639748122" target="_blank" rel="noopener">WhatsApp · +52 56 3974 8122</a>
-      <a href="mailto:walkmetravel@gmail.com">walkmetravel@gmail.com</a>
-      <a href="https://maps.app.goo.gl/DWLhRbmXJ1zfDa6P7" target="_blank" rel="noopener">5ta Av entre Calle 10 y 12, Playa del Carmen</a><span style="display:block;font-size:13px;color:#888;">Lun–Vie 10 AM – 7 PM · Fines de semana bajo cita</span>
-    </div>
-    <div class="f-col">
-      <h4>Idioma</h4>
-      <a href="reserva.html">Español</a>
-      <a href="reserva-en.html">English</a>
-    </div>
-  </div>
   <div class="f-bottom">
     <span>© 2026 WalkMe Travel · Playa del Carmen, México</span>
-    <span>Reservas por WhatsApp</span>
+    <span><a href="reserva.html" style="color:inherit;">Reserva online</a></span>
   </div>
 </footer>
 
 <script src="assets/nav.js?v=20260725"></script>
-<script src="assets/catalogo.js?v=20260812"></script>
-<script src="assets/firma.js?v=20260812"></script>
-<script src="assets/reserva.js?v=20260812"></script>
+<script src="assets/qrcode.min.js?v=20260812"></script>
+<script src="assets/gracias.js?v=20260812"></script>
 </body>
 </html>
