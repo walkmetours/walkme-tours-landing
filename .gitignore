@@ -23,10 +23,6 @@ uploads/*
 !uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf
 !uploads/Travel Soulmates Weight - OTF-4b584a0a.otf
 
-# Guía interna y SQL de reservas: no se publican en el sitio
-RESERVAS-SETUP.md
-sql/
-
 # Backend /api (Vercel instala las deps en el deploy)
 node_modules/
 package-lock.json
