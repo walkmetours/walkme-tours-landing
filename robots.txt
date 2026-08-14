@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /crm.html
+Disallow: /cupon.html
+Disallow: /cupon-en.html
+Disallow: /api/
 
 Sitemap: https://www.walkmetours.com/sitemap.xml

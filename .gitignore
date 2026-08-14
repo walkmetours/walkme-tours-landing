@@ -9,12 +9,21 @@ _ENTREGAS/
 _ENTREGAS-walkme/
 xcaret-pag-web-walkme/
 marketing/
+Branding y desarrollo Walkmetours/
 BITACORA.md
 PLAN-VISUAL-3-DIAS.md
 PLAN-SEO.md
 .claude/
 .agents/
 skills-lock.json
+
+# Guía interna de reservas (tiene detalles de cuentas), no se publica
+RESERVAS-SETUP*.md
+
+# Backend /api: Vercel instala las deps en el deploy
+node_modules/
+package-lock.json
+.env*
 
 # uploads/: solo se publican logo + las 2 fuentes que usan las páginas
 uploads/*

@@ -1,0 +1,9 @@
+{
+  "name": "walkme-tours-landing",
+  "private": true,
+  "description": "Dependencias exclusivas de las Vercel Functions en /api. El front sigue siendo HTML/CSS/JS estatico sin build.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2",
+    "stripe": "^17"
+  }
+}

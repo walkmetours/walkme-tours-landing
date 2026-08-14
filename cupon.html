@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Tu cupón de reserva | WalkMe Bikes</title>
+  <link rel="stylesheet" href="assets/cupon.css?v=20260814">
+</head>
+<body>
+
+<div class="cp-cargando" id="cpCargando">Cargando tu comprobante…</div>
+<div class="cp-error" id="cpError" style="display:none;"></div>
+
+<div class="cp-scale-outer" id="cpScaleOuter" style="display:none;">
+  <div class="cp-scale" id="cpScale">
+    <div class="cp-card">
+
+      <div class="cp-head">
+        <img src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe">
+        <div class="cp-bikes">BIKES</div>
+        <div class="cp-head-right"><span id="cpVoucher"></span><br><span>walkmetours.com/bikes</span></div>
+      </div>
+
+      <div class="cp-folio-row">
+        <div class="cp-folio-col">
+          <div class="cp-folio-label" id="cpFolioLabel"></div>
+          <div class="cp-folio" id="cpFolio"></div>
+        </div>
+        <div class="cp-badge" id="cpBadge"></div>
+      </div>
+
+      <div class="cp-grid">
+        <div class="cp-cell">
+          <div class="cp-cell-label" id="cpLblCliente"></div>
+          <div class="cp-cell-val" id="cpCliente"></div>
+        </div>
+        <div class="cp-cell">
+          <div class="cp-cell-label" id="cpLblPlan"></div>
+          <div class="cp-cell-val" id="cpPlan"></div>
+        </div>
+        <div class="cp-cell">
+          <div class="cp-cell-label" id="cpLblFecha"></div>
+          <div class="cp-cell-val" id="cpFecha"></div>
+        </div>
+        <div class="cp-cell">
+          <div class="cp-cell-label" id="cpLblBicis"></div>
+          <div class="cp-cell-val" id="cpBicis"></div>
+        </div>
+      </div>
+
+      <div class="cp-money">
+        <div class="cp-money-col">
+          <div class="cp-total-label" id="cpLblTotal"></div>
+          <div class="cp-total" id="cpTotal"></div>
+          <div class="cp-pago-detalle" id="cpPagoDetalle"></div>
+        </div>
+        <div class="cp-money-div"></div>
+        <div class="cp-money-col">
+          <div class="cp-gar-label" id="cpGarLabel"></div>
+          <div class="cp-gar-monto" id="cpGarMonto"></div>
+          <div class="cp-gar-nota" id="cpGarNota"></div>
+          <div class="cp-efectivo" id="cpEfectivo"></div>
+        </div>
+      </div>
+
+      <div class="cp-cols">
+        <div>
+          <div class="cp-col-title" id="cpLblReqs"></div>
+          <div class="cp-items" id="cpReqs"></div>
+        </div>
+        <div>
+          <div class="cp-col-title" id="cpLblIncs"></div>
+          <div class="cp-items" id="cpIncs"></div>
+        </div>
+      </div>
+
+      <div class="cp-tear"></div>
+
+      <div class="cp-foot">
+        <div class="cp-qr-box">
+          <div class="cp-qr" id="cpQr"></div>
+          <div class="cp-qr-caption">walkmetours.com/bikes</div>
+        </div>
+        <div class="cp-dir-col">
+          <div class="cp-dir-title" id="cpDirTitle"></div>
+          <div class="cp-dir" id="cpDir"></div>
+          <div class="cp-contact">WhatsApp +52 56 3974 8122 · walkmetravel@gmail.com</div>
+          <div class="cp-nota" id="cpNota"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="cp-pay" id="cpPay">
+  <div class="cp-pay-title" id="cpPayTitle"></div>
+  <div class="cp-pay-err" id="cpPayErr"></div>
+  <button type="button" class="cp-pay-btn" id="cpBtnMP"></button>
+  <button type="button" class="cp-pay-btn" id="cpBtnStripe"></button>
+  <button type="button" class="cp-pay-btn secundario" id="cpBtnAgencia"></button>
+  <div class="cp-pay-nota" id="cpPayNota"></div>
+</div>
+
+<div class="cp-actions">
+  <a id="cpWa" href="#" target="_blank" rel="noopener"></a>
+  <button type="button" id="cpPrint"></button>
+</div>
+
+<script>window.CUPON_LANG = 'es';</script>
+<script src="assets/qrcode.min.js?v=20260814"></script>
+<script src="assets/cupon.js?v=20260814"></script>
+</body>
+</html>

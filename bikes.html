@@ -59,7 +59,7 @@
     <li><a href="index.html">Inicio</a></li>
     <li><a href="xcaret.html">Xcaret</a></li>
     <li><a href="tours.html">Tours</a></li>
-    <li><a class="active" href="bikes.html">Bikes</a></li>
+    <li><a class="active" href="bikes.html">Bicis</a></li>
     <li><a href="quienes-somos.html">Quiénes somos</a></li>
   </ul>
   <div class="nav-right">
@@ -82,14 +82,14 @@
     <div class="hero-badge">WalkMe Bikes · Playa del Carmen</div>
     <h1 class="hero-title">
       <span class="hero-pre">Renta tu</span>
-      <em>bicicleta</em>
+      <em>bici</em>
     </h1>
     <div class="hero-loc"><span></span><span>Recoge en la 5ta Avenida, Playa del Carmen</span><span></span></div>
-    <p class="hero-sub">Bicicletas eléctricas en Playa del Carmen, listas para recoger en la 5ta Avenida. Reserva tu bici en menos de un minuto por WhatsApp y pagas el link cuando recibas la confirmación.</p>
+    <p class="hero-sub">Bicicletas eléctricas en Playa del Carmen, listas para recoger en la 5ta Avenida. Reserva tu bici en menos de un minuto.</p>
     <div class="hero-ctas">
       <button type="button" class="btn-wa" data-open-bike-modal>
         <svg width="18" height="18"><use href="#wa-icon"/></svg>
-        Reservar por WhatsApp
+        Reservar tu bici
       </button>
       <a class="btn-ghost" href="#precios">Ver precios</a>
     </div>
@@ -111,7 +111,7 @@
 
       <div class="hero-ctas" style="justify-content:flex-start;">
         <button type="button" class="btn-wa" data-open-bike-modal>
-          <svg width="18" height="18"><use href="#wa-icon"/></svg> Reservar esta bici por WhatsApp
+          <svg width="18" height="18"><use href="#wa-icon"/></svg> Reservar esta bici
         </button>
       </div>
     </div>
@@ -144,11 +144,11 @@
 <!-- PRECIOS -->
 <section class="section section--cream" id="precios" style="padding-top:24px;padding-bottom:24px;">
   <div class="bike-prices-strip">
-    <div class="bike-price-chip"><div class="bike-price-val">$150</div><div class="bike-price-lbl">MXN / hora</div></div>
+    <div class="bike-price-chip"><div class="bike-price-val">$200</div><div class="bike-price-lbl">MXN / 2 horas</div></div>
     <div class="bike-price-chip"><div class="bike-price-val">$400</div><div class="bike-price-lbl">MXN / día (10am-7pm)</div></div>
     <div class="bike-price-chip"><div class="bike-price-val">$500</div><div class="bike-price-lbl">MXN / 24 horas</div></div>
-    <div class="bike-price-chip"><div class="bike-price-val">$1,700</div><div class="bike-price-lbl">MXN / semana</div></div>
-    <div class="bike-price-chip"><div class="bike-price-val">$3,000</div><div class="bike-price-lbl">MXN / mes</div></div>
+    <div class="bike-price-chip"><div class="bike-price-val">$1,500</div><div class="bike-price-lbl">MXN / semana</div></div>
+    <div class="bike-price-chip"><div class="bike-price-val">$2,500</div><div class="bike-price-lbl">MXN / mes</div></div>
   </div>
 </section>
 
@@ -189,18 +189,16 @@
         <label class="field-label" for="duracion">Duración</label>
         <select class="field-select" id="duracion" name="duracion" required>
           <option value="">Selecciona…</option>
-          <option value="1 hora">1 hora</option>
-          <option value="2 horas">2 horas</option>
-          <option value="4 horas">4 horas</option>
-          <option value="Día (10am-7pm)">Día (10am – 7pm)</option>
-          <option value="24 horas">24 horas</option>
-          <option value="Semana">Semana</option>
-          <option value="Mes">Mes</option>
+          <option value="2h">2 horas · $200</option>
+          <option value="dia">Día (10am – 7pm) · $400</option>
+          <option value="24h">24 horas · $500</option>
+          <option value="semana">Semana · $1,500</option>
+          <option value="mes">Mes · $2,500</option>
         </select>
       </div>
       <div class="field">
         <label class="field-label" for="cantidad">Número de bicicletas</label>
-        <input class="field-input" type="number" id="cantidad" name="cantidad" min="1" max="10" value="1" required>
+        <input class="field-input" type="number" id="cantidad" name="cantidad" min="1" max="6" value="1" required>
       </div>
     </div>
 
@@ -209,6 +207,21 @@
       <label class="field-label" for="nombre">Nombre completo</label>
       <input class="field-input" type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required>
     </div>
+
+    <!-- Correo + teléfono -->
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" for="email">Correo electrónico</label>
+        <input class="field-input" type="email" id="email" name="email" placeholder="tu@correo.com" required>
+      </div>
+      <div class="field">
+        <label class="field-label" for="telefono">WhatsApp (opcional)</label>
+        <input class="field-input" type="tel" id="telefono" name="telefono" placeholder="+52 …">
+      </div>
+    </div>
+
+    <!-- Honeypot: invisible para humanos, los bots lo llenan -->
+    <input type="text" id="hp" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;opacity:0;">
 
     <!-- Términos -->
     <div class="terms-box">
@@ -219,13 +232,14 @@
     </div>
     <details style="margin:-8px 0 22px;">
       <summary style="cursor:pointer;font-size:13px;color:var(--green);font-weight:bold;">Ver términos, condiciones y contrato de renta</summary>
-      <div style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;">
-        <p>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</p>
-        <p><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $2,000 MXN en efectivo, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</p>
-        <p><strong>Cargos por daño o extravío:</strong> Casco $350 MXN · Candado $400 MXN · Cargador $1,500 MXN · Canasta (si aplica) $500 MXN · Llanta ponchada $300 MXN · Llaves perdidas $300 MXN.</p>
-        <p>Retraso en la entrega: $200 MXN por hora. Robo o pérdida total de la bici: $6,500 MXN.</p>
-        <p>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</p>
-      </div>
+      <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+        <li>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</li>
+        <li><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $3,000 MXN en efectivo por bicicleta, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
+        <li><strong>Cargos por daño o extravío:</strong> Casco $350 MXN · Candado $400 MXN · Cargador $1,500 MXN · Canasta (si aplica) $500 MXN · Llanta ponchada $300 MXN · Llaves perdidas $300 MXN.</li>
+        <li>Retraso en la entrega: $200 MXN por hora. Robo o pérdida total de la bici: $7,500 MXN.</li>
+        <li>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</li>
+        <li>Tus datos se tratan conforme a nuestro <a href="aviso-privacidad.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Aviso de Privacidad</a>.</li>
+      </ul>
     </details>
 
     <!-- Firma de conformidad -->
@@ -235,13 +249,18 @@
       <p style="font-size:12px;color:#888;margin-top:6px;line-height:1.5;">Al escribir tu nombre confirmas que aceptas la responsabilidad por robo, daños o pérdida del equipo, y que entiendes que la renta no incluye seguro médico, de accidentes, robo ni daños.</p>
     </div>
 
+    <!-- Total en vivo -->
+    <div id="totalVivo" style="display:none;text-align:center;font-size:15px;color:var(--green);font-weight:bold;margin-bottom:14px;"></div>
+
+    <!-- Error del envío -->
+    <div id="formError" style="display:none;background:#fdecec;border:2px solid #E8397D;border-radius:12px;padding:12px 16px;font-size:13px;color:#7a1230;line-height:1.5;margin-bottom:14px;"></div>
+
     <button type="submit" class="bike-submit" id="submitBtn" disabled>
-      <svg width="20" height="20"><use href="#wa-icon"/></svg>
-      Enviar reserva por WhatsApp
+      Reservar tu bici
     </button>
 
     <p style="text-align:center;font-size:12px;color:#888;margin-top:14px;line-height:1.5;">
-      Te abrimos WhatsApp con tu reserva. El pago se realiza por link que te enviamos manualmente al confirmar.
+      Al enviar recibes tu cupón con folio. Puedes pagar en línea o al recoger tu bici en la agencia.
     </p>
   </form>
   </div>
@@ -263,7 +282,7 @@
       <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--green);opacity:0.65;margin-bottom:12px;">Al recoger</h4>
       <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;">
         <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Pasaporte vigente (se retiene durante el alquiler)</li>
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Depósito de $2,000 MXN en efectivo</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Depósito de $3,000 MXN en efectivo por bicicleta</li>
         <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Foto de tu reservación (hotel, Airbnb o domicilio)</li>
         <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Devolución del depósito al regresar la bici en buen estado</li>
       </ul>
@@ -303,12 +322,14 @@
   </div>
 </footer>
 
+<script src="assets/catalogo-bicis.js?v=20260814"></script>
 <script>
-  const TIPO_BICI = 'E-bike WalkMe';
-
   const form = document.getElementById('bikeForm');
   const submitBtn = document.getElementById('submitBtn');
-  const requiredFields = ['fecha','hora','duracion','cantidad','nombre','firma'];
+  const totalVivo = document.getElementById('totalVivo');
+  const formError = document.getElementById('formError');
+  const requiredFields = ['fecha','hora','duracion','cantidad','nombre','email','firma'];
+  let enviando = false;
 
   const modal = document.getElementById('bikeModal');
   function openBikeModal() {
@@ -324,49 +345,101 @@
   modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeBikeModal));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeBikeModal(); });
 
+  // Total en vivo desde el catálogo compartido (el servidor lo recalcula igual).
+  function pintarTotal() {
+    const d = document.getElementById('duracion').value;
+    const n = document.getElementById('cantidad').value;
+    const calc = WM_BICIS.calcularTotal(d, n);
+    if (calc) {
+      totalVivo.style.display = 'block';
+      totalVivo.textContent = 'Total de la renta: ' + WM_BICIS.money(calc.total) +
+        ' · Garantía al recoger: ' + WM_BICIS.money(calc.depositoTotal) + ' en efectivo';
+    } else {
+      totalVivo.style.display = 'none';
+    }
+  }
+
   function validate() {
     const terms = document.getElementById('terms').checked;
     const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
-    submitBtn.disabled = !(terms && allFilled);
+    submitBtn.disabled = !(terms && allFilled) || enviando;
+    pintarTotal();
   }
 
   form.addEventListener('input', validate);
   form.addEventListener('change', validate);
 
-  function formatDate(iso) {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-    return `${d} ${meses[parseInt(m)-1]} ${y}`;
+  // Mensajes de error legibles; siempre con salida a WhatsApp.
+  const ERRORES = {
+    sin_disponibilidad: n => n > 0
+      ? `Para ese horario solo nos quedan ${n} bici${n === 1 ? '' : 's'}. Cambia la cantidad o la fecha, o escríbenos por WhatsApp.`
+      : 'Para ese horario ya no tenemos bicis disponibles. Prueba otra fecha o escríbenos por WhatsApp.',
+    firma_no_coincide: () => 'La firma debe coincidir con tu nombre completo.',
+    email_invalido: () => 'Revisa tu correo electrónico.',
+    fecha_pasada: () => 'La fecha ya pasó — elige hoy o una fecha futura.',
+    demasiadas_reservas: () => 'Demasiadas reservas seguidas. Espera un momento o escríbenos por WhatsApp.',
+    reservas_no_configuradas: () => 'La reserva en línea aún no está activa. Escríbenos por WhatsApp y te apartamos tu bici.'
+  };
+
+  function mostrarError(codigo, disponibles) {
+    const fn = ERRORES[codigo];
+    const msgTexto = fn ? fn(disponibles) : 'No pudimos crear tu reserva. Inténtalo de nuevo o escríbenos por WhatsApp.';
+    formError.textContent = '';
+    formError.append(msgTexto + ' ');
+    const wa = document.createElement('a');
+    wa.href = 'https://wa.me/525639748122?text=' + encodeURIComponent('Hola WalkMe Bikes 🚲, quiero reservar una bici.');
+    wa.target = '_blank'; wa.rel = 'noopener';
+    wa.style.cssText = 'color:#0d2e1a;font-weight:bold;text-decoration:underline;';
+    wa.textContent = 'Abrir WhatsApp';
+    formError.append(wa);
+    formError.style.display = 'block';
   }
 
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const fecha = formatDate(document.getElementById('fecha').value);
-    const hora = document.getElementById('hora').value;
-    const duracion = document.getElementById('duracion').value;
-    const cantidad = document.getElementById('cantidad').value;
-    const nombre = document.getElementById('nombre').value.trim();
-    const firma = document.getElementById('firma').value.trim();
+    if (enviando) return; // doble submit = doble folio
+    enviando = true;
+    submitBtn.disabled = true;
+    const textoOriginal = submitBtn.textContent;
+    submitBtn.textContent = 'Enviando…';
+    formError.style.display = 'none';
 
-    const msg =
-`Hola WalkMe Bikes 🚲, quiero reservar:
-
-• Tipo de bici: ${TIPO_BICI}
-• Fecha: ${fecha}
-• Hora de inicio: ${hora}
-• Duración: ${duracion}
-• Número de bicicletas: ${cantidad}
-• Nombre: ${nombre}
-• Firma de conformidad: ${firma}
-
-Acepto términos, condiciones y contrato de renta. ¿Me confirman disponibilidad y el link de pago? ¡Gracias!`;
-
-    window.open(`https://wa.me/525639748122?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
-    closeBikeModal();
+    try {
+      const r = await fetch('/api/bici/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idioma: 'es',
+          duracionId: document.getElementById('duracion').value,
+          fecha: document.getElementById('fecha').value,
+          hora: document.getElementById('hora').value,
+          cantidad: document.getElementById('cantidad').value,
+          nombre: document.getElementById('nombre').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          telefono: document.getElementById('telefono').value.trim(),
+          firma: document.getElementById('firma').value.trim(),
+          aceptaTerminos: document.getElementById('terms').checked,
+          hp: document.getElementById('hp').value
+        })
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        mostrarError(data.error, data.disponibles);
+        enviando = false;
+        submitBtn.textContent = textoOriginal;
+        validate();
+        return;
+      }
+      location.href = 'cupon.html?t=' + encodeURIComponent(data.token);
+    } catch (err) {
+      mostrarError('red');
+      enviando = false;
+      submitBtn.textContent = textoOriginal;
+      validate();
+    }
   });
 
-  // initialize date min = today
+  // fecha mínima = hoy
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('fecha').setAttribute('min', today);
 </script>
@@ -377,6 +450,6 @@ Acepto términos, condiciones y contrato de renta. ¿Me confirman disponibilidad
 </a>
 
 <script src="assets/nav.js?v=20260725"></script>
-<script src="assets/hero-letters.js?v=20260801"></script>
+<script src="assets/hero-letters.js?v=20260814"></script>
 </body>
 </html>

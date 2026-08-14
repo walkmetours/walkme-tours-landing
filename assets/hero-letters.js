@@ -12,8 +12,12 @@
       var span = document.createElement('span');
       span.setAttribute('aria-hidden', 'true');
       if (ch === ' ') {
-        span.textContent = ' ';
+        // Un espacio de texto normal se puede colapsar a un ancho casi nulo
+        // segun la fuente (pasaba en "Renta tu": se veia como "Rentatu").
+        // Ancho fijo en em para que el espacio siempre se vea.
+        span.textContent = ' ';
         span.style.display = 'inline-block';
+        span.style.width = '0.3em';
       } else {
         span.className = 'hl';
         span.textContent = ch;

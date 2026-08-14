@@ -1,0 +1,217 @@
+/* Cupón de reserva WalkMe Bikes — réplica del diseño entregado
+   (Cupon Reserva Bikes.dc.html, tarjeta 1080×1500) + tercer estado,
+   garantía dinámica y botones de pago.
+   Marca: Verde Selva #0D2E1A · Arena #F7F5EF · Amarillo #F2DE4A ·
+   Rosa #E8397D (un acento por pieza) · Naranja #EE9014 (solo trazos). */
+
+@font-face {
+  font-family: 'GTEesti';
+  src: url('../uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf') format('opentype');
+  font-weight: bold;
+}
+@font-face {
+  font-family: 'TravelSoul';
+  src: url('../uploads/Travel Soulmates Weight - OTF-4b584a0a.otf') format('opentype');
+  unicode-range: U+0020, U+0041-005A, U+0061-007A;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #e9e5d8;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #0d2e1a;
+  min-height: 100vh;
+}
+a { color: #0d2e1a; }
+a:hover { color: #E8397D; }
+
+/* ---- Estados de carga / error ---- */
+.cp-cargando, .cp-error {
+  max-width: 560px; margin: 80px auto; text-align: center;
+  font-size: 17px; line-height: 1.6; padding: 0 24px;
+}
+.cp-error a { font-weight: bold; }
+
+/* ---- Wrapper con escala: la tarjeta es de 1080px fijos.
+   transform-origin top-left + translateX calculado en JS: escalar desde
+   el centro con un hijo más ancho que el viewport lo saca de pantalla. ---- */
+.cp-scale-outer { overflow: hidden; }
+.cp-scale {
+  width: 1080px;
+  transform-origin: top left;
+}
+
+/* ---- La tarjeta (fiel al diseño) ---- */
+.cp-card {
+  width: 1080px;
+  background: #f7f0dd;
+  color: #0d2e1a;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-head {
+  background: #022814; color: #f7f0dd;
+  padding: 44px 56px 38px;
+  display: flex; align-items: center; gap: 24px;
+}
+.cp-head img { height: 86px; width: auto; }
+.cp-bikes {
+  font-family: 'TravelSoul', 'GTEesti', sans-serif;
+  font-size: 52px; color: #F2DE4A; line-height: 1;
+}
+.cp-head-right {
+  margin-left: auto; text-align: right;
+  font-size: 24px; line-height: 1.35; opacity: 0.85;
+}
+.cp-head-right span { opacity: 0.6; }
+
+.cp-folio-row {
+  padding: 44px 56px 0;
+  display: flex; align-items: flex-start; gap: 32px;
+}
+.cp-folio-col { flex: 1; }
+.cp-folio-label { font-size: 22px; letter-spacing: 0.12em; opacity: 0.55; }
+.cp-folio {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 72px; line-height: 1.05; margin-top: 6px;
+}
+.cp-badge {
+  flex: none; border-radius: 999px; padding: 18px 34px;
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 30px; letter-spacing: 0.04em; text-align: center;
+  max-width: 420px; line-height: 1.15;
+}
+.cp-badge.pagada       { background: #0d2e1a; color: #F2DE4A; }
+.cp-badge.pendiente    { background: #F2DE4A; color: #0d2e1a; }
+/* Tercer estado (nuevo): sin confirmar — arena + borde naranja (solo trazo) */
+.cp-badge.sin-confirmar { background: #F7F5EF; color: #0d2e1a; border: 3px solid #EE9014; }
+.cp-badge.neutra       { background: rgba(13,46,26,0.08); color: #0d2e1a; }
+
+.cp-grid {
+  padding: 38px 56px 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 26px 32px;
+}
+.cp-cell { border-top: 3px solid rgba(13,46,26,0.18); padding-top: 14px; }
+.cp-cell-label { font-size: 21px; letter-spacing: 0.1em; opacity: 0.55; }
+.cp-cell-val {
+  font-size: 38px; margin-top: 6px;
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  overflow-wrap: break-word;
+}
+
+.cp-money {
+  margin: 38px 56px 0;
+  background: #022814; color: #f7f0dd;
+  border-radius: 28px; padding: 32px 40px;
+  display: flex; align-items: center; gap: 36px;
+}
+.cp-money-col { flex: 1; }
+.cp-total-label { font-size: 22px; letter-spacing: 0.1em; opacity: 0.6; }
+.cp-total {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 64px; line-height: 1.05; margin-top: 4px; color: #F2DE4A;
+}
+.cp-pago-detalle { font-size: 24px; margin-top: 8px; opacity: 0.85; line-height: 1.35; }
+.cp-money-div { flex: none; width: 3px; align-self: stretch; background: rgba(247,240,221,0.2); }
+.cp-gar-label { font-size: 22px; letter-spacing: 0.1em; color: #E8397D; }
+.cp-gar-monto {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 52px; line-height: 1.05; margin-top: 4px;
+}
+.cp-gar-nota { font-size: 22px; margin-top: 8px; opacity: 0.8; line-height: 1.35; }
+.cp-efectivo {
+  font-size: 23px; margin-top: 12px;
+  font-family: 'GTEesti', sans-serif; font-weight: bold;
+  color: #F2DE4A; line-height: 1.3;
+}
+
+.cp-cols {
+  padding: 38px 56px 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+}
+.cp-col-title {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 26px; letter-spacing: 0.06em; color: #E8397D; margin-bottom: 14px;
+}
+.cp-items { font-size: 25px; line-height: 1.5; }
+.cp-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+.cp-item::before {
+  content: ''; flex: none; width: 12px; height: 12px;
+  border-radius: 50%; background: #0d2e1a; margin-top: 9px;
+}
+
+.cp-tear { margin-top: 40px; border-top: 5px dashed rgba(13,46,26,0.28); }
+
+.cp-foot {
+  padding: 36px 56px 48px;
+  display: flex; align-items: center; gap: 36px;
+}
+.cp-qr-box {
+  flex: none; background: #fff; padding: 14px; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.cp-qr-box .cp-qr { width: 200px; height: 200px; }
+.cp-qr-box .cp-qr img, .cp-qr-box .cp-qr canvas { width: 200px !important; height: 200px !important; display: block; }
+.cp-qr-caption { font-size: 15px; }
+.cp-dir-col { flex: 1; }
+.cp-dir-title {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 30px; line-height: 1.25;
+}
+.cp-dir { font-size: 24px; line-height: 1.45; margin-top: 10px; }
+.cp-contact { font-size: 24px; line-height: 1.45; margin-top: 12px; }
+.cp-nota { font-size: 21px; line-height: 1.4; margin-top: 14px; opacity: 0.6; }
+
+/* ---- Bloque de pago (fuera de la tarjeta; solo pantalla) ---- */
+.cp-pay {
+  max-width: 560px; margin: 28px auto 20px; padding: 0 20px;
+  display: none; flex-direction: column; gap: 12px;
+}
+.cp-pay.visible { display: flex; }
+.cp-pay-title {
+  text-align: center; font-family: 'GTEesti', Helvetica, sans-serif;
+  font-weight: bold; font-size: 19px; margin-bottom: 4px;
+}
+.cp-pay-btn {
+  display: block; width: 100%; border: none; cursor: pointer;
+  border-radius: 999px; padding: 16px 24px;
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 17px; text-align: center; text-decoration: none;
+  background: #F2DE4A; color: #0d2e1a;
+  transition: transform 0.12s ease;
+}
+.cp-pay-btn:hover { transform: translateY(-1px); color: #0d2e1a; }
+.cp-pay-btn.secundario {
+  background: transparent; border: 2px solid #0d2e1a; color: #0d2e1a;
+}
+.cp-pay-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+.cp-pay-nota { text-align: center; font-size: 13px; opacity: 0.65; line-height: 1.5; }
+.cp-pay-err {
+  display: none; background: #fdecec; border: 2px solid #E8397D;
+  border-radius: 12px; padding: 12px 16px; font-size: 13px;
+  color: #7a1230; line-height: 1.5; text-align: center;
+}
+.cp-pay-err.visible { display: block; }
+
+/* ---- Acciones bajo el cupón (solo pantalla) ---- */
+.cp-actions {
+  max-width: 560px; margin: 0 auto 60px; padding: 0 20px;
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.cp-actions a, .cp-actions button {
+  font-family: 'GTEesti', Helvetica, sans-serif; font-weight: bold;
+  font-size: 14px; padding: 10px 20px; border-radius: 999px;
+  border: 2px solid #0d2e1a; background: transparent; color: #0d2e1a;
+  cursor: pointer; text-decoration: none;
+}
+
+/* ---- Impresión: solo la tarjeta, a tamaño Carta ---- */
+@media print {
+  body { background: #fff; }
+  .cp-pay, .cp-actions, .cp-pay-err { display: none !important; }
+  .cp-scale { transform: none !important; width: auto; }
+  .cp-scale-outer { height: auto !important; overflow: visible; }
+  .cp-card { width: 7.6in; margin: 0 auto; }
+  .cp-card { zoom: 0.52; } /* 1080px → cabe en Carta con márgenes */
+}

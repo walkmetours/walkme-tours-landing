@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0D2E1A">
+<title>WalkMe · CRM</title>
+<link rel="icon" href="uploads/WALKME_LOGO_REDONDO.png">
+<link rel="stylesheet" href="assets/crm.css?v=20260814">
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login" id="vistaLogin" hidden>
+  <form class="login-card" id="formLogin" autocomplete="on">
+    <img class="login-logo" src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe Tours">
+    <div class="login-kicker">CRM · Renta de bicis</div>
+    <h1 class="login-tit">Entrar</h1>
+    <label class="campo">
+      <span class="campo-lab">Correo</span>
+      <input class="campo-in" type="email" id="loginEmail" required autocomplete="username" inputmode="email" placeholder="tucorreo@walkmetours.com">
+    </label>
+    <label class="campo">
+      <span class="campo-lab">Contraseña</span>
+      <input class="campo-in" type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••">
+    </label>
+    <p class="login-error" id="loginError" hidden></p>
+    <button class="btn btn-amarillo btn-bloque" type="submit" id="loginBtn">Entrar</button>
+    <p class="login-pie">Sólo para el equipo de WalkMe.</p>
+  </form>
+</div>
+
+<!-- ============ PANTALLA COMPLETA DE ERROR ============ -->
+<div class="fatal" id="vistaFatal" hidden>
+  <div class="fatal-card">
+    <img class="fatal-logo" src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe Tours">
+    <h1 class="fatal-tit" id="fatalTitulo">El CRM aún no está configurado</h1>
+    <p class="fatal-txt" id="fatalTexto">Falta terminar la configuración en el servidor. Avísale al equipo técnico.</p>
+    <button class="btn btn-linea-clara" id="fatalReintentar" type="button">Reintentar</button>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="vistaApp" hidden>
+
+  <aside class="side">
+    <div class="side-marca">
+      <img class="side-logo" src="uploads/WALKME_LOGO_FVERDE.png" alt="WalkMe">
+      <span class="side-marca-tx">WalkMe · CRM</span>
+    </div>
+
+    <nav class="side-nav">
+      <button class="nav-item is-activa" type="button" id="navBicis">
+        <span class="nav-ic" aria-hidden="true">◎</span>
+        <span class="nav-tx nav-tx-larga">Bicis</span>
+        <span class="nav-tx nav-tx-corta">Bicis</span>
+      </button>
+      <button class="nav-item is-apagada" type="button" disabled>
+        <span class="nav-ic" aria-hidden="true">▤</span>
+        <span class="nav-tx nav-tx-larga">Tours · próximamente</span>
+        <span class="nav-tx nav-tx-corta">Tours</span>
+      </button>
+      <button class="nav-item nav-salir-movil" type="button" id="btnSalirMovil">
+        <span class="nav-ic" aria-hidden="true">⏻</span>
+        <span class="nav-tx nav-tx-corta">Salir</span>
+      </button>
+    </nav>
+
+    <div class="side-hoy">
+      <div class="side-hoy-tit">Hoy en agencia</div>
+      <div class="side-hoy-tx" id="hoyResumen">Cargando…</div>
+    </div>
+
+    <div class="side-pie">
+      <div class="side-mail" id="sesionEmail"></div>
+      <button class="side-salir" type="button" id="btnSalir">Salir</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div class="top-tits">
+        <h1 class="top-tit">Renta de bicis</h1>
+        <div class="top-sub" id="topFecha"></div>
+      </div>
+      <div class="top-acc">
+        <button class="btn btn-linea" type="button" id="btnRefrescar">Actualizar</button>
+        <button class="btn btn-amarillo" type="button" id="btnMostrador">+ Renta en mostrador</button>
+      </div>
+    </header>
+
+    <div class="banner" id="bannerAviso" hidden></div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <nav class="tabs" id="tabs" role="tablist">
+      <button class="tab is-activa" type="button" role="tab" data-ir="contratos">Contratos<span class="tab-badge" id="badgeContratos">0</span></button>
+      <button class="tab" type="button" role="tab" data-ir="solicitudes" id="tabSolicitudes" hidden>Solicitudes<span class="tab-badge tab-badge-alerta" id="badgeSolicitudes">0</span></button>
+      <button class="tab" type="button" role="tab" data-ir="flota">Flota<span class="tab-badge" id="badgeFlota">0</span></button>
+    </nav>
+
+    <div class="cols" id="cols" data-tab="contratos">
+
+      <section class="panel panel-contratos" data-panel="contratos">
+        <div class="panel-head">
+          <h2 class="panel-tit">Contratos de renta</h2>
+          <span class="panel-sub" id="contratosSub"></span>
+        </div>
+        <div class="chips" id="filtros"></div>
+        <div class="tabla-wrap">
+          <div class="tabla" id="tabla"></div>
+        </div>
+      </section>
+
+      <div class="col-lado">
+        <section class="panel panel-oscuro panel-solicitudes" data-panel="solicitudes" id="panelSolicitudes" hidden>
+          <h2 class="panel-tit panel-tit-amarillo">Solicitudes del link móvil · <span id="solCount">0</span></h2>
+          <div class="panel-sub-claro">Reservas de la web que todavía no tienen bici asignada</div>
+          <div class="sol-lista" id="solicitudes"></div>
+        </section>
+
+        <section class="panel panel-flota" data-panel="flota">
+          <h2 class="panel-tit">Flota</h2>
+          <div class="panel-sub-bloque">Toca el estado para cambiarlo: disponible → cargando → mantenimiento</div>
+          <div class="flota-lista" id="flota"></div>
+          <button class="btn-agregar" type="button" id="btnAgregarUnidad">+ Agregar unidad</button>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============ DRAWER DE DETALLE ============ -->
+<div class="scrim" id="scrimDrawer" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Detalle de la renta">
+  <div class="drawer-in" id="drawerIn"></div>
+</aside>
+
+<!-- ============ MODAL (mostrador / confirmar / prompt) ============ -->
+<div class="scrim" id="scrimModal" hidden></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+  <div class="modal-in" id="modalIn"></div>
+</div>
+
+<!-- ============ TOASTS ============ -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="assets/catalogo-bicis.js?v=20260814"></script>
+<script src="assets/crm-auth.js?v=20260814"></script>
+<script src="assets/crm.js?v=20260814"></script>
+</body>
+</html>
