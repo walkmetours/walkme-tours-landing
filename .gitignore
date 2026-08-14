@@ -23,12 +23,5 @@ uploads/*
 !uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf
 !uploads/Travel Soulmates Weight - OTF-4b584a0a.otf
 
-# Backend /api (Vercel instala las deps en el deploy)
-node_modules/
-package-lock.json
-.env
-.env.local
-.vercel/
-
 # Sistema
 .DS_Store
