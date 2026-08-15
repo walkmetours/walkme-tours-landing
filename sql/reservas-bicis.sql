@@ -117,6 +117,34 @@ create table if not exists public.reservas_bicis (
 -- de arriba no la habría agregado): idempotente, seguro correr siempre.
 alter table public.reservas_bicis add column if not exists foto_id_path text;
 
+-- ── Migración 15-ago-2026: formulario nuevo de renta (diseño "Renta Bikes") ──
+-- El formulario pasó a 5 idiomas y pide una segunda foto (la reserva de
+-- hotel/Airbnb, OPCIONAL — decisión de María: que no bloquee la reserva).
+alter table public.reservas_bicis add column if not exists foto_reserva_path text;
+
+-- El check original era check (idioma in ('es','en')). Con el formulario en
+-- 5 idiomas, un cliente italiano hacía fallar el insert y PERDÍA la reserva.
+-- Se amplía. El nombre del check inline lo genera Postgres, así que primero
+-- se busca por definición y luego se recrea con nombre propio (idempotente).
+do $$
+declare v_conname text;
+begin
+  select conname into v_conname
+    from pg_constraint
+   where conrelid = 'public.reservas_bicis'::regclass
+     and contype  = 'c'
+     and conname <> 'reservas_bicis_idioma_chk'
+     and pg_get_constraintdef(oid) ilike '%idioma%';
+  if v_conname is not null then
+    execute format('alter table public.reservas_bicis drop constraint %I', v_conname);
+  end if;
+end $$;
+
+alter table public.reservas_bicis drop constraint if exists reservas_bicis_idioma_chk;
+alter table public.reservas_bicis
+  add constraint reservas_bicis_idioma_chk
+  check (idioma in ('es','en','it','fr','pt'));
+
 create index if not exists reservas_bicis_token_idx   on public.reservas_bicis (token);
 create index if not exists reservas_bicis_folio_idx   on public.reservas_bicis (folio);
 create index if not exists reservas_bicis_estado_idx  on public.reservas_bicis (estado);
@@ -141,6 +169,8 @@ create table if not exists public.crm_eventos (
 --                precio_unitario, total, deposito_unitario,
 --                nombre_completo, email, telefono, firma_nombre,
 --                firma_ip, firma_ua, terminos_version, expira_at,
+--                nacionalidad?, documento?, hotel?,          -- 15-ago-26
+--                foto_id_path?, foto_reserva_path?,          -- 15-ago-26
 --                forzar (bool, solo CRM) }
 --     Devuelve: { ok:true, folio, token }
 --            o  { ok:false, error:'sin_disponibilidad', disponibles:N }
@@ -197,8 +227,9 @@ begin
     token, idioma, canal, tipo_bici, duracion_id, duracion_nombre,
     fecha_reserva, hora_inicio, inicio, fin, cantidad_bicis,
     precio_unitario, total, deposito_unitario,
-    nombre_completo, email, telefono,
-    firma_nombre, firma_ip, firma_ua, terminos_version, foto_id_path,
+    nombre_completo, email, telefono, nacionalidad, documento, hotel,
+    firma_nombre, firma_ip, firma_ua, terminos_version,
+    foto_id_path, foto_reserva_path,
     estado, expira_at
   ) values (
     v_token,
@@ -218,11 +249,15 @@ begin
     payload->>'nombre_completo',
     nullif(payload->>'email', ''),
     nullif(payload->>'telefono', ''),
+    nullif(payload->>'nacionalidad', ''),
+    nullif(payload->>'documento', ''),
+    nullif(payload->>'hotel', ''),
     payload->>'firma_nombre',
     nullif(payload->>'firma_ip', ''),
     nullif(payload->>'firma_ua', ''),
     coalesce(payload->>'terminos_version', 'bici-v1-2026-08'),
     nullif(payload->>'foto_id_path', ''),
+    nullif(payload->>'foto_reserva_path', ''),
     coalesce(payload->>'estado', 'pendiente_pago'),
     (payload->>'expira_at')::timestamptz
   )

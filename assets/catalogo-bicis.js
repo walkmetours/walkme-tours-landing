@@ -9,18 +9,34 @@
   else root.WM_BICIS = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
 
+  // Idiomas del formulario de renta (diseño "Renta Bikes", 15-ago-26).
+  // El cupón, los correos y el CRM siguen en es/en: un cliente que llena en
+  // italiano ve su cupón en inglés. Decisión de María — traducir el resto
+  // después, no bloquear el formulario por eso.
+  const IDIOMAS = ['es', 'en', 'it', 'fr', 'pt'];
+  // A qué idioma cae el cupón/correo cuando el cliente eligió uno que esos
+  // todavía no hablan. Todo lo que no sea español cae a inglés.
+  function idiomaCupon(lang) { return lang === 'es' ? 'es' : 'en'; }
+
   const CATALOGO = {
     version: '2026-08',
     moneda: 'MXN',
     // Garantía en efectivo al recoger, POR BICI (decisión de María, 14-ago-26).
     DEPOSITO_UNITARIO: 3000,
-    tipoBici: { id: 'ebike-u1', nombre: { es: 'E-bike WalkMe', en: 'WalkMe e-bike' } },
+    tipoBici: { id: 'ebike-u1', nombre: {
+      es: 'E-bike WalkMe', en: 'WalkMe e-bike', it: 'E-bike WalkMe',
+      fr: 'Vélo électrique WalkMe', pt: 'E-bike WalkMe' } },
     duraciones: [
-      { id: '2h',     precio: 200,  nombre: { es: '2 horas',        en: '2 hours' } },
-      { id: 'dia',    precio: 400,  nombre: { es: 'Día (10am-7pm)', en: 'Day (10am-7pm)' } },
-      { id: '24h',    precio: 500,  nombre: { es: '24 horas',       en: '24 hours' } },
-      { id: 'semana', precio: 1500, nombre: { es: 'Semana',         en: 'Week' } },
-      { id: 'mes',    precio: 2500, nombre: { es: 'Mes',            en: 'Month' } }
+      { id: '2h',     precio: 200,  nombre: { es: '2 horas',        en: '2 hours',
+        it: '2 ore',           fr: '2 heures',           pt: '2 horas' } },
+      { id: 'dia',    precio: 400,  nombre: { es: 'Día (10am-7pm)', en: 'Day (10am-7pm)',
+        it: 'Giorno (10-19)',  fr: 'Journée (10h-19h)',  pt: 'Dia (10h-19h)' } },
+      { id: '24h',    precio: 500,  nombre: { es: '24 horas',       en: '24 hours',
+        it: '24 ore',          fr: '24 heures',          pt: '24 horas' } },
+      { id: 'semana', precio: 1500, nombre: { es: 'Semana',         en: 'Week',
+        it: 'Settimana',       fr: 'Semaine',            pt: 'Semana' } },
+      { id: 'mes',    precio: 2500, nombre: { es: 'Mes',            en: 'Month',
+        it: 'Mese',            fr: 'Mois',               pt: 'Mês' } }
     ]
   };
 
@@ -56,6 +72,8 @@
   return {
     CATALOGO: CATALOGO,
     DEPOSITO_UNITARIO: CATALOGO.DEPOSITO_UNITARIO,
+    IDIOMAS: IDIOMAS,
+    idiomaCupon: idiomaCupon,
     duracion: duracion,
     calcularTotal: calcularTotal,
     folioLabel: folioLabel,

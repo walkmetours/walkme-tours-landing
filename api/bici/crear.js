@@ -3,16 +3,20 @@
 // creación son atómicas en el RPC crear_reserva_bici (advisory lock).
 //
 // Body: { idioma, duracionId, fecha, hora, cantidad, nombre, email,
-//         telefono?, firma, aceptaTerminos, hp }
+//         telefono?, nacionalidad?, documento?, hotel?, firma,
+//         aceptaTerminos, foto, fotoReserva?, hp }
 // 200 → { folio, folioLabel, token, total, moneda }
 // 409 → { error:'sin_disponibilidad', disponibles:N }
 const { supa, leerJson } = require('../_lib/supabase.js');
 const { generarToken } = require('../_lib/token.js');
 const { ventana, hoyCancun, RE_FECHA, RE_HORA } = require('../_lib/fechas.js');
-const { calcularTotal } = require('../_lib/catalogo-bicis.js');
+const { calcularTotal, IDIOMAS } = require('../_lib/catalogo-bicis.js');
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const RE_FOTO = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/;
+// La reserva de hotel suele llegar como PDF, así que ese sí se acepta aquí.
+// Un PDF no pasa por el canvas del navegador: llega sin comprimir.
+const RE_DOC = /^data:(image\/(?:jpeg|jpg|png|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
 const FOTO_MAX_BYTES = 8 * 1024 * 1024; // ya viene comprimida por el navegador (~1600px, JPEG 75%)
 const HOLD_MIN = 30; // minutos de hold para pendiente_pago
 
@@ -21,6 +25,17 @@ function normaliza(s) {
   return String(s || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// data URL → { buffer, contentType, ext }. null si no parsea o se pasa de
+// tamaño; el llamador decide si eso es un error o "no adjuntó nada".
+function parseArchivo(valor, permitirPdf) {
+  const m = (permitirPdf ? RE_DOC : RE_FOTO).exec(String(valor || ''));
+  if (!m) return null;
+  const contentType = permitirPdf ? m[1] : 'image/' + m[1];
+  const buffer = Buffer.from(m[2], 'base64');
+  if (buffer.length === 0 || buffer.length > FOTO_MAX_BYTES) return null;
+  return { buffer, contentType, ext: contentType === 'application/pdf' ? '.pdf' : '.jpg' };
 }
 
 module.exports = async (req, res) => {
@@ -35,7 +50,10 @@ module.exports = async (req, res) => {
   // no darles señal — y sin quemar un folio.
   if (b.hp) return res.status(200).json({ folio: 0, token: '', total: 0, moneda: 'MXN' });
 
-  const idioma = b.idioma === 'en' ? 'en' : 'es';
+  // 5 idiomas desde el catálogo (es/en/it/fr/pt). Cualquier otra cosa cae a
+  // español en vez de rechazar: perder una reserva por un código de idioma
+  // raro sería absurdo.
+  const idioma = IDIOMAS.indexOf(b.idioma) >= 0 ? b.idioma : 'es';
   const duracionId = String(b.duracionId || '');
   const fecha = String(b.fecha || '');
   const hora = String(b.hora || '');
@@ -44,6 +62,10 @@ module.exports = async (req, res) => {
   const email = String(b.email || '').trim();
   const telefono = String(b.telefono || '').replace(/[^\d+]/g, '');
   const firma = String(b.firma || '').trim();
+  // Campos del formulario nuevo. Opcionales: si vienen vacíos se guardan null.
+  const nacionalidad = String(b.nacionalidad || '').trim().slice(0, 80);
+  const documento = String(b.documento || '').trim().slice(0, 60);
+  const hotel = String(b.hotel || '').trim().slice(0, 200);
 
   // --- Validación ---
   const precio = calcularTotal(duracionId, cantidad);
@@ -78,13 +100,24 @@ module.exports = async (req, res) => {
   const v = ventana(duracionId, fecha, hora);
   if (!v) return res.status(400).json({ error: 'ventana_invalida' });
 
-  // Foto de identificación: obligatoria, ya viene comprimida (data URL) del navegador.
-  if (!b.foto) return res.status(400).json({ error: 'foto_requerida' });
-  const fotoMatch = RE_FOTO.exec(String(b.foto));
-  if (!fotoMatch) return res.status(400).json({ error: 'foto_invalida' });
-  const fotoBuffer = Buffer.from(fotoMatch[2], 'base64');
-  if (fotoBuffer.length === 0 || fotoBuffer.length > FOTO_MAX_BYTES) {
-    return res.status(400).json({ error: 'foto_muy_grande' });
+  // Foto de identificación: OPCIONAL desde el 15-ago-26. El formulario en
+  // producción (el de 728e6ae) no la pide, y exigirla aquí hacía fallar TODAS
+  // las reservas con foto_requerida. El formulario nuevo sí la manda y se
+  // guarda igual. Si viene pero no parsea, se avisa en vez de tirarla en
+  // silencio: el cliente creería que la subió.
+  let archivoId = null;
+  if (b.foto) {
+    archivoId = parseArchivo(b.foto, false);
+    if (!archivoId) return res.status(400).json({ error: 'foto_invalida' });
+  }
+
+  // Foto de la reserva de hotel/Airbnb: OPCIONAL (decisión de María, 15-ago-26:
+  // que no bloquee la reserva). Si vino pero no parsea, se avisa en vez de
+  // tirarla en silencio — el cliente creería que la subió.
+  let archivoReserva = null;
+  if (b.fotoReserva) {
+    archivoReserva = parseArchivo(b.fotoReserva, true);
+    if (!archivoReserva) return res.status(400).json({ error: 'foto_reserva_invalida' });
   }
 
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null;
@@ -92,15 +125,31 @@ module.exports = async (req, res) => {
   const s = supa();
 
   try {
-    // Se sube una sola vez con una ruta propia (no atada al token de la
-    // reserva) para no repetir la subida si el RPC reintenta por choque de token.
-    const fotoPath = generarToken() + '.jpg';
-    const { error: fotoError } = await s.storage
-      .from('documentos-bicis')
-      .upload(fotoPath, fotoBuffer, { contentType: 'image/jpeg' });
-    if (fotoError) {
-      console.error('crear:foto:', fotoError.message);
-      return res.status(500).json({ error: 'error_interno' });
+    // Se suben una sola vez con ruta propia (no atada al token de la reserva)
+    // para no repetir la subida si el RPC reintenta por choque de token.
+    let fotoPath = null;
+    if (archivoId) {
+      fotoPath = generarToken() + archivoId.ext;
+      const { error: fotoError } = await s.storage
+        .from('documentos-bicis')
+        .upload(fotoPath, archivoId.buffer, { contentType: archivoId.contentType });
+      if (fotoError) {
+        console.error('crear:foto:', fotoError.message);
+        return res.status(500).json({ error: 'error_interno' });
+      }
+    }
+
+    // La de la reserva es opcional: si falla la subida NO se cae la reserva,
+    // solo se queda sin ese adjunto. Perder la renta por una foto de cortesía
+    // sería peor que no tenerla.
+    let fotoReservaPath = null;
+    if (archivoReserva) {
+      const p = generarToken() + archivoReserva.ext;
+      const { error: e2 } = await s.storage
+        .from('documentos-bicis')
+        .upload(p, archivoReserva.buffer, { contentType: archivoReserva.contentType });
+      if (e2) console.error('crear:fotoReserva:', e2.message);
+      else fotoReservaPath = p;
     }
 
     // Anti-abuso: cada inserción quema un folio público. Máx 5/hora por IP.
@@ -132,10 +181,14 @@ module.exports = async (req, res) => {
         nombre_completo: nombre,
         email,
         telefono: telefono || null,
+        nacionalidad: nacionalidad || null,
+        documento: documento || null,
+        hotel: hotel || null,
         firma_nombre: firma,
         firma_ip: ip,
         firma_ua: ua,
         foto_id_path: fotoPath,
+        foto_reserva_path: fotoReservaPath,
         expira_at: new Date(Date.now() + HOLD_MIN * 60 * 1000).toISOString()
       };
 
