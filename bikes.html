@@ -155,102 +155,140 @@
 <!-- FORM (modal) -->
 <div class="qmodal" id="bikeModal" aria-hidden="true">
   <div class="qmodal-bg" data-close></div>
-  <div class="qmodal-box" role="dialog" aria-modal="true" style="max-width:560px;">
+  <div class="qmodal-box qmodal-box--bike" role="dialog" aria-modal="true">
   <button class="qmodal-close" data-close aria-label="Cerrar">×</button>
   <form class="bike-form" id="bikeForm" novalidate>
     <h2>Reserva tu bici</h2>
     <p class="form-sub">Llena el formulario y al enviar abrimos WhatsApp con tu reserva lista para confirmar.</p>
 
-    <!-- Tipo de bici -->
-    <div class="field">
-      <label class="field-label">Tipo de bicicleta</label>
-      <div class="bike-type checked" style="cursor:default;justify-content:center;align-items:center;padding:24px;">
-        <video class="tibu-phone" autoplay muted loop playsinline aria-label="Bicicleta eléctrica plegable WalkMe en movimiento">
-          <source src="assets/video/bici-tipo-walkme.mp4" type="video/mp4">
-        </video>
+    <div class="bike-cols">
+    <div class="bike-left">
+
+    <!-- 1 · Tipo de bici -->
+    <div class="bike-section">
+      <div class="bike-section-head">
+        <span class="bike-section-num">1</span>
+        <span class="bike-section-title">Tipo de bicicleta</span>
+      </div>
+      <div class="bike-icon-box">
+        <img src="assets/img/icono-bicicleta-walkme.svg" alt="E-bike plegable WalkMe" width="88" height="88">
+      </div>
+      <p style="font-size:13px;color:#777;text-align:center;margin-top:10px;">E-bike WalkMe plegable</p>
+    </div>
+
+    <!-- 2 · Tus datos -->
+    <div class="bike-section">
+      <div class="bike-section-head">
+        <span class="bike-section-num">2</span>
+        <span class="bike-section-title">Tus datos</span>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="nombre">Nombre completo</label>
+        <input class="field-input" type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="email">Correo electrónico</label>
+          <input class="field-input" type="email" id="email" name="email" placeholder="tu@correo.com" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="telefono">WhatsApp (opcional)</label>
+          <input class="field-input" type="tel" id="telefono" name="telefono" placeholder="+52 …">
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" for="fotoId">Foto de tu pasaporte o identificación</label>
+        <input class="field-input" type="file" id="fotoId" name="fotoId" accept="image/*" capture="environment" required>
+        <p style="font-size:12px;color:#888;margin-top:6px;line-height:1.5;">La guardamos para tu contrato de renta. Solo la ven María y Gina.</p>
       </div>
     </div>
 
-    <!-- Fecha + hora -->
-    <div class="field-row">
-      <div class="field">
-        <label class="field-label" for="fecha">Fecha</label>
-        <input class="field-input" type="date" id="fecha" name="fecha" required>
+    <!-- 3 · Tu renta -->
+    <div class="bike-section">
+      <div class="bike-section-head">
+        <span class="bike-section-num">3</span>
+        <span class="bike-section-title">Tu renta</span>
       </div>
-      <div class="field">
-        <label class="field-label" for="hora">Hora de inicio</label>
-        <input class="field-input" type="time" id="hora" name="hora" required>
-      </div>
-    </div>
 
-    <!-- Duración + cantidad -->
-    <div class="field-row">
-      <div class="field">
-        <label class="field-label" for="duracion">Duración</label>
-        <select class="field-select" id="duracion" name="duracion" required>
-          <option value="">Selecciona…</option>
-          <option value="2h">2 horas · $200</option>
-          <option value="dia">Día (10am – 7pm) · $400</option>
-          <option value="24h">24 horas · $500</option>
-          <option value="semana">Semana · $1,500</option>
-          <option value="mes">Mes · $2,500</option>
-        </select>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="fecha">Fecha</label>
+          <input class="field-input" type="date" id="fecha" name="fecha" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="hora">Hora de inicio</label>
+          <input class="field-input" type="time" id="hora" name="hora" required>
+        </div>
       </div>
-      <div class="field">
-        <label class="field-label" for="cantidad">Número de bicicletas</label>
-        <input class="field-input" type="number" id="cantidad" name="cantidad" min="1" max="6" value="1" required>
-      </div>
-    </div>
 
-    <!-- Nombre -->
-    <div class="field">
-      <label class="field-label" for="nombre">Nombre completo</label>
-      <input class="field-input" type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required>
-    </div>
-
-    <!-- Correo + teléfono -->
-    <div class="field-row">
-      <div class="field">
-        <label class="field-label" for="email">Correo electrónico</label>
-        <input class="field-input" type="email" id="email" name="email" placeholder="tu@correo.com" required>
-      </div>
-      <div class="field">
-        <label class="field-label" for="telefono">WhatsApp (opcional)</label>
-        <input class="field-input" type="tel" id="telefono" name="telefono" placeholder="+52 …">
+      <div class="field-row" style="margin-bottom:0;">
+        <div class="field">
+          <label class="field-label" for="duracion">Duración</label>
+          <select class="field-select" id="duracion" name="duracion" required>
+            <option value="">Selecciona…</option>
+            <option value="2h">2 horas · $200</option>
+            <option value="dia">Día (10am – 7pm) · $400</option>
+            <option value="24h">24 horas · $500</option>
+            <option value="semana">Semana · $1,500</option>
+            <option value="mes">Mes · $2,500</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="cantidad">Número de bicicletas</label>
+          <input class="field-input" type="number" id="cantidad" name="cantidad" min="1" max="6" value="1" required>
+        </div>
       </div>
     </div>
 
     <!-- Honeypot: invisible para humanos, los bots lo llenan -->
     <input type="text" id="hp" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;opacity:0;">
 
-    <!-- Términos -->
-    <div class="terms-box">
-      <input type="checkbox" id="terms" required>
-      <label for="terms">
-        Acepto los <strong>términos, condiciones y contrato de renta</strong> (ver abajo).
-      </label>
+    <!-- 4 · Condiciones -->
+    <div class="bike-section">
+      <div class="bike-section-head">
+        <span class="bike-section-num">4</span>
+        <span class="bike-section-title">Condiciones</span>
+      </div>
+      <div class="terms-box" style="margin-bottom:0;">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">
+          Acepto los <strong>términos, condiciones y contrato de renta</strong> (ver abajo).
+        </label>
+      </div>
+      <details style="margin:14px 0 0;">
+        <summary style="cursor:pointer;font-size:13px;color:var(--green);font-weight:bold;">Ver términos, condiciones y contrato de renta</summary>
+        <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+          <li>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</li>
+          <li><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $3,000 MXN en efectivo por bicicleta, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
+          <li><strong>Cargos por daño o extravío:</strong> Casco $350 MXN · Candado $400 MXN · Cargador $1,500 MXN · Canasta (si aplica) $500 MXN · Llanta ponchada $300 MXN · Llaves perdidas $300 MXN.</li>
+          <li>Retraso en la entrega: $200 MXN por hora. Robo o pérdida total de la bici: $7,500 MXN.</li>
+          <li>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</li>
+          <li>Tus datos se tratan conforme a nuestro <a href="aviso-privacidad.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Aviso de Privacidad</a>.</li>
+        </ul>
+      </details>
     </div>
-    <details style="margin:-8px 0 22px;">
-      <summary style="cursor:pointer;font-size:13px;color:var(--green);font-weight:bold;">Ver términos, condiciones y contrato de renta</summary>
-      <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
-        <li>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</li>
-        <li><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $3,000 MXN en efectivo por bicicleta, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
-        <li><strong>Cargos por daño o extravío:</strong> Casco $350 MXN · Candado $400 MXN · Cargador $1,500 MXN · Canasta (si aplica) $500 MXN · Llanta ponchada $300 MXN · Llaves perdidas $300 MXN.</li>
-        <li>Retraso en la entrega: $200 MXN por hora. Robo o pérdida total de la bici: $7,500 MXN.</li>
-        <li>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</li>
-        <li>Tus datos se tratan conforme a nuestro <a href="aviso-privacidad.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Aviso de Privacidad</a>.</li>
-      </ul>
-    </details>
 
-    <!-- Firma de conformidad -->
-    <div class="field">
-      <label class="field-label" for="firma">Firma de conformidad: escribe tu nombre completo</label>
-      <input class="field-input" type="text" id="firma" name="firma" placeholder="Tu nombre y apellido" required>
-      <p style="font-size:12px;color:#888;margin-top:6px;line-height:1.5;">Al escribir tu nombre confirmas que aceptas la responsabilidad por robo, daños o pérdida del equipo, y que entiendes que la renta no incluye seguro médico, de accidentes, robo ni daños.</p>
     </div>
+    <div class="bike-right">
 
     <!-- Total en vivo -->
-    <div id="totalVivo" style="display:none;text-align:center;font-size:15px;color:var(--green);font-weight:bold;margin-bottom:14px;"></div>
+    <div id="totalVivo" class="bike-summary" style="display:none;"></div>
+
+    <!-- 5 · Firma -->
+    <div class="bike-section">
+      <div class="bike-section-head">
+        <span class="bike-section-num">5</span>
+        <span class="bike-section-title">Firma</span>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label" for="firma">Escribe tu nombre completo como firma</label>
+        <input class="field-input" type="text" id="firma" name="firma" placeholder="Tu nombre y apellido" required>
+        <p style="font-size:12px;color:#888;margin-top:6px;line-height:1.5;">Al escribir tu nombre confirmas que aceptas la responsabilidad por robo, daños o pérdida del equipo, y que entiendes que la renta no incluye seguro médico, de accidentes, robo ni daños.</p>
+      </div>
+    </div>
 
     <!-- Error del envío -->
     <div id="formError" style="display:none;background:#fdecec;border:2px solid #E8397D;border-radius:12px;padding:12px 16px;font-size:13px;color:#7a1230;line-height:1.5;margin-bottom:14px;"></div>
@@ -262,6 +300,9 @@
     <p style="text-align:center;font-size:12px;color:#888;margin-top:14px;line-height:1.5;">
       Al enviar recibes tu cupón con folio. Puedes pagar en línea o al recoger tu bici en la agencia.
     </p>
+
+    </div>
+    </div>
   </form>
   </div>
 </div>
@@ -330,6 +371,36 @@
   const formError = document.getElementById('formError');
   const requiredFields = ['fecha','hora','duracion','cantidad','nombre','email','firma'];
   let enviando = false;
+  let fotoIdDataUrl = null;
+
+  // Foto de ID: se comprime en el navegador (máx 1600px, JPEG 75%) antes
+  // de guardarla, para no mandar fotos de varios MB al servidor.
+  const fotoInput = document.getElementById('fotoId');
+  function comprimirFoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1600;
+        let { width, height } = img;
+        if (width > height && width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+        else if (height >= width && height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+  fotoInput.addEventListener('change', async () => {
+    const file = fotoInput.files[0];
+    fotoIdDataUrl = null;
+    if (file) { try { fotoIdDataUrl = await comprimirFoto(file); } catch (e) { fotoIdDataUrl = null; } }
+    validate();
+  });
 
   const modal = document.getElementById('bikeModal');
   function openBikeModal() {
@@ -352,8 +423,10 @@
     const calc = WM_BICIS.calcularTotal(d, n);
     if (calc) {
       totalVivo.style.display = 'block';
-      totalVivo.textContent = 'Total de la renta: ' + WM_BICIS.money(calc.total) +
-        ' · Garantía al recoger: ' + WM_BICIS.money(calc.depositoTotal) + ' en efectivo';
+      totalVivo.innerHTML =
+        '<div class="bike-summary-row main"><span>Total renta</span><span class="bike-summary-val">' + WM_BICIS.money(calc.total) + '</span></div>' +
+        '<div class="bike-summary-row"><span>Depósito en garantía</span><span class="bike-summary-val">' + WM_BICIS.money(calc.depositoTotal) + '</span></div>' +
+        '<p class="bike-summary-note">Retención en efectivo al recoger. Se libera al devolver la bici sin daños ni faltantes.</p>';
     } else {
       totalVivo.style.display = 'none';
     }
@@ -362,7 +435,7 @@
   function validate() {
     const terms = document.getElementById('terms').checked;
     const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
-    submitBtn.disabled = !(terms && allFilled) || enviando;
+    submitBtn.disabled = !(terms && allFilled && fotoIdDataUrl) || enviando;
     pintarTotal();
   }
 
@@ -378,6 +451,9 @@
     email_invalido: () => 'Revisa tu correo electrónico.',
     fecha_pasada: () => 'La fecha ya pasó — elige hoy o una fecha futura.',
     demasiadas_reservas: () => 'Demasiadas reservas seguidas. Espera un momento o escríbenos por WhatsApp.',
+    foto_requerida: () => 'Sube una foto de tu pasaporte o identificación.',
+    foto_invalida: () => 'No pudimos leer esa foto. Intenta con otra imagen (JPG o PNG).',
+    foto_muy_grande: () => 'Esa foto pesa demasiado. Intenta con otra o toma la foto de nuevo.',
     reservas_no_configuradas: () => 'La reserva en línea aún no está activa. Escríbenos por WhatsApp y te apartamos tu bici.'
   };
 
@@ -419,6 +495,7 @@
           telefono: document.getElementById('telefono').value.trim(),
           firma: document.getElementById('firma').value.trim(),
           aceptaTerminos: document.getElementById('terms').checked,
+          foto: fotoIdDataUrl,
           hp: document.getElementById('hp').value
         })
       });

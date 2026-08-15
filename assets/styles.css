@@ -359,6 +359,7 @@ nav.nav--solid {
   transform: translateY(0) scale(1); opacity: 1;
   transition: transform .32s cubic-bezier(0.32,0.72,0,1), opacity .28s cubic-bezier(0.32,0.72,0,1);
 }
+.qmodal-box--bike { max-width: 560px; }
 .qmodal-close {
   position: absolute; top: 14px; right: 14px;
   width: 36px; height: 36px; border-radius: 50%;
@@ -524,8 +525,34 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 
 /* ───── FORM (Bikes) ───── */
 .bike-form {
-  max-width: 720px; margin: 0 auto; background: white;
+  margin: 0 auto; background: white;
   border-radius: 28px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+/* 2 columnas: pasos a la izquierda, resumen+firma fijos a la derecha */
+.bike-cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: start; }
+.bike-right { position: sticky; top: 20px; }
+
+/* Tarjetas numeradas (1·2·3·4·5), estilo del mockup de contrato digital */
+.bike-section { background: var(--cream); border-radius: 18px; padding: 22px 22px 4px; margin-bottom: 18px; }
+.bike-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.bike-section-num {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--pink); color: #fff;
+  font-weight: bold; font-size: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.bike-section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); font-weight: bold; }
+.bike-icon-box { background: var(--green); border-radius: 16px; padding: 26px; display: flex; align-items: center; justify-content: center; }
+.bike-icon-box img { width: 88px; height: 88px; }
+
+/* Resumen (Total + Depósito), como la caja verde del mockup */
+.bike-summary { background: var(--green); border-radius: 16px; padding: 20px 22px; margin-bottom: 18px; }
+.bike-summary-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--cream); padding: 3px 0; }
+.bike-summary-row.main { font-weight: bold; font-size: 17px; }
+.bike-summary-val { font-weight: bold; }
+.bike-summary-note { font-size: 11px; color: var(--cream); opacity: .7; line-height: 1.5; margin-top: 10px; }
+/* Ensancha el modal solo para bikes en desktop; en mobile queda igual (560px, ver .qmodal-box) */
+@media (min-width: 900px) {
+  .qmodal-box--bike { max-width: 960px; }
 }
 .bike-form h2 { font-family: 'TravelSoul', serif; font-size: clamp(36px, 5vw, 56px); color: var(--green); line-height: 1; margin-bottom: 6px; }
 .bike-form .form-sub { color: #777; font-size: 14px; margin-bottom: 28px; line-height: 1.55; }
@@ -601,6 +628,8 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
   footer { padding: 48px 20px 24px; }
   .bike-form { padding: 28px 20px; border-radius: 22px; }
   .field-row { grid-template-columns: 1fr; }
+  .bike-cols { grid-template-columns: 1fr; gap: 0; }
+  .bike-right { position: static; }
   #bici-electrica .tibu-video-wrap,
   #e-bike .tibu-video-wrap { order: 0; }
 }

@@ -12,6 +12,8 @@ const { ventana, hoyCancun, RE_FECHA, RE_HORA } = require('../_lib/fechas.js');
 const { calcularTotal } = require('../_lib/catalogo-bicis.js');
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const RE_FOTO = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/;
+const FOTO_MAX_BYTES = 8 * 1024 * 1024; // ya viene comprimida por el navegador (~1600px, JPEG 75%)
 const HOLD_MIN = 30; // minutos de hold para pendiente_pago
 
 // Compara firma≈nombre ignorando acentos, mayúsculas y espacios extra.
@@ -76,11 +78,31 @@ module.exports = async (req, res) => {
   const v = ventana(duracionId, fecha, hora);
   if (!v) return res.status(400).json({ error: 'ventana_invalida' });
 
+  // Foto de identificación: obligatoria, ya viene comprimida (data URL) del navegador.
+  if (!b.foto) return res.status(400).json({ error: 'foto_requerida' });
+  const fotoMatch = RE_FOTO.exec(String(b.foto));
+  if (!fotoMatch) return res.status(400).json({ error: 'foto_invalida' });
+  const fotoBuffer = Buffer.from(fotoMatch[2], 'base64');
+  if (fotoBuffer.length === 0 || fotoBuffer.length > FOTO_MAX_BYTES) {
+    return res.status(400).json({ error: 'foto_muy_grande' });
+  }
+
   const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || null;
   const ua = String(req.headers['user-agent'] || '').slice(0, 300) || null;
   const s = supa();
 
   try {
+    // Se sube una sola vez con una ruta propia (no atada al token de la
+    // reserva) para no repetir la subida si el RPC reintenta por choque de token.
+    const fotoPath = generarToken() + '.jpg';
+    const { error: fotoError } = await s.storage
+      .from('documentos-bicis')
+      .upload(fotoPath, fotoBuffer, { contentType: 'image/jpeg' });
+    if (fotoError) {
+      console.error('crear:foto:', fotoError.message);
+      return res.status(500).json({ error: 'error_interno' });
+    }
+
     // Anti-abuso: cada inserción quema un folio público. Máx 5/hora por IP.
     if (ip) {
       const desde = new Date(Date.now() - 3600 * 1000).toISOString();
@@ -113,6 +135,7 @@ module.exports = async (req, res) => {
         firma_nombre: firma,
         firma_ip: ip,
         firma_ua: ua,
+        foto_id_path: fotoPath,
         expira_at: new Date(Date.now() + HOLD_MIN * 60 * 1000).toISOString()
       };
 

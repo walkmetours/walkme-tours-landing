@@ -769,9 +769,33 @@
     c.appendChild(dato('Nacionalidad', r.nacionalidad));
     c.appendChild(dato('Documento', r.documento));
     c.appendChild(dato('Hotel', r.hotel));
+    if (r.foto_id_path) {
+      var docRow = el('div', 'dato');
+      docRow.appendChild(el('span', 'dato-lab', 'Identificación'));
+      var docVal = el('span', 'dato-val');
+      var verBtn = el('button', 'btn-sutil', 'Ver documento →');
+      verBtn.type = 'button';
+      verBtn.addEventListener('click', function () { verDocumento(r); });
+      docVal.appendChild(verBtn);
+      docRow.appendChild(docVal);
+      c.appendChild(docRow);
+    }
     if (r.notas_internas) c.appendChild(dato('Notas', r.notas_internas));
     s.appendChild(c);
     return s;
+  }
+
+  // Signed URL temporal (el bucket es privado): se pide fresco cada vez,
+  // nunca se guarda una URL fija.
+  async function verDocumento(r) {
+    try {
+      var resp = await AUTH.apiFetch('/api/crm/foto?token=' + encodeURIComponent(r.token));
+      var data = await resp.json();
+      if (!resp.ok || !data.url) throw new Error(data.error || 'error');
+      window.open(data.url, '_blank', 'noopener');
+    } catch (e) {
+      toast('No se pudo abrir el documento.', 'error');
+    }
   }
 
   var CAMPOS_EDIT = [

@@ -86,6 +86,12 @@ create table if not exists public.reservas_bicis (
   firma_ua      text,
   terminos_version text not null default 'bici-v1-2026-08',
 
+  -- Foto del pasaporte/ID, subida por el cliente. Ruta dentro del bucket
+  -- PRIVADO 'documentos-bicis' (crearlo a mano en Supabase → Storage →
+  -- New bucket → Public: NO). Para verla hay que generar un signed URL,
+  -- nunca una URL pública fija (es un documento de identidad).
+  foto_id_path  text,
+
   -- Pago
   metodo_pago   text check (metodo_pago in ('mercadopago','stripe','efectivo')),
   pago_ref      text,
@@ -106,6 +112,10 @@ create table if not exists public.reservas_bicis (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- Por si la tabla ya existía sin esta columna (create table if not exists
+-- de arriba no la habría agregado): idempotente, seguro correr siempre.
+alter table public.reservas_bicis add column if not exists foto_id_path text;
 
 create index if not exists reservas_bicis_token_idx   on public.reservas_bicis (token);
 create index if not exists reservas_bicis_folio_idx   on public.reservas_bicis (folio);
@@ -188,7 +198,7 @@ begin
     fecha_reserva, hora_inicio, inicio, fin, cantidad_bicis,
     precio_unitario, total, deposito_unitario,
     nombre_completo, email, telefono,
-    firma_nombre, firma_ip, firma_ua, terminos_version,
+    firma_nombre, firma_ip, firma_ua, terminos_version, foto_id_path,
     estado, expira_at
   ) values (
     v_token,
@@ -212,6 +222,7 @@ begin
     nullif(payload->>'firma_ip', ''),
     nullif(payload->>'firma_ua', ''),
     coalesce(payload->>'terminos_version', 'bici-v1-2026-08'),
+    nullif(payload->>'foto_id_path', ''),
     coalesce(payload->>'estado', 'pendiente_pago'),
     (payload->>'expira_at')::timestamptz
   )
@@ -222,13 +233,24 @@ end;
 $$;
 
 -- La function corre como owner (security definer); revocamos ejecución a
--- anon/authenticated por si acaso — solo service_role la llama.
+-- anon/authenticated por si acaso — solo service_role la llama. El revoke
+-- de PUBLIC también le quita el permiso a service_role (solo tenía acceso
+-- vía PUBLIC), así que hay que devolvérselo explícito.
 revoke execute on function public.crear_reserva_bici(jsonb) from public, anon, authenticated;
+grant  execute on function public.crear_reserva_bici(jsonb) to service_role;
 
 -- ============================================================
 -- 6 · RLS: activo, SIN policies — nadie entra con la anon key.
 --     Las functions de Vercel usan service_role, que ignora RLS.
+--     Ojo: RLS y GRANT son cosas distintas — bypasear RLS no basta,
+--     service_role también necesita el GRANT de tabla de abajo (sobre
+--     todo si en el dashboard de Supabase quedó apagado "Automatically
+--     expose new tables").
 -- ============================================================
 alter table public.reservas_bicis enable row level security;
 alter table public.bikes_flota    enable row level security;
 alter table public.crm_eventos    enable row level security;
+
+grant select, insert, update, delete on public.reservas_bicis to service_role;
+grant select, insert, update, delete on public.bikes_flota    to service_role;
+grant select, insert            on public.crm_eventos    to service_role;
