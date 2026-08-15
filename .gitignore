@@ -32,5 +32,8 @@ uploads/*
 !uploads/GT Eesti Pro Display Bold - OTF-ef657e90.otf
 !uploads/Travel Soulmates Weight - OTF-4b584a0a.otf
 
+# Páginas viejas fuera de servicio, guardadas por si acaso. No se publican.
+_archivo-paginas-viejas/
+
 # Sistema
 .DS_Store
