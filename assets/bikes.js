@@ -25,15 +25,12 @@
   var WA = '525639748122';
   var MAX_BICIS = 10;
 
-  // Montos que sólo viven en el texto de las condiciones (del diseño).
-  var REPOSICION = 6500, CARGO_RETRASO = 200;
-  var ACC = {
-    es: 'casco $350 · candado $400 · cargador $1,500 · canasta $500 · llanta ponchada $350',
-    en: 'helmet $350 · lock $400 · charger $1,500 · basket $500 · flat tire $350',
-    it: 'casco $350 · lucchetto $400 · caricabatterie $1,500 · cestino $500 · gomma bucata $350',
-    fr: 'casque $350 · antivol $400 · chargeur $1,500 · panier $500 · pneu crevé $350',
-    pt: 'capacete $350 · cadeado $400 · carregador $1,500 · cesta $500 · pneu furado $350'
-  };
+  // Montos desde el catálogo compartido (antes vivían hardcodeados aquí,
+  // desincronizados con los de bikes.html — bug corregido 17-ago-26).
+  var CARGOS = window.WM_BICIS.CATALOGO.CARGOS;
+  var REPOSICION = CARGOS.reposicion, CARGO_RETRASO = CARGOS.retrasoHora;
+  var ACC = {};
+  IDIOMAS.forEach(function (l) { ACC[l] = window.WM_BICIS.textoAccesorios(l); });
   function n(x) { return Number(x).toLocaleString('en-US'); }
 
   function conds(l) {

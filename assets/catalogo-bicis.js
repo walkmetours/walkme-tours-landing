@@ -19,7 +19,7 @@
   function idiomaCupon(lang) { return lang === 'es' ? 'es' : 'en'; }
 
   const CATALOGO = {
-    version: '2026-08',
+    version: '2026-08b',
     moneda: 'MXN',
     // Garantía en efectivo al recoger, POR BICI (decisión de María, 14-ago-26).
     DEPOSITO_UNITARIO: 3000,
@@ -37,7 +37,28 @@
         it: 'Settimana',       fr: 'Semaine',            pt: 'Semana' } },
       { id: 'mes',    precio: 2500, nombre: { es: 'Mes',            en: 'Month',
         it: 'Mese',            fr: 'Mois',               pt: 'Mês' } }
-    ]
+    ],
+    // Cargos por daño/extravío — FUENTE ÚNICA (confirmados con María, 17-ago-26).
+    // Antes vivían duplicados a mano en bikes.html/bikes-en.html Y en assets/bikes.js,
+    // desincronizados entre sí (bug real, corregido en este commit).
+    CARGOS: {
+      reposicion: 7500,
+      retrasoHora: 200,
+      accesorios: [
+        { id: 'casco',    precio: 350,  nombre: { es: 'casco',           en: 'helmet',
+          it: 'casco',            fr: 'casque',              pt: 'capacete' } },
+        { id: 'candado',  precio: 400,  nombre: { es: 'candado',         en: 'lock',
+          it: 'lucchetto',        fr: 'antivol',             pt: 'cadeado' } },
+        { id: 'cargador', precio: 1500, nombre: { es: 'cargador',        en: 'charger',
+          it: 'caricabatterie',   fr: 'chargeur',            pt: 'carregador' } },
+        { id: 'canasta',  precio: 500,  nombre: { es: 'canasta',         en: 'basket',
+          it: 'cestino',          fr: 'panier',              pt: 'cesta' } },
+        { id: 'llanta',   precio: 300,  nombre: { es: 'llanta ponchada', en: 'flat tire',
+          it: 'gomma bucata',     fr: 'pneu crevé',          pt: 'pneu furado' } },
+        { id: 'llaves',   precio: 300,  nombre: { es: 'llaves perdidas', en: 'lost keys',
+          it: 'chiavi perse',     fr: 'clés perdues',        pt: 'chaves perdidas' } }
+      ]
+    }
   };
 
   function duracion(id) {
@@ -69,6 +90,13 @@
     return '$' + Number(n).toLocaleString('en-US') + ' MXN';
   }
 
+  // Texto de accesorios en un idioma: "casco $350 · candado $400 · ...".
+  function textoAccesorios(lang) {
+    return CATALOGO.CARGOS.accesorios.map(function (a) {
+      return a.nombre[lang] + ' $' + a.precio.toLocaleString('en-US');
+    }).join(' · ');
+  }
+
   return {
     CATALOGO: CATALOGO,
     DEPOSITO_UNITARIO: CATALOGO.DEPOSITO_UNITARIO,
@@ -77,6 +105,7 @@
     duracion: duracion,
     calcularTotal: calcularTotal,
     folioLabel: folioLabel,
-    money: money
+    money: money,
+    textoAccesorios: textoAccesorios
   };
 });

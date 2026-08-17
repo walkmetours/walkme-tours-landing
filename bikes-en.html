@@ -228,8 +228,8 @@
       <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
         <li>Includes helmet, lock and charger. <strong>Does not include medical, accident, theft or damage insurance</strong> &mdash; the customer is responsible for any accident or damage to themselves, third parties or the equipment.</li>
         <li><strong>Deposit:</strong> valid passport (held during the rental) + $3,000 MXN cash deposit per bike, paid in advance along with the rental fee. Proof of your reservation (hotel, Airbnb or address) is also required.</li>
-        <li><strong>Damage or loss fees:</strong> Helmet $350 MXN &middot; Lock $400 MXN &middot; Charger $1,500 MXN &middot; Basket (if applicable) $500 MXN &middot; Flat tire $300 MXN &middot; Lost keys $300 MXN.</li>
-        <li>Late return: $200 MXN per hour. Theft or total loss of the bike: $7,500 MXN.</li>
+        <li><strong>Damage or loss fees:</strong> <span id="txtAccesorios"></span> (MXN).</li>
+        <li>Late return: <span id="txtRetraso"></span> MXN per hour. Theft or total loss of the bike: <span id="txtReposicion"></span> MXN.</li>
         <li>The bike and accessories must be returned in their original condition; the deposit is refunded in full if everything comes back in good condition.</li>
         <li>Your data is handled according to our <a href="privacy-notice-en.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Privacy Notice</a>.</li>
       </ul>
@@ -293,8 +293,13 @@
   <div class="f-bottom"><span>© 2026 WalkMe Travel · Playa del Carmen, Mexico</span><span>Bookings via WhatsApp</span></div>
 </footer>
 
-<script src="assets/catalogo-bicis.js?v=20260814"></script>
+<script src="assets/catalogo-bicis.js?v=20260817"></script>
 <script>
+  // Damage charges from the shared catalog (previously hand-written here).
+  document.getElementById('txtAccesorios').textContent = WM_BICIS.textoAccesorios('en');
+  document.getElementById('txtRetraso').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.retrasoHora.toLocaleString('en-US');
+  document.getElementById('txtReposicion').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.reposicion.toLocaleString('en-US');
+
   const form = document.getElementById('bikeForm');
   const submitBtn = document.getElementById('submitBtn');
   const totalVivo = document.getElementById('totalVivo');

@@ -235,8 +235,8 @@
       <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
         <li>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</li>
         <li><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $3,000 MXN en efectivo por bicicleta, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
-        <li><strong>Cargos por daño o extravío:</strong> Casco $350 MXN · Candado $400 MXN · Cargador $1,500 MXN · Canasta (si aplica) $500 MXN · Llanta ponchada $300 MXN · Llaves perdidas $300 MXN.</li>
-        <li>Retraso en la entrega: $200 MXN por hora. Robo o pérdida total de la bici: $7,500 MXN.</li>
+        <li><strong>Cargos por daño o extravío:</strong> <span id="txtAccesorios"></span> (MXN).</li>
+        <li>Retraso en la entrega: <span id="txtRetraso"></span> MXN por hora. Robo o pérdida total de la bici: <span id="txtReposicion"></span> MXN.</li>
         <li>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</li>
         <li>Tus datos se tratan conforme a nuestro <a href="aviso-privacidad.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Aviso de Privacidad</a>.</li>
       </ul>
@@ -322,8 +322,13 @@
   </div>
 </footer>
 
-<script src="assets/catalogo-bicis.js?v=20260814"></script>
+<script src="assets/catalogo-bicis.js?v=20260817"></script>
 <script>
+  // Cargos por daño desde el catálogo compartido (antes escritos a mano aquí).
+  document.getElementById('txtAccesorios').textContent = WM_BICIS.textoAccesorios('es');
+  document.getElementById('txtRetraso').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.retrasoHora.toLocaleString('en-US');
+  document.getElementById('txtReposicion').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.reposicion.toLocaleString('en-US');
+
   const form = document.getElementById('bikeForm');
   const submitBtn = document.getElementById('submitBtn');
   const totalVivo = document.getElementById('totalVivo');
