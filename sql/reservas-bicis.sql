@@ -289,3 +289,20 @@ alter table public.crm_eventos    enable row level security;
 grant select, insert, update, delete on public.reservas_bicis to service_role;
 grant select, insert, update, delete on public.bikes_flota    to service_role;
 grant select, insert            on public.crm_eventos    to service_role;
+
+-- ── Migración 17-ago-2026: consignación real (2 dueñas) ──
+-- `dueno` ya existía "lista para consignación futura" pero nunca se usó (v1
+-- no la tocaba). Confirmado con María: las 6 bicis de la flota se reparten
+-- entre ella (3) y Andreina (3) — no son bicis nuevas, es dueño real de las
+-- B-01..B-06 existentes. Se agrega correo para poder avisarles por email
+-- (feature "avisar a dueños" del CRM v2). El correo de Andreina queda NULL
+-- hasta que María lo confirme — no se inventa.
+alter table public.bikes_flota add column if not exists dueno_email text;
+
+-- Reparto real: B-01..B-03 = María, B-04..B-06 = Andreina. Solo corre si
+-- `dueno` sigue NULL (no pisa un reparto que María ya haya editado a mano
+-- en el CRM viejo).
+update public.bikes_flota set dueno = 'María',    dueno_email = 'boticaspa@gmail.com'
+  where id in ('B-01','B-02','B-03') and dueno is null;
+update public.bikes_flota set dueno = 'Andreina', dueno_email = null
+  where id in ('B-04','B-05','B-06') and dueno is null;
