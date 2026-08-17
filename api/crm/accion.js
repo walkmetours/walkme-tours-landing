@@ -7,7 +7,7 @@ const { verificarCRM } = require('../_lib/auth-crm.js');
 const { esTokenValido, generarToken } = require('../_lib/token.js');
 const { ventana } = require('../_lib/fechas.js');
 const { calcularTotal } = require('../_lib/catalogo-bicis.js');
-const { notificarReservaBici } = require('../_lib/notificar-bici.js');
+const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar-bici.js');
 
 // De qué estado a qué estados se puede pasar a mano desde el CRM.
 // (pagada vía webhook no pasa por aquí.)
@@ -21,11 +21,20 @@ const TRANSICIONES = {
   no_show:            []
 };
 
-// Campos que 'editar' puede tocar. folio/token/total jamás.
+// Campos que 'editar' puede tocar. folio/token jamás (identidad de la
+// reserva). deposito_total tampoco: es columna generada en Postgres
+// (deposito_unitario * cantidad_bicis), se edita vía deposito_unitario.
 const EDITABLES = [
   'nombre_completo', 'email', 'telefono', 'hotel', 'nacionalidad',
   'documento', 'notas_internas', 'fecha_reserva', 'hora_inicio'
 ];
+
+// Campos de dinero: María pidió poder corregirlos a mano desde el CRM
+// (decisión 17-ago-26, amplía el candado que antes lo prohibía). Se
+// auditan aparte con el valor ANTERIOR y el NUEVO — no solo el nombre del
+// campo — porque un error de tecleo en un monto es más caro que en un
+// nombre.
+const EDITABLES_DINERO = ['total', 'deposito_unitario', 'cargo_retraso', 'cargo_danos'];
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -167,10 +176,24 @@ module.exports = async (req, res) => {
         for (const k of EDITABLES) {
           if (k in campos) cambios[k] = campos[k] === '' ? null : campos[k];
         }
-        if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
         if (!cambios.nombre_completo && 'nombre_completo' in cambios) {
           return res.status(400).json({ error: 'nombre_requerido' });
         }
+
+        // Montos: número finito ≥ 0. Sin tope arriba — es una corrección
+        // manual, María sabe lo que está cobrando.
+        const cambiosDinero = {};
+        for (const k of EDITABLES_DINERO) {
+          if (!(k in campos)) continue;
+          const v = Number(campos[k]);
+          if (!Number.isFinite(v) || v < 0) {
+            return res.status(400).json({ error: 'monto_invalido', campo: k });
+          }
+          cambiosDinero[k] = v;
+        }
+        Object.assign(cambios, cambiosDinero);
+
+        if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
 
         // Cambiar fecha/hora recalcula la ventana (sin re-chequear
         // disponibilidad: la operadora sabe lo que hace — queda auditado).
@@ -184,9 +207,32 @@ module.exports = async (req, res) => {
           cambios.hora_inicio = nuevaHora;
         }
 
+        // deposito_total es columna generada (deposito_unitario × cantidad);
+        // si se corrige deposito_unitario o los cargos de una renta YA
+        // cerrada, el devuelto queda obsoleto — se recalcula igual que en
+        // 'cerrar', con el deposito_total NUEVO (Postgres ya lo recalculó
+        // para `r` no, pero sí lo hará al hacer update — por eso se calcula
+        // aquí a mano con el mismo deposito_unitario nuevo).
+        if (r.cerrada_at && ('deposito_unitario' in cambiosDinero ||
+            'cargo_retraso' in cambiosDinero || 'cargo_danos' in cambiosDinero)) {
+          const depUnit = cambiosDinero.deposito_unitario ?? r.deposito_unitario;
+          const cRetraso = cambiosDinero.cargo_retraso ?? r.cargo_retraso;
+          const cDanos = cambiosDinero.cargo_danos ?? r.cargo_danos;
+          cambios.deposito_devuelto = Math.max(0, depUnit * r.cantidad_bicis - cRetraso - cDanos);
+        }
+
         cambios.updated_at = new Date().toISOString();
         await s.from('reservas_bicis').update(cambios).eq('id', r.id);
-        await auditar(r.id, 'editar', { campos: Object.keys(cambios) });
+
+        // Auditoría: los campos normales solo registran el nombre; los
+        // montos registran antes→después, porque un typo en un monto sale
+        // caro y hay que poder revisarlo después.
+        const detalleDinero = {};
+        for (const k of Object.keys(cambiosDinero)) detalleDinero[k] = { antes: r[k], despues: cambiosDinero[k] };
+        await auditar(r.id, 'editar', {
+          campos: Object.keys(cambios).filter(k => !(k in cambiosDinero) && k !== 'updated_at'),
+          dinero: Object.keys(detalleDinero).length ? detalleDinero : undefined
+        });
         return res.status(200).json({ ok: true });
       }
 
@@ -219,6 +265,20 @@ module.exports = async (req, res) => {
           await s.from('bikes_flota').insert({ id, ...cambios });
         }
         await auditar(null, 'flota', { id, ...cambios });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Avisar a un dueño de flota en consignación (por correo) ----
+      case 'avisar_dueno': {
+        const dueno = String(b.dueno || '').trim();
+        if (!dueno) return res.status(400).json({ error: 'dueno_requerido' });
+        const { data: bicis } = await s.from('bikes_flota')
+          .select('id, estado, bateria, dueno_email').eq('dueno', dueno);
+        if (!bicis || !bicis.length) return res.status(404).json({ error: 'dueno_sin_bicis' });
+        const correo = bicis[0].dueno_email;
+        const r = await notificarDuenoFlota(dueno, correo, bicis);
+        if (!r.enviado) return res.status(409).json({ error: r.motivo });
+        await auditar(null, 'avisar_dueno', { dueno, bicis: bicis.map(x => x.id) });
         return res.status(200).json({ ok: true });
       }
 

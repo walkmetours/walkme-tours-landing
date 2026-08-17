@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /crm.html
+Disallow: /crm-v2.html
 Disallow: /cupon.html
 Disallow: /cupon-en.html
 Disallow: /api/

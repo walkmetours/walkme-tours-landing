@@ -48,6 +48,23 @@
       ]
     },
     {
+      "source": "/crm-v2.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+        }
+      ]
+    },
+    {
       "source": "/(cupon|cupon-en).html",
       "headers": [
         {

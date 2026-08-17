@@ -173,4 +173,30 @@ async function notificarReservaBici(r, evento) {
   }
 }
 
-module.exports = { notificarReservaBici };
+// Avisar a un dueño de flota en consignación el estado de SUS bicis
+// (acción manual desde el CRM — botón "avisar a dueños"). No inventa
+// cálculos de ganancia/reparto: solo informa id + estado de cada unidad,
+// que es el dato real que existe en bikes_flota hoy.
+const ETIQUETA_ESTADO_BICI = {
+  disponible: 'Disponible', rentada: 'Rentada',
+  cargando: 'Cargando', mantenimiento: 'Mantenimiento'
+};
+
+async function notificarDuenoFlota(nombreDueno, correoDueno, bicis) {
+  if (!correoDueno) return { enviado: false, motivo: 'sin_correo' };
+  if (!process.env.RESEND_API_KEY) return { enviado: false, motivo: 'sin_resend_configurado' };
+  const filas = bicis.map(b =>
+    filaHtml(b.id, `${ETIQUETA_ESTADO_BICI[b.estado] || b.estado} · batería ${b.bateria}%`)
+  ).join('');
+  const html = `
+  <div style="font-family:Helvetica,Arial,sans-serif;color:#0D2E1A;">
+    <p>Hola ${nombreDueno},</p>
+    <p>Este es el estado actual de tus bicis en WalkMe:</p>
+    <table style="border-collapse:collapse;font-size:14px;">${filas}</table>
+    <p style="color:#6b6f66;font-size:13px;">${DIRECCION}<br>WhatsApp ${WHATSAPP_PUBLICO}</p>
+  </div>`;
+  await emailResend([correoDueno], `Estado de tus bicis WalkMe — ${bicis.length} unidad(es)`, html);
+  return { enviado: true };
+}
+
+module.exports = { notificarReservaBici, notificarDuenoFlota };
