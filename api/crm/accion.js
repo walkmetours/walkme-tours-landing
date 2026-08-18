@@ -2,12 +2,19 @@
 // (límite de functions de Vercel). switch sobre { accion, ... }.
 // La matriz de transiciones vive AQUÍ: el navegador nunca manda un estado
 // que el servidor acepte a ciegas. Cada acción deja rastro en crm_eventos.
+const Stripe = require('stripe');
 const { supa, leerJson } = require('../_lib/supabase.js');
 const { verificarCRM } = require('../_lib/auth-crm.js');
 const { esTokenValido, generarToken } = require('../_lib/token.js');
 const { ventana } = require('../_lib/fechas.js');
 const { calcularTotal } = require('../_lib/catalogo-bicis.js');
-const { notificarReservaBici } = require('../_lib/notificar-bici.js');
+const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar-bici.js');
+
+// Depósito de garantía vía Stripe (hold, capture_method: manual) — desde
+// qué deposito_estado se puede volver a disparar 'autorizar_deposito', y
+// desde cuáles se puede 'capturar'/'liberar'. Ver sql/reservas-bicis-deposito.sql.
+const DEPOSITO_AUTORIZABLE = ['none', 'liberado', 'expirado', 'requiere_atencion'];
+const DEPOSITO_RESOLVIBLE = ['autorizado', 'requiere_atencion'];
 
 // De qué estado a qué estados se puede pasar a mano desde el CRM.
 // (pagada vía webhook no pasa por aquí.)
@@ -21,11 +28,20 @@ const TRANSICIONES = {
   no_show:            []
 };
 
-// Campos que 'editar' puede tocar. folio/token/total jamás.
+// Campos que 'editar' puede tocar. folio/token jamás (identidad de la
+// reserva). deposito_total tampoco: es columna generada en Postgres
+// (deposito_unitario * cantidad_bicis), se edita vía deposito_unitario.
 const EDITABLES = [
   'nombre_completo', 'email', 'telefono', 'hotel', 'nacionalidad',
   'documento', 'notas_internas', 'fecha_reserva', 'hora_inicio'
 ];
+
+// Campos de dinero: María pidió poder corregirlos a mano desde el CRM
+// (decisión 17-ago-26, amplía el candado que antes lo prohibía). Se
+// auditan aparte con el valor ANTERIOR y el NUEVO — no solo el nombre del
+// campo — porque un error de tecleo en un monto es más caro que en un
+// nombre.
+const EDITABLES_DINERO = ['total', 'deposito_unitario', 'cargo_retraso', 'cargo_danos'];
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -86,6 +102,21 @@ module.exports = async (req, res) => {
         if ((destino === 'cancelada' || destino === 'no_show') && r.unidades.length) {
           await s.from('bikes_flota').update({ estado: 'disponible' })
             .in('id', r.unidades).eq('estado', 'rentada');
+        }
+        // Si se cancela con un hold de depósito activo, se libera solo
+        // (best-effort: si Stripe falla aquí no se bloquea la cancelación,
+        // el hold expira solo a los 7 días y queda auditado el intento).
+        if (destino === 'cancelada' && r.deposito_estado === 'autorizado' && r.deposito_pi_id
+            && process.env.STRIPE_SECRET_KEY) {
+          try {
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'abandoned' });
+            await s.from('reservas_bicis').update({
+              deposito_estado: 'liberado', deposito_liberado_at: new Date().toISOString()
+            }).eq('id', r.id);
+          } catch (e) {
+            console.error('estado: liberar deposito al cancelar:', e.message);
+          }
         }
 
         await auditar(r.id, 'estado', { desde: r.estado, hacia: destino, nota: b.nota || null });
@@ -158,6 +189,127 @@ module.exports = async (req, res) => {
         return res.status(200).json({ ok: true, deposito_devuelto: devuelto });
       }
 
+      // ---- Depósito de garantía: autorizar el hold (Stripe Checkout,
+      //      capture_method: manual). El staff la dispara al entregar la
+      //      bici; el cliente teclea su tarjeta en la página de Stripe. ----
+      case 'autorizar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!['pagada', 'en_curso'].includes(r.estado)) {
+          return res.status(409).json({ error: 'estado_invalido' });
+        }
+
+        // Candado atómico anti-doble-clic: solo avanza si el depósito
+        // sigue en un estado "libre para empezar". Cero filas = ya hay
+        // uno en curso, no se llama a Stripe dos veces.
+        const { data: claimada } = await s.from('reservas_bicis')
+          .update({ deposito_estado: 'pendiente', updated_at: new Date().toISOString() })
+          .eq('id', r.id).in('deposito_estado', DEPOSITO_AUTORIZABLE)
+          .select('*').single();
+        if (!claimada) return res.status(409).json({ error: 'deposito_ya_activo' });
+
+        const site = process.env.SITE_URL || 'https://www.walkmetours.com';
+        const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            customer_creation: 'always',
+            client_reference_id: r.token,
+            customer_email: r.email,
+            payment_intent_data: {
+              capture_method: 'manual',
+              setup_future_usage: 'off_session',
+              metadata: { tipo: 'deposito_bici', reserva_id: r.id, token: r.token, folio: String(r.folio) }
+            },
+            metadata: { tipo: 'deposito_bici', reserva_id: r.id, token: r.token, folio: String(r.folio) },
+            line_items: [{
+              quantity: 1,
+              price_data: {
+                currency: 'mxn',
+                unit_amount: Math.round(Number(r.deposito_total) * 100),
+                product_data: { name: `Depósito de garantía · Folio WB-${r.folio}` }
+              }
+            }],
+            success_url: cuponBase + '&deposito=1',
+            cancel_url: cuponBase + '&deposito=cancelado'
+          }, { idempotencyKey: `deposito-crear-${r.token}` });
+
+          await s.from('reservas_bicis')
+            .update({ deposito_checkout_session_id: session.id, updated_at: new Date().toISOString() })
+            .eq('id', r.id);
+          await auditar(r.id, 'autorizar_deposito', { checkout_session_id: session.id, monto: r.deposito_total });
+          return res.status(200).json({ ok: true, url: session.url });
+        } catch (e) {
+          // Stripe falló: no dejar la reserva atorada en 'pendiente' —
+          // regresarla al estado que tenía antes de reclamarla.
+          console.error('autorizar_deposito:', e.message);
+          await s.from('reservas_bicis')
+            .update({ deposito_estado: r.deposito_estado, updated_at: new Date().toISOString() })
+            .eq('id', r.id);
+          return res.status(502).json({ error: 'stripe_error' });
+        }
+      }
+
+      // ---- Depósito: capturar (total o parcial — daño/atraso) ----
+      case 'capturar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
+          return res.status(409).json({ error: 'deposito_estado_invalido' });
+        }
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const opts = {};
+          if (b.monto != null) {
+            const monto = Math.max(0, Number(b.monto) || 0);
+            opts.amount_to_capture = Math.round(monto * 100);
+          }
+          const pi = await stripe.paymentIntents.capture(r.deposito_pi_id, opts);
+          const capturado = (pi.amount_received || 0) / 100;
+          await s.from('reservas_bicis').update({
+            deposito_estado: 'capturado',
+            deposito_capturado: capturado,
+            deposito_capturado_at: new Date().toISOString(),
+            deposito_ultimo_error: null,
+            updated_at: new Date().toISOString()
+          }).eq('id', r.id);
+          await auditar(r.id, 'capturar_deposito', { monto: capturado, pi: r.deposito_pi_id });
+          return res.status(200).json({ ok: true, capturado });
+        } catch (e) {
+          console.error('capturar_deposito:', e.message);
+          return res.status(409).json({ error: 'stripe_captura_fallo' });
+        }
+      }
+
+      // ---- Depósito: liberar sin cobrar (bici regresó bien) ----
+      case 'liberar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
+          return res.status(409).json({ error: 'deposito_estado_invalido' });
+        }
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        try {
+          await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'requested_by_customer' });
+        } catch (e) {
+          // Puede ya estar cancelado/capturado del lado de Stripe (replay,
+          // expiración natural) — se sigue liberando en la DB igual.
+          console.error('liberar_deposito: stripe cancel:', e.message);
+        }
+        await s.from('reservas_bicis').update({
+          deposito_estado: 'liberado',
+          deposito_liberado_at: new Date().toISOString(),
+          deposito_ultimo_error: null,
+          updated_at: new Date().toISOString()
+        }).eq('id', r.id);
+        await auditar(r.id, 'liberar_deposito', { pi: r.deposito_pi_id });
+        return res.status(200).json({ ok: true });
+      }
+
       // ---- Editar campos (whitelist) ----
       case 'editar': {
         const r = await cargarReserva(b.token);
@@ -167,10 +319,24 @@ module.exports = async (req, res) => {
         for (const k of EDITABLES) {
           if (k in campos) cambios[k] = campos[k] === '' ? null : campos[k];
         }
-        if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
         if (!cambios.nombre_completo && 'nombre_completo' in cambios) {
           return res.status(400).json({ error: 'nombre_requerido' });
         }
+
+        // Montos: número finito ≥ 0. Sin tope arriba — es una corrección
+        // manual, María sabe lo que está cobrando.
+        const cambiosDinero = {};
+        for (const k of EDITABLES_DINERO) {
+          if (!(k in campos)) continue;
+          const v = Number(campos[k]);
+          if (!Number.isFinite(v) || v < 0) {
+            return res.status(400).json({ error: 'monto_invalido', campo: k });
+          }
+          cambiosDinero[k] = v;
+        }
+        Object.assign(cambios, cambiosDinero);
+
+        if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
 
         // Cambiar fecha/hora recalcula la ventana (sin re-chequear
         // disponibilidad: la operadora sabe lo que hace — queda auditado).
@@ -184,9 +350,32 @@ module.exports = async (req, res) => {
           cambios.hora_inicio = nuevaHora;
         }
 
+        // deposito_total es columna generada (deposito_unitario × cantidad);
+        // si se corrige deposito_unitario o los cargos de una renta YA
+        // cerrada, el devuelto queda obsoleto — se recalcula igual que en
+        // 'cerrar', con el deposito_total NUEVO (Postgres ya lo recalculó
+        // para `r` no, pero sí lo hará al hacer update — por eso se calcula
+        // aquí a mano con el mismo deposito_unitario nuevo).
+        if (r.cerrada_at && ('deposito_unitario' in cambiosDinero ||
+            'cargo_retraso' in cambiosDinero || 'cargo_danos' in cambiosDinero)) {
+          const depUnit = cambiosDinero.deposito_unitario ?? r.deposito_unitario;
+          const cRetraso = cambiosDinero.cargo_retraso ?? r.cargo_retraso;
+          const cDanos = cambiosDinero.cargo_danos ?? r.cargo_danos;
+          cambios.deposito_devuelto = Math.max(0, depUnit * r.cantidad_bicis - cRetraso - cDanos);
+        }
+
         cambios.updated_at = new Date().toISOString();
         await s.from('reservas_bicis').update(cambios).eq('id', r.id);
-        await auditar(r.id, 'editar', { campos: Object.keys(cambios) });
+
+        // Auditoría: los campos normales solo registran el nombre; los
+        // montos registran antes→después, porque un typo en un monto sale
+        // caro y hay que poder revisarlo después.
+        const detalleDinero = {};
+        for (const k of Object.keys(cambiosDinero)) detalleDinero[k] = { antes: r[k], despues: cambiosDinero[k] };
+        await auditar(r.id, 'editar', {
+          campos: Object.keys(cambios).filter(k => !(k in cambiosDinero) && k !== 'updated_at'),
+          dinero: Object.keys(detalleDinero).length ? detalleDinero : undefined
+        });
         return res.status(200).json({ ok: true });
       }
 
@@ -219,6 +408,20 @@ module.exports = async (req, res) => {
           await s.from('bikes_flota').insert({ id, ...cambios });
         }
         await auditar(null, 'flota', { id, ...cambios });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Avisar a un dueño de flota en consignación (por correo) ----
+      case 'avisar_dueno': {
+        const dueno = String(b.dueno || '').trim();
+        if (!dueno) return res.status(400).json({ error: 'dueno_requerido' });
+        const { data: bicis } = await s.from('bikes_flota')
+          .select('id, estado, bateria, dueno_email').eq('dueno', dueno);
+        if (!bicis || !bicis.length) return res.status(404).json({ error: 'dueno_sin_bicis' });
+        const correo = bicis[0].dueno_email;
+        const r = await notificarDuenoFlota(dueno, correo, bicis);
+        if (!r.enviado) return res.status(409).json({ error: r.motivo });
+        await auditar(null, 'avisar_dueno', { dueno, bicis: bicis.map(x => x.id) });
         return res.status(200).json({ ok: true });
       }
 

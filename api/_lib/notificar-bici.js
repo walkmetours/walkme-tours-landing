@@ -173,4 +173,65 @@ async function notificarReservaBici(r, evento) {
   }
 }
 
-module.exports = { notificarReservaBici };
+// Avisar a un dueño de flota en consignación el estado de SUS bicis
+// (acción manual desde el CRM — botón "avisar a dueños"). No inventa
+// cálculos de ganancia/reparto: solo informa id + estado de cada unidad,
+// que es el dato real que existe en bikes_flota hoy.
+const ETIQUETA_ESTADO_BICI = {
+  disponible: 'Disponible', rentada: 'Rentada',
+  cargando: 'Cargando', mantenimiento: 'Mantenimiento'
+};
+
+async function notificarDuenoFlota(nombreDueno, correoDueno, bicis) {
+  if (!correoDueno) return { enviado: false, motivo: 'sin_correo' };
+  if (!process.env.RESEND_API_KEY) return { enviado: false, motivo: 'sin_resend_configurado' };
+  const filas = bicis.map(b =>
+    filaHtml(b.id, `${ETIQUETA_ESTADO_BICI[b.estado] || b.estado} · batería ${b.bateria}%`)
+  ).join('');
+  const html = `
+  <div style="font-family:Helvetica,Arial,sans-serif;color:#0D2E1A;">
+    <p>Hola ${nombreDueno},</p>
+    <p>Este es el estado actual de tus bicis en WalkMe:</p>
+    <table style="border-collapse:collapse;font-size:14px;">${filas}</table>
+    <p style="color:#6b6f66;font-size:13px;">${DIRECCION}<br>WhatsApp ${WHATSAPP_PUBLICO}</p>
+  </div>`;
+  await emailResend([correoDueno], `Estado de tus bicis WalkMe — ${bicis.length} unidad(es)`, html);
+  return { enviado: true };
+}
+
+// Depósito de garantía (hold de Stripe) que necesita que un humano lo
+// revise: la tarjeta fue rechazada, pidió 3DS y no se pudo confirmar sin
+// que el cliente esté presente, o el hold expiró sin que nadie lo cerrara.
+// Best-effort igual que el resto del archivo — nunca lanza.
+async function notificarDepositoAtencion(r, error) {
+  const mensajeError = (error && error.message) || String(error || 'motivo desconocido');
+  const asunto = `Depósito WB-${r.folio} requiere atención`;
+  const html = `
+  <div style="font-family:Helvetica,Arial,sans-serif;color:#0D2E1A;">
+    <p><strong>El depósito de la renta WB-${r.folio} necesita que lo revises a mano.</strong></p>
+    <p>Motivo: ${mensajeError}</p>
+    ${resumenHtml(r, 'es')}
+    <p>Cliente: ${r.nombre_completo} · ${r.telefono || '-'} · ${r.email || '-'}</p>
+    <p>Revísalo en el CRM (pantalla Bikes → esta reserva → Capturar/Liberar depósito).</p>
+  </div>`;
+  const dest = process.env.AGENCIA_EMAIL;
+  if (dest) {
+    await emailResend([dest], asunto, html).catch(e => console.error('notificar-bici: depositoAtencion email:', e.message));
+  }
+  const token = process.env.WA_TOKEN;
+  const phoneId = process.env.WA_PHONE_ID;
+  const destino = process.env.AGENCIA_WA;
+  if (token && phoneId && destino) {
+    await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', to: destino, type: 'text',
+        text: { body: `⚠ Depósito WB-${r.folio} requiere atención: ${mensajeError}` }
+      })
+    }).then(resp => { if (!resp.ok) return resp.text().then(t => console.error('notificar-bici: depositoAtencion WA:', resp.status, t)); })
+      .catch(e => console.error('notificar-bici: depositoAtencion WA:', e.message));
+  }
+}
+
+module.exports = { notificarReservaBici, notificarDuenoFlota, notificarDepositoAtencion };
