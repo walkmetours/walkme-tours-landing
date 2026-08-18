@@ -2,12 +2,19 @@
 // (límite de functions de Vercel). switch sobre { accion, ... }.
 // La matriz de transiciones vive AQUÍ: el navegador nunca manda un estado
 // que el servidor acepte a ciegas. Cada acción deja rastro en crm_eventos.
+const Stripe = require('stripe');
 const { supa, leerJson } = require('../_lib/supabase.js');
 const { verificarCRM } = require('../_lib/auth-crm.js');
 const { esTokenValido, generarToken } = require('../_lib/token.js');
 const { ventana } = require('../_lib/fechas.js');
 const { calcularTotal } = require('../_lib/catalogo-bicis.js');
 const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar-bici.js');
+
+// Depósito de garantía vía Stripe (hold, capture_method: manual) — desde
+// qué deposito_estado se puede volver a disparar 'autorizar_deposito', y
+// desde cuáles se puede 'capturar'/'liberar'. Ver sql/reservas-bicis-deposito.sql.
+const DEPOSITO_AUTORIZABLE = ['none', 'liberado', 'expirado', 'requiere_atencion'];
+const DEPOSITO_RESOLVIBLE = ['autorizado', 'requiere_atencion'];
 
 // De qué estado a qué estados se puede pasar a mano desde el CRM.
 // (pagada vía webhook no pasa por aquí.)
@@ -96,6 +103,21 @@ module.exports = async (req, res) => {
           await s.from('bikes_flota').update({ estado: 'disponible' })
             .in('id', r.unidades).eq('estado', 'rentada');
         }
+        // Si se cancela con un hold de depósito activo, se libera solo
+        // (best-effort: si Stripe falla aquí no se bloquea la cancelación,
+        // el hold expira solo a los 7 días y queda auditado el intento).
+        if (destino === 'cancelada' && r.deposito_estado === 'autorizado' && r.deposito_pi_id
+            && process.env.STRIPE_SECRET_KEY) {
+          try {
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'abandoned' });
+            await s.from('reservas_bicis').update({
+              deposito_estado: 'liberado', deposito_liberado_at: new Date().toISOString()
+            }).eq('id', r.id);
+          } catch (e) {
+            console.error('estado: liberar deposito al cancelar:', e.message);
+          }
+        }
 
         await auditar(r.id, 'estado', { desde: r.estado, hacia: destino, nota: b.nota || null });
         return res.status(200).json({ ok: true, estado: destino });
@@ -165,6 +187,127 @@ module.exports = async (req, res) => {
           deposito_devuelto: devuelto, nota: b.nota || null
         });
         return res.status(200).json({ ok: true, deposito_devuelto: devuelto });
+      }
+
+      // ---- Depósito de garantía: autorizar el hold (Stripe Checkout,
+      //      capture_method: manual). El staff la dispara al entregar la
+      //      bici; el cliente teclea su tarjeta en la página de Stripe. ----
+      case 'autorizar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!['pagada', 'en_curso'].includes(r.estado)) {
+          return res.status(409).json({ error: 'estado_invalido' });
+        }
+
+        // Candado atómico anti-doble-clic: solo avanza si el depósito
+        // sigue en un estado "libre para empezar". Cero filas = ya hay
+        // uno en curso, no se llama a Stripe dos veces.
+        const { data: claimada } = await s.from('reservas_bicis')
+          .update({ deposito_estado: 'pendiente', updated_at: new Date().toISOString() })
+          .eq('id', r.id).in('deposito_estado', DEPOSITO_AUTORIZABLE)
+          .select('*').single();
+        if (!claimada) return res.status(409).json({ error: 'deposito_ya_activo' });
+
+        const site = process.env.SITE_URL || 'https://www.walkmetours.com';
+        const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            customer_creation: 'always',
+            client_reference_id: r.token,
+            customer_email: r.email,
+            payment_intent_data: {
+              capture_method: 'manual',
+              setup_future_usage: 'off_session',
+              metadata: { tipo: 'deposito_bici', reserva_id: r.id, token: r.token, folio: String(r.folio) }
+            },
+            metadata: { tipo: 'deposito_bici', reserva_id: r.id, token: r.token, folio: String(r.folio) },
+            line_items: [{
+              quantity: 1,
+              price_data: {
+                currency: 'mxn',
+                unit_amount: Math.round(Number(r.deposito_total) * 100),
+                product_data: { name: `Depósito de garantía · Folio WB-${r.folio}` }
+              }
+            }],
+            success_url: cuponBase + '&deposito=1',
+            cancel_url: cuponBase + '&deposito=cancelado'
+          }, { idempotencyKey: `deposito-crear-${r.token}` });
+
+          await s.from('reservas_bicis')
+            .update({ deposito_checkout_session_id: session.id, updated_at: new Date().toISOString() })
+            .eq('id', r.id);
+          await auditar(r.id, 'autorizar_deposito', { checkout_session_id: session.id, monto: r.deposito_total });
+          return res.status(200).json({ ok: true, url: session.url });
+        } catch (e) {
+          // Stripe falló: no dejar la reserva atorada en 'pendiente' —
+          // regresarla al estado que tenía antes de reclamarla.
+          console.error('autorizar_deposito:', e.message);
+          await s.from('reservas_bicis')
+            .update({ deposito_estado: r.deposito_estado, updated_at: new Date().toISOString() })
+            .eq('id', r.id);
+          return res.status(502).json({ error: 'stripe_error' });
+        }
+      }
+
+      // ---- Depósito: capturar (total o parcial — daño/atraso) ----
+      case 'capturar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
+          return res.status(409).json({ error: 'deposito_estado_invalido' });
+        }
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const opts = {};
+          if (b.monto != null) {
+            const monto = Math.max(0, Number(b.monto) || 0);
+            opts.amount_to_capture = Math.round(monto * 100);
+          }
+          const pi = await stripe.paymentIntents.capture(r.deposito_pi_id, opts);
+          const capturado = (pi.amount_received || 0) / 100;
+          await s.from('reservas_bicis').update({
+            deposito_estado: 'capturado',
+            deposito_capturado: capturado,
+            deposito_capturado_at: new Date().toISOString(),
+            deposito_ultimo_error: null,
+            updated_at: new Date().toISOString()
+          }).eq('id', r.id);
+          await auditar(r.id, 'capturar_deposito', { monto: capturado, pi: r.deposito_pi_id });
+          return res.status(200).json({ ok: true, capturado });
+        } catch (e) {
+          console.error('capturar_deposito:', e.message);
+          return res.status(409).json({ error: 'stripe_captura_fallo' });
+        }
+      }
+
+      // ---- Depósito: liberar sin cobrar (bici regresó bien) ----
+      case 'liberar_deposito': {
+        if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
+          return res.status(409).json({ error: 'deposito_estado_invalido' });
+        }
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        try {
+          await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'requested_by_customer' });
+        } catch (e) {
+          // Puede ya estar cancelado/capturado del lado de Stripe (replay,
+          // expiración natural) — se sigue liberando en la DB igual.
+          console.error('liberar_deposito: stripe cancel:', e.message);
+        }
+        await s.from('reservas_bicis').update({
+          deposito_estado: 'liberado',
+          deposito_liberado_at: new Date().toISOString(),
+          deposito_ultimo_error: null,
+          updated_at: new Date().toISOString()
+        }).eq('id', r.id);
+        await auditar(r.id, 'liberar_deposito', { pi: r.deposito_pi_id });
+        return res.status(200).json({ ok: true });
       }
 
       // ---- Editar campos (whitelist) ----

@@ -376,6 +376,12 @@ textarea.campo-in { resize: vertical; min-height: 62px; font-family: var(--fuent
 .estado.e-rentada { background: var(--aviso-bg); color: var(--aviso-fg); }
 .estado.e-cargando { background: var(--azul-bg); color: var(--azul-fg); }
 .estado.e-mantenimiento { background: var(--alerta-bg); color: var(--alerta-fg); }
+.estado.e-deposito_pendiente { background: var(--azul-bg); color: var(--azul-fg); }
+.estado.e-deposito_autorizado { background: var(--ok-bg); color: var(--ok-fg); }
+.estado.e-deposito_capturado { background: var(--linea-2); color: var(--tenue); }
+.estado.e-deposito_liberado { background: var(--linea-2); color: var(--tenue); }
+.estado.e-deposito_expirado { background: var(--alerta-bg); color: var(--alerta-fg); }
+.estado.e-deposito_requiere_atencion { background: var(--alerta-bg); color: var(--alerta-fg); }
 .estado-grande { font-size: 12px; padding: 6px 13px; border-radius: 12px; }
 
 /* ---------- Solicitudes ---------- */

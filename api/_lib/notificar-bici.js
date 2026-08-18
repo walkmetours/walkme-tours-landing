@@ -199,4 +199,39 @@ async function notificarDuenoFlota(nombreDueno, correoDueno, bicis) {
   return { enviado: true };
 }
 
-module.exports = { notificarReservaBici, notificarDuenoFlota };
+// Depósito de garantía (hold de Stripe) que necesita que un humano lo
+// revise: la tarjeta fue rechazada, pidió 3DS y no se pudo confirmar sin
+// que el cliente esté presente, o el hold expiró sin que nadie lo cerrara.
+// Best-effort igual que el resto del archivo — nunca lanza.
+async function notificarDepositoAtencion(r, error) {
+  const mensajeError = (error && error.message) || String(error || 'motivo desconocido');
+  const asunto = `Depósito WB-${r.folio} requiere atención`;
+  const html = `
+  <div style="font-family:Helvetica,Arial,sans-serif;color:#0D2E1A;">
+    <p><strong>El depósito de la renta WB-${r.folio} necesita que lo revises a mano.</strong></p>
+    <p>Motivo: ${mensajeError}</p>
+    ${resumenHtml(r, 'es')}
+    <p>Cliente: ${r.nombre_completo} · ${r.telefono || '-'} · ${r.email || '-'}</p>
+    <p>Revísalo en el CRM (pantalla Bikes → esta reserva → Capturar/Liberar depósito).</p>
+  </div>`;
+  const dest = process.env.AGENCIA_EMAIL;
+  if (dest) {
+    await emailResend([dest], asunto, html).catch(e => console.error('notificar-bici: depositoAtencion email:', e.message));
+  }
+  const token = process.env.WA_TOKEN;
+  const phoneId = process.env.WA_PHONE_ID;
+  const destino = process.env.AGENCIA_WA;
+  if (token && phoneId && destino) {
+    await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', to: destino, type: 'text',
+        text: { body: `⚠ Depósito WB-${r.folio} requiere atención: ${mensajeError}` }
+      })
+    }).then(resp => { if (!resp.ok) return resp.text().then(t => console.error('notificar-bici: depositoAtencion WA:', resp.status, t)); })
+      .catch(e => console.error('notificar-bici: depositoAtencion WA:', e.message));
+  }
+}
+
+module.exports = { notificarReservaBici, notificarDuenoFlota, notificarDepositoAtencion };

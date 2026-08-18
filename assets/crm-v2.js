@@ -55,6 +55,7 @@
     editando: false,
     editandoDinero: false,
     cerrando: false,
+    capturandoDeposito: false,
     unidadesSel: [],
     cargando: false,
     modalAbierto: false,
@@ -131,7 +132,14 @@
     borrador: 'Borrador',
     enviada: 'Enviada',
     aceptada: 'Aceptada',
-    expirada: 'Expirada'
+    expirada: 'Expirada',
+    // ---- Depósito de garantía (hold de Stripe) ----
+    deposito_pendiente: 'Depósito: esperando al cliente',
+    deposito_autorizado: 'Depósito autorizado',
+    deposito_capturado: 'Depósito cobrado',
+    deposito_liberado: 'Depósito liberado',
+    deposito_expirado: 'Depósito expirado',
+    deposito_requiere_atencion: 'Depósito: requiere atención'
   };
 
   // Estado "de pantalla": en_curso puede verse como Retrasada o Vence hoy.
@@ -176,7 +184,12 @@
     sin_disponibilidad: 'No hay bicis suficientes en ese horario.',
     error_interno: 'Falló el servidor. Intenta otra vez en un momento.',
     method_not_allowed: 'Petición inválida.',
-    accion_invalida: 'Acción no reconocida.'
+    accion_invalida: 'Acción no reconocida.',
+    stripe_no_configurado: 'Stripe no está configurado en el servidor.',
+    deposito_ya_activo: 'Ya hay un depósito en proceso o autorizado para esta renta.',
+    deposito_estado_invalido: 'El depósito no está en un estado que permita esto.',
+    stripe_captura_fallo: 'Stripe no pudo procesar el cobro del depósito. Intenta de nuevo.',
+    stripe_error: 'No se pudo conectar con Stripe. Intenta de nuevo en un momento.'
   };
 
   function textoError(e) {
@@ -861,6 +874,7 @@
     estado.editando = false;
     estado.editandoDinero = false;
     estado.cerrando = false;
+    estado.capturandoDeposito = false;
     var r = rentaPorToken(token);
     estado.unidadesSel = (r && r.unidades) ? r.unidades.slice() : [];
     $('scrimDrawer').hidden = false;
@@ -873,6 +887,7 @@
     estado.tokenAbierto = null;
     estado.editando = false;
     estado.cerrando = false;
+    estado.capturandoDeposito = false;
     estado.cotAbierta = null;
     $('scrimDrawer').hidden = true;
     $('drawer').hidden = true;
@@ -1190,6 +1205,24 @@
     var c = el('div', 'dr-caja');
     c.appendChild(dato('Total de la renta', money(r.total), { fuerte: true }));
     c.appendChild(dato('Garantía (depósito)', money(r.deposito_total)));
+    if (r.deposito_estado && r.deposito_estado !== 'none') {
+      var filaDep = el('div', 'dato');
+      filaDep.appendChild(el('span', 'dato-lab', 'Estado del depósito'));
+      var valDep = el('span', 'dato-val');
+      valDep.appendChild(chipEstado('deposito_' + r.deposito_estado));
+      filaDep.appendChild(valDep);
+      c.appendChild(filaDep);
+      if (r.deposito_estado === 'autorizado' && r.deposito_expira_at) {
+        var dias = Math.ceil((new Date(r.deposito_expira_at) - new Date()) / 86400000);
+        c.appendChild(dato('Vence en', dias <= 0 ? 'hoy' : (dias + ' día' + (dias === 1 ? '' : 's'))));
+      }
+      if (r.deposito_estado === 'capturado') {
+        c.appendChild(dato('Depósito cobrado', money(r.deposito_capturado)));
+      }
+      if (r.deposito_estado === 'requiere_atencion' && r.deposito_ultimo_error) {
+        c.appendChild(el('div', 'dr-hint', 'Motivo: ' + r.deposito_ultimo_error));
+      }
+    }
     c.appendChild(dato('Método de pago', r.metodo_pago ? (METODOS[r.metodo_pago] || r.metodo_pago) : '—'));
     if (r.pago_ts) c.appendChild(dato('Pagado el', fechaCorta(r.pago_ts)));
     if (r.estado === 'cerrada' || Number(r.cargo_retraso) || Number(r.cargo_danos)) {
@@ -1385,6 +1418,61 @@
       cont.appendChild(cerrarR);
     }
 
+    // Depósito de garantía (hold de Stripe) — solo aplica a rentas ya
+    // pagadas/entregadas. Los 3 botones son aditivos, no tocan nada de
+    // arriba (misma reserva puede tener acciones de renta Y de depósito
+    // visibles a la vez, ej. "Entregar bici" + "Autorizar depósito").
+    if (['pagada', 'en_curso'].indexOf(r.estado) !== -1) {
+      var depEstado = r.deposito_estado || 'none';
+      if (['none', 'liberado', 'expirado', 'requiere_atencion'].indexOf(depEstado) !== -1) {
+        var autorizar = el('button', 'btn btn-linea',
+          'Autorizar depósito (' + money(r.deposito_total) + ')');
+        autorizar.type = 'button';
+        autorizar.addEventListener('click', async function () {
+          autorizar.disabled = true;
+          var res = await ejecutar({ accion: 'autorizar_deposito', token: r.token },
+            'Depósito iniciado: comparte el link con el cliente para que meta su tarjeta.');
+          autorizar.disabled = false;
+          if (res && res.url) window.open(res.url, '_blank', 'noopener');
+        });
+        cont.appendChild(autorizar);
+      }
+
+      if (depEstado === 'pendiente') {
+        cont.appendChild(el('div', 'dr-hint', 'Esperando a que el cliente termine de meter su tarjeta.'));
+        var reintentar = el('button', 'btn btn-linea', 'Actualizar');
+        reintentar.type = 'button';
+        reintentar.addEventListener('click', function () { cargarTablero(true); });
+        cont.appendChild(reintentar);
+      }
+
+      if (depEstado === 'autorizado' || depEstado === 'requiere_atencion') {
+        if (estado.capturandoDeposito) {
+          cont.appendChild(formularioCapturaDeposito(r));
+        } else {
+          var filaDep = el('div', 'dr-acc-fila');
+          var capturarBt = el('button', 'btn btn-amarillo', 'Capturar depósito…');
+          capturarBt.type = 'button';
+          capturarBt.addEventListener('click', function () { estado.capturandoDeposito = true; pintarDrawer(); });
+          filaDep.appendChild(capturarBt);
+
+          var liberarBt = el('button', 'btn btn-linea', 'Liberar depósito');
+          liberarBt.type = 'button';
+          liberarBt.addEventListener('click', async function () {
+            var ok = await confirmar({
+              titulo: '¿Liberar el depósito?',
+              texto: 'No se le cobra nada al cliente. El hold en su tarjeta se cancela.',
+              aceptar: 'Sí, liberar',
+              clase: 'btn-amarillo'
+            });
+            if (ok) ejecutar({ accion: 'liberar_deposito', token: r.token }, 'Depósito liberado.');
+          });
+          filaDep.appendChild(liberarBt);
+          cont.appendChild(filaDep);
+        }
+      }
+    }
+
     // Cancelar: sólo donde el backend lo permite.
     if (['pendiente_pago', 'pendiente_efectivo', 'pagada'].indexOf(r.estado) !== -1) {
       var cancelar = el('button', 'btn btn-peligro', 'Cancelar esta renta');
@@ -1427,6 +1515,49 @@
 
     s.appendChild(cont);
     return s;
+  }
+
+  // Monto por cobrar del hold, pre-llenado con los cargos de retraso/daños
+  // si la renta ya se cerró (lo normal: primero se cierra la renta con sus
+  // cargos, luego se resuelve el depósito con ese mismo número).
+  function formularioCapturaDeposito(r) {
+    var caja = el('div', 'dr-caja');
+    caja.appendChild(el('div', 'dr-nota', 'Cobra del depósito solo lo que corresponda a daños o atraso. El resto se libera.'));
+
+    var sugerido = r.cerrada_at
+      ? Math.max(0, Number(r.cargo_retraso || 0) + Number(r.cargo_danos || 0))
+      : Number(r.deposito_total || 0);
+
+    var grid = el('div', 'form-grid');
+    grid.style.marginTop = '10px';
+    var lab = el('label', 'campo ancho');
+    lab.appendChild(el('span', 'campo-lab', 'Monto a cobrar del depósito (MXN, máx. ' + money(r.deposito_total) + ')'));
+    var input = el('input', 'campo-in');
+    input.type = 'number'; input.min = '0'; input.step = '50'; input.value = String(sugerido);
+    input.inputMode = 'numeric';
+    lab.appendChild(input);
+    grid.appendChild(lab);
+    caja.appendChild(grid);
+
+    var acc = el('div', 'form-acc');
+    var volver = el('button', 'btn btn-linea', 'Cancelar');
+    volver.type = 'button';
+    volver.addEventListener('click', function () { estado.capturandoDeposito = false; pintarDrawer(); });
+    var confirmarBt = el('button', 'btn btn-amarillo', 'Cobrar del depósito');
+    confirmarBt.type = 'button';
+    confirmarBt.addEventListener('click', async function () {
+      var monto = Number(input.value);
+      if (!Number.isFinite(monto) || monto < 0) { toast('El monto no puede quedar vacío ni negativo.', 'error'); return; }
+      confirmarBt.disabled = true;
+      var res = await ejecutar({ accion: 'capturar_deposito', token: r.token, monto: monto },
+        function (d) { return 'Se cobraron ' + money(d.capturado) + ' del depósito.'; });
+      confirmarBt.disabled = false;
+      if (res) { estado.capturandoDeposito = false; pintarDrawer(); }
+    });
+    acc.appendChild(volver);
+    acc.appendChild(confirmarBt);
+    caja.appendChild(acc);
+    return caja;
   }
 
   function formularioCierre(r) {
