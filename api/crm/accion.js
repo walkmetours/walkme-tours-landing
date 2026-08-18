@@ -221,11 +221,10 @@ module.exports = async (req, res) => {
         const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
         try {
           const stripe = stripeClient();
-          const session = await stripe.checkout.sessions.create({
+          const params = {
             mode: 'payment',
             customer_creation: 'always',
             client_reference_id: r.token,
-            customer_email: r.email,
             payment_intent_data: {
               capture_method: 'manual',
               setup_future_usage: 'off_session',
@@ -242,7 +241,14 @@ module.exports = async (req, res) => {
             }],
             success_url: cuponBase + '&deposito=1',
             cancel_url: cuponBase + '&deposito=cancelado'
-          }, { idempotencyKey: `deposito-crear-${r.token}` });
+          };
+          // customer_email vacío/null hace que Stripe rechace la sesión con
+          // "Invalid email address" — solo se manda si de verdad hay una.
+          if (r.email) params.customer_email = r.email;
+
+          const session = await stripe.checkout.sessions.create(
+            params, { idempotencyKey: `deposito-crear-${r.token}` }
+          );
 
           await s.from('reservas_bicis')
             .update({ deposito_checkout_session_id: session.id, updated_at: new Date().toISOString() })
