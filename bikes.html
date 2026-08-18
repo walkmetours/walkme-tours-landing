@@ -155,7 +155,7 @@
 <!-- FORM (modal) -->
 <div class="qmodal" id="bikeModal" aria-hidden="true">
   <div class="qmodal-bg" data-close></div>
-  <div class="qmodal-box" role="dialog" aria-modal="true" style="max-width:560px;">
+  <div class="qmodal-box qmodal-box--bike" role="dialog" aria-modal="true">
   <button class="qmodal-close" data-close aria-label="Cerrar">×</button>
   <form class="bike-form" id="bikeForm" novalidate>
     <h2>Reserva tu bici</h2>
@@ -289,6 +289,18 @@
     </div>
   </div>
   <style>@media(max-width:600px){.section > div[style*='grid-template-columns:1fr 1fr']{grid-template-columns:1fr !important;}}</style>
+</section>
+
+<!-- CTA FINAL -->
+<section class="section section--green" style="text-align:center;">
+  <h2 class="s-title">¿Listo para rodar por Playa?</h2>
+  <p class="tibu-why" style="margin-left:auto;margin-right:auto;">Reserva tu bici en menos de un minuto y recógela en la 5ta Avenida.</p>
+  <div class="hero-ctas" style="justify-content:center;">
+    <button type="button" class="btn-wa" data-open-bike-modal>
+      <svg width="18" height="18"><use href="#wa-icon"/></svg>
+      Reservar tu bici
+    </button>
+  </div>
 </section>
 
 <footer>

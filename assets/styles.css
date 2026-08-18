@@ -359,7 +359,7 @@ nav.nav--solid {
   transform: translateY(0) scale(1); opacity: 1;
   transition: transform .32s cubic-bezier(0.32,0.72,0,1), opacity .28s cubic-bezier(0.32,0.72,0,1);
 }
-.qmodal-box--bike { max-width: 560px; }
+.qmodal-box--bike { max-width: 560px; padding: 28px 22px; }
 .qmodal-close {
   position: absolute; top: 14px; right: 14px;
   width: 36px; height: 36px; border-radius: 50%;
@@ -417,9 +417,12 @@ nav.nav--solid {
 .qm-submit:disabled { opacity: 0.45; cursor: not-allowed; }
 .qm-disclaimer { font-size: 11px; color: #999; line-height: 1.5; text-align: center; margin-top: 10px; }
 @media (max-width: 480px) {
+  .qmodal { padding: 12px; }
   .qmodal-box { padding: 28px 20px 22px; border-radius: 20px; }
   .qmodal-name { font-size: 30px; }
   .qm-row { grid-template-columns: 1fr; }
+  .qmodal-box--bike { padding: 16px 12px; }
+  .bike-form { padding: 20px 14px; }
 }
 
 /* ───── PASOS (Cómo reservar) ───── */
