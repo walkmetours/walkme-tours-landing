@@ -639,8 +639,10 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 @media (max-width: 480px) {
   .hero { padding: 130px 18px 80px; }
   .hero-ctas { flex-direction: column; align-items: stretch; }
-  .hero-ctas a { justify-content: center; }
+  .hero-ctas a, .hero-ctas button { justify-content: center; }
   .paso-n { width: 44px; height: 44px; font-size: 22px; }
+  .bike-form { padding: 20px 14px; }
+  .bike-prices-strip { flex-direction: column; gap: 14px; padding: 20px 24px; }
 }
 
 /* ───── SCROLL REVEAL ───── */
