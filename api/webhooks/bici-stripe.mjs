@@ -50,9 +50,9 @@ export default async function handler(req, res) {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const raw = Buffer.concat(chunks);
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY || "").trim());
     event = stripe.webhooks.constructEvent(
-      raw, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET
+      raw, req.headers['stripe-signature'], String(process.env.STRIPE_WEBHOOK_SECRET || '').trim()
     );
   } catch (e) {
     console.error('firma stripe invalida:', e.message);
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
           // OJO: session.payment_status queda 'unpaid' con capture_method
           // manual aunque el hold SÍ se haya autorizado — no sirve como
           // señal aquí. Hay que leer el PaymentIntent.
-          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY || "").trim());
           const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
           const reservaId = session.metadata.reserva_id;
           if (pi.status === 'requires_capture') {
