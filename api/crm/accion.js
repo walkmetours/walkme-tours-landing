@@ -335,6 +335,201 @@ module.exports = async (req, res) => {
         return res.status(200).json({ ok: true, folio: data.folio, token: data.token });
       }
 
+      // ==========================================================
+      // Cotizaciones (sql/cotizaciones.sql) — Fase 3, 17-ago-26.
+      // Mismo archivo/función que todo lo demás del CRM (límite de
+      // functions del plan Hobby de Vercel, ya está en el tope).
+      // ==========================================================
+
+      case 'cotizacion_crear': {
+        const clienteNombre = String(b.cliente_nombre || '').trim();
+        if (!clienteNombre) return res.status(400).json({ error: 'cliente_requerido' });
+        const items = Array.isArray(b.items) ? b.items : [];
+        if (!items.length) return res.status(400).json({ error: 'sin_items' });
+        for (const it of items) {
+          if (!it.servicio_nombre || !Number.isFinite(Number(it.precio_adulto))) {
+            return res.status(400).json({ error: 'item_invalido' });
+          }
+        }
+
+        const { data: cot, error: eCot } = await s.from('cotizaciones').insert({
+          estado: 'borrador',
+          origen: 'crm',
+          idioma: b.idioma === 'en' ? 'en' : 'es',
+          cliente_nombre: clienteNombre,
+          cliente_tel: b.cliente_tel || null,
+          cliente_email: b.cliente_email || null,
+          descuento: Math.max(0, Number(b.descuento) || 0),
+          notas: b.notas || null,
+          creado_por: quien.email
+        }).select('*').single();
+        if (eCot) { console.error('cotizacion_crear:', eCot.message); return res.status(500).json({ error: 'error_interno' }); }
+
+        const filas = items.map((it, i) => ({
+          cotizacion_id: cot.id,
+          servicio_id: it.servicio_id || null,
+          servicio_nombre: String(it.servicio_nombre).trim(),
+          fecha: it.fecha || null,
+          zona: it.zona || null,
+          nacionalidad: it.nacionalidad === 'nacional' ? 'nacional' : 'extranjero',
+          adultos: Math.max(0, parseInt(it.adultos, 10) || 0),
+          menores: Math.max(0, parseInt(it.menores, 10) || 0),
+          precio_adulto: Number(it.precio_adulto) || 0,
+          precio_menor: Number(it.precio_menor) || 0,
+          operador_id: it.operador_id || null,
+          orden: i
+        }));
+        const { error: eItems } = await s.from('cotizacion_items').insert(filas);
+        if (eItems) { console.error('cotizacion_crear:items:', eItems.message); return res.status(500).json({ error: 'error_interno' }); }
+
+        await auditar(null, 'cotizacion_crear', { folio: cot.folio, items: filas.length });
+        return res.status(200).json({ ok: true, folio: cot.folio, id: cot.id });
+      }
+
+      // ---- Editar cliente/notas/descuento de una cotización en borrador ----
+      case 'cotizacion_editar': {
+        const id = String(b.id || '');
+        const { data: cot } = await s.from('cotizaciones').select('*').eq('id', id).single();
+        if (!cot) return res.status(404).json({ error: 'cotizacion_no_encontrada' });
+        if (cot.estado !== 'borrador') return res.status(409).json({ error: 'solo_editable_en_borrador' });
+
+        const cambios = {};
+        if ('cliente_nombre' in b) {
+          const v = String(b.cliente_nombre || '').trim();
+          if (!v) return res.status(400).json({ error: 'cliente_requerido' });
+          cambios.cliente_nombre = v;
+        }
+        ['cliente_tel', 'cliente_email', 'notas'].forEach(k => { if (k in b) cambios[k] = b[k] || null; });
+        if ('descuento' in b) cambios.descuento = Math.max(0, Number(b.descuento) || 0);
+        if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
+
+        cambios.updated_at = new Date().toISOString();
+        await s.from('cotizaciones').update(cambios).eq('id', id);
+
+        if (Array.isArray(b.items)) {
+          await s.from('cotizacion_items').delete().eq('cotizacion_id', id);
+          const filas = b.items.map((it, i) => ({
+            cotizacion_id: id,
+            servicio_id: it.servicio_id || null,
+            servicio_nombre: String(it.servicio_nombre || '').trim(),
+            fecha: it.fecha || null,
+            zona: it.zona || null,
+            nacionalidad: it.nacionalidad === 'nacional' ? 'nacional' : 'extranjero',
+            adultos: Math.max(0, parseInt(it.adultos, 10) || 0),
+            menores: Math.max(0, parseInt(it.menores, 10) || 0),
+            precio_adulto: Number(it.precio_adulto) || 0,
+            precio_menor: Number(it.precio_menor) || 0,
+            operador_id: it.operador_id || null,
+            orden: i
+          }));
+          if (filas.length) await s.from('cotizacion_items').insert(filas);
+        }
+
+        await auditar(null, 'cotizacion_editar', { id, campos: Object.keys(cambios) });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Transición de estado de una cotización ----
+      case 'cotizacion_estado': {
+        const COT_TRANSICIONES = {
+          borrador: ['enviada', 'cancelada'],
+          enviada: ['borrador', 'aceptada', 'cancelada'],
+          aceptada: [],
+          cancelada: [],
+          expirada: ['borrador']
+        };
+        const id = String(b.id || '');
+        const { data: cot } = await s.from('cotizaciones').select('*').eq('id', id).single();
+        if (!cot) return res.status(404).json({ error: 'cotizacion_no_encontrada' });
+        const destino = String(b.estado || '');
+        if (!(COT_TRANSICIONES[cot.estado] || []).includes(destino)) {
+          return res.status(409).json({ error: 'transicion_invalida', desde: cot.estado, hacia: destino });
+        }
+        await s.from('cotizaciones')
+          .update({ estado: destino, updated_at: new Date().toISOString() }).eq('id', id);
+        await auditar(null, 'cotizacion_estado', { id, folio: cot.folio, desde: cot.estado, hacia: destino });
+        return res.status(200).json({ ok: true, estado: destino });
+      }
+
+      // ---- Tarifario: servicio (tour/parque) ----
+      case 'servicio_guardar': {
+        const id = String(b.id || '').trim();
+        if (!id) return res.status(400).json({ error: 'id_requerido' });
+        const nombre = String(b.nombre || '').trim();
+        if (!nombre) return res.status(400).json({ error: 'nombre_requerido' });
+        const fila = {
+          id, nombre,
+          categoria: b.categoria || 'tour',
+          activo: b.activo !== false,
+          orden: parseInt(b.orden, 10) || 0,
+          updated_at: new Date().toISOString()
+        };
+        await s.from('catalogo_servicios').upsert(fila);
+        await auditar(null, 'servicio_guardar', { id });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Tarifario: precio de venta por zona/nacionalidad ----
+      case 'tarifa_guardar': {
+        const servicioId = String(b.servicio_id || '').trim();
+        const zona = String(b.zona || '').trim();
+        if (!servicioId || !zona) return res.status(400).json({ error: 'servicio_y_zona_requeridos' });
+        const precioAdulto = Number(b.precio_adulto);
+        if (!Number.isFinite(precioAdulto) || precioAdulto < 0) {
+          return res.status(400).json({ error: 'precio_invalido' });
+        }
+        await s.from('servicio_tarifas').upsert({
+          servicio_id: servicioId,
+          zona,
+          nacionalidad: b.nacionalidad === 'nacional' ? 'nacional' : 'extranjero',
+          precio_adulto: precioAdulto,
+          precio_menor: b.precio_menor === '' || b.precio_menor == null ? null : Number(b.precio_menor),
+          vigente: b.vigente !== false,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'servicio_id,zona,nacionalidad' });
+        await auditar(null, 'tarifa_guardar', { servicioId, zona });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Operadores: directorio ----
+      case 'operador_guardar': {
+        const nombre = String(b.nombre || '').trim();
+        if (!nombre) return res.status(400).json({ error: 'nombre_requerido' });
+        const fila = {
+          nombre, contacto: b.contacto || null, telefono: b.telefono || null,
+          notas: b.notas || null, activo: b.activo !== false,
+          updated_at: new Date().toISOString()
+        };
+        if (b.id) {
+          await s.from('operadores').update(fila).eq('id', b.id);
+        } else {
+          await s.from('operadores').insert(fila);
+        }
+        await auditar(null, 'operador_guardar', { id: b.id || 'nuevo', nombre });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Operadores: costo neto por servicio ----
+      case 'oferta_guardar': {
+        const operadorId = String(b.operador_id || '').trim();
+        const servicioId = String(b.servicio_id || '').trim();
+        if (!operadorId || !servicioId) return res.status(400).json({ error: 'operador_y_servicio_requeridos' });
+        const netoAdulto = Number(b.neto_adulto);
+        if (!Number.isFinite(netoAdulto) || netoAdulto < 0) {
+          return res.status(400).json({ error: 'neto_invalido' });
+        }
+        await s.from('operador_ofertas').upsert({
+          operador_id: operadorId,
+          servicio_id: servicioId,
+          neto_adulto: netoAdulto,
+          neto_menor: b.neto_menor === '' || b.neto_menor == null ? null : Number(b.neto_menor),
+          vigente: b.vigente !== false,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'operador_id,servicio_id' });
+        await auditar(null, 'oferta_guardar', { operadorId, servicioId });
+        return res.status(200).json({ ok: true });
+      }
+
       default:
         return res.status(400).json({ error: 'accion_invalida' });
     }

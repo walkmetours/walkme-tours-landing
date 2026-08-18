@@ -38,7 +38,28 @@ function parseArchivo(valor, permitirPdf) {
   return { buffer, contentType, ext: contentType === 'application/pdf' ? '.pdf' : '.jpg' };
 }
 
+// GET en esta misma función = smoke test (antes vivía en api/bici/ping.js,
+// fusionado aquí 17-ago-26 para no pasarse del límite de functions del plan
+// Hobby de Vercel — sin uso real de frontend, solo verificación manual).
+async function ping(req, res) {
+  let supabaseOk = false;
+  try { require('@supabase/supabase-js'); supabaseOk = true; } catch (e) { /* dep ausente */ }
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(200).json({
+    ok: true,
+    deps: { supabase: supabaseOk },
+    env: {
+      supabase: !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      mercadopago: !!process.env.MP_ACCESS_TOKEN,
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+      resend: !!process.env.RESEND_API_KEY,
+      crm: !!process.env.SUPABASE_ANON_KEY && !!process.env.CRM_EMAILS
+    }
+  });
+}
+
 module.exports = async (req, res) => {
+  if (req.method === 'GET') return ping(req, res);
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(503).json({ error: 'reservas_no_configuradas' });
