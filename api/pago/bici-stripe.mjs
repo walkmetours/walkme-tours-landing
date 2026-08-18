@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     }
 
     const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY || "").trim());
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       client_reference_id: r.token,
@@ -88,12 +88,13 @@ async function auditarCron(s, reservaId, accion, detalle) {
 // de depósito que están por vencer, para rentas de más de 7 días.
 async function handleCronReauth(req, res) {
   const auth = String(req.headers.authorization || '');
-  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = String(process.env.CRON_SECRET || '').trim();
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'no_autorizado' });
   }
   if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY || "").trim());
   const s = supa();
   const limite = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
 

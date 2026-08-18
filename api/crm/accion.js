@@ -16,6 +16,14 @@ const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar
 const DEPOSITO_AUTORIZABLE = ['none', 'liberado', 'expirado', 'requiere_atencion'];
 const DEPOSITO_RESOLVIBLE = ['autorizado', 'requiere_atencion'];
 
+// Espacios/saltos de línea invisibles al copiar la clave desde el dashboard
+// de Stripe rompen el header Authorization sin dar un error claro (Stripe
+// SDK lo reporta como "connection error", no como credencial inválida) —
+// .trim() por si acaso, es gratis y evita ese dolor de cabeza.
+function stripeClient() {
+  return new Stripe(String(process.env.STRIPE_SECRET_KEY || '').trim());
+}
+
 // De qué estado a qué estados se puede pasar a mano desde el CRM.
 // (pagada vía webhook no pasa por aquí.)
 const TRANSICIONES = {
@@ -109,7 +117,7 @@ module.exports = async (req, res) => {
         if (destino === 'cancelada' && r.deposito_estado === 'autorizado' && r.deposito_pi_id
             && process.env.STRIPE_SECRET_KEY) {
           try {
-            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            const stripe = stripeClient();
             await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'abandoned' });
             await s.from('reservas_bicis').update({
               deposito_estado: 'liberado', deposito_liberado_at: new Date().toISOString()
@@ -212,7 +220,7 @@ module.exports = async (req, res) => {
         const site = process.env.SITE_URL || 'https://www.walkmetours.com';
         const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
         try {
-          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const stripe = stripeClient();
           const session = await stripe.checkout.sessions.create({
             mode: 'payment',
             customer_creation: 'always',
@@ -261,7 +269,7 @@ module.exports = async (req, res) => {
           return res.status(409).json({ error: 'deposito_estado_invalido' });
         }
         try {
-          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const stripe = stripeClient();
           const opts = {};
           if (b.monto != null) {
             const monto = Math.max(0, Number(b.monto) || 0);
@@ -292,7 +300,7 @@ module.exports = async (req, res) => {
         if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
           return res.status(409).json({ error: 'deposito_estado_invalido' });
         }
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const stripe = stripeClient();
         try {
           await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'requested_by_customer' });
         } catch (e) {
