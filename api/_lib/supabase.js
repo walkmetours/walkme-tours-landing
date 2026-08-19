@@ -20,7 +20,11 @@ function supa() {
 const CAMPOS_PUBLICOS_BICI =
   'folio, token, estado, idioma, tipo_bici, duracion_id, duracion_nombre, ' +
   'fecha_reserva, hora_inicio, cantidad_bicis, precio_unitario, total, moneda, ' +
-  'deposito_unitario, deposito_total, metodo_pago, nombre_completo';
+  'deposito_unitario, deposito_total, metodo_pago, nombre_completo, ' +
+  // Garantía: el cupón tiene que decirle al cliente con qué llegar.
+  // NO se exponen los campos garantia_id_* : son datos internos del
+  // mostrador sobre un documento de identidad.
+  'garantia_tipo, deposito_tarjeta_total, deposito_estado';
 
 function leerJson(req) {
   // Vercel ya parsea JSON; por si llega como string.

@@ -70,6 +70,34 @@ create table if not exists public.reservas_bicis (
   deposito_unitario numeric not null default 3000,
   deposito_total    numeric generated always as (deposito_unitario * cantidad_bicis) stored,
 
+  -- Garantía: el cliente elige modalidad al reservar (19-ago-26). En
+  -- efectivo se cobra deposito_total al recoger y se retiene una
+  -- identificación; con tarjeta se hace un hold de Stripe por
+  -- deposito_tarjeta_total y no se retiene documento.
+  -- Las columnas del hold viven en sql/reservas-bicis-garantia.sql.
+  garantia_tipo     text not null default 'efectivo'
+                    constraint reservas_bicis_garantia_tipo_chk
+                    check (garantia_tipo in ('efectivo','tarjeta')),
+  deposito_tarjeta_unitario numeric not null default 7500,
+  deposito_tarjeta_total    numeric
+                    generated always as (deposito_tarjeta_unitario * cantidad_bicis) stored,
+
+  -- Identificación en resguardo (solo modalidad efectivo). No se guarda
+  -- una copia: solo QUÉ documento se retuvo y cuándo, para que nadie se
+  -- quede con el pasaporte de un cliente en el cajón.
+  garantia_id_tipo        text
+                    constraint reservas_bicis_garantia_id_tipo_chk
+                    check (garantia_id_tipo is null or
+                           garantia_id_tipo in ('ine','licencia','pasaporte','otro')),
+  garantia_id_detalle     text,
+  garantia_id_retenido_at  timestamptz,
+  garantia_id_retenido_por text,
+  garantia_id_devuelto_at  timestamptz,
+  garantia_id_devuelto_por text,
+  -- Efectivo que de verdad entró. NO sumar junto con deposito_capturado
+  -- (que es exclusivo de capturas de Stripe): sería contar dos veces.
+  deposito_efectivo_recibido numeric,
+
   -- Cliente. email es NOT NULL solo conceptualmente para la web (lo
   -- exige crear.js); en mostrador un walk-in puede no tener correo.
   nombre_completo text not null,
@@ -84,7 +112,7 @@ create table if not exists public.reservas_bicis (
   firma_ts      timestamptz not null default now(),
   firma_ip      text,
   firma_ua      text,
-  terminos_version text not null default 'bici-v1-2026-08',
+  terminos_version text not null default 'bici-v2-2026-08',
 
   -- Foto del pasaporte/ID, subida por el cliente. Ruta dentro del bucket
   -- PRIVADO 'documentos-bicis' (crearlo a mano en Supabase → Storage →
@@ -227,6 +255,7 @@ begin
     token, idioma, canal, tipo_bici, duracion_id, duracion_nombre,
     fecha_reserva, hora_inicio, inicio, fin, cantidad_bicis,
     precio_unitario, total, deposito_unitario,
+    garantia_tipo, deposito_tarjeta_unitario,
     nombre_completo, email, telefono, nacionalidad, documento, hotel,
     firma_nombre, firma_ip, firma_ua, terminos_version,
     foto_id_path, foto_reserva_path,
@@ -246,6 +275,11 @@ begin
     (payload->>'precio_unitario')::numeric,
     (payload->>'total')::numeric,
     coalesce((payload->>'deposito_unitario')::numeric, 3000),
+    -- Se NORMALIZA aquí, no se confía en el check: un valor inesperado
+    -- debe caer a 'efectivo', nunca reventar el insert (mismo criterio
+    -- que `idioma`, y por la misma razón).
+    case when payload->>'garantia_tipo' = 'tarjeta' then 'tarjeta' else 'efectivo' end,
+    coalesce((payload->>'deposito_tarjeta_unitario')::numeric, 7500),
     payload->>'nombre_completo',
     nullif(payload->>'email', ''),
     nullif(payload->>'telefono', ''),
@@ -255,7 +289,7 @@ begin
     payload->>'firma_nombre',
     nullif(payload->>'firma_ip', ''),
     nullif(payload->>'firma_ua', ''),
-    coalesce(payload->>'terminos_version', 'bici-v1-2026-08'),
+    coalesce(payload->>'terminos_version', 'bici-v2-2026-08'),
     nullif(payload->>'foto_id_path', ''),
     nullif(payload->>'foto_reserva_path', ''),
     coalesce(payload->>'estado', 'pendiente_pago'),

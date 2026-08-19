@@ -2,8 +2,8 @@
 // El total SIEMPRE se recalcula aquí desde el catálogo; disponibilidad y
 // creación son atómicas en el RPC crear_reserva_bici (advisory lock).
 //
-// Body: { idioma, duracionId, fecha, hora, cantidad, nombre, email,
-//         telefono?, nacionalidad?, documento?, hotel?, firma,
+// Body: { idioma, duracionId, fecha, hora, cantidad, garantiaTipo, nombre,
+//         email, telefono?, nacionalidad?, documento?, hotel?, firma,
 //         aceptaTerminos, foto, fotoReserva?, hp }
 // 200 → { folio, folioLabel, token, total, moneda }
 // 409 → { error:'sin_disponibilidad', disponibles:N }
@@ -87,6 +87,10 @@ module.exports = async (req, res) => {
   const nacionalidad = String(b.nacionalidad || '').trim().slice(0, 80);
   const documento = String(b.documento || '').trim().slice(0, 60);
   const hotel = String(b.hotel || '').trim().slice(0, 200);
+  // Modalidad de garantía (19-ago-26). Cualquier cosa que no sea 'tarjeta'
+  // cae a 'efectivo' en vez de rechazar — mismo criterio que `idioma` de
+  // arriba y por la misma razón: no perder una reserva por un valor raro.
+  const garantiaTipo = b.garantiaTipo === 'tarjeta' ? 'tarjeta' : 'efectivo';
 
   // --- Validación ---
   const precio = calcularTotal(duracionId, cantidad);
@@ -199,6 +203,11 @@ module.exports = async (req, res) => {
         precio_unitario: precio.precioUnitario,
         total: precio.total,
         deposito_unitario: precio.depositoUnitario,
+        // Se sellan SIEMPRE los dos montos, no solo el de la modalidad
+        // elegida: si el mostrador la cambia, se cobra el precio que
+        // estaba vigente cuando el cliente firmó, no el de hoy.
+        garantia_tipo: garantiaTipo,
+        deposito_tarjeta_unitario: precio.depositoTarjetaUnitario,
         nombre_completo: nombre,
         email,
         telefono: telefono || null,

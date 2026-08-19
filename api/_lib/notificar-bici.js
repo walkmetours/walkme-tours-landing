@@ -62,9 +62,18 @@ function filaHtml(l, v) {
 }
 
 function resumenHtml(r, lang) {
+  // La garantía tiene dos modalidades desde el 19-ago-26: el correo tiene
+  // que decir CUÁL y con qué monto, o el cliente llega con el dinero
+  // equivocado. El '|| efectivo' cubre las reservas anteriores.
+  const tarjeta = (r.garantia_tipo || 'efectivo') === 'tarjeta';
   const t = lang === 'en'
-    ? { folio: 'Booking', plan: 'Plan', fecha: 'Date and time', bicis: 'Bikes', total: 'Total', garantia: 'Deposit (cash)' }
-    : { folio: 'Folio', plan: 'Plan', fecha: 'Fecha y hora', bicis: 'Bicis', total: 'Total', garantia: 'Garantía (efectivo)' };
+    ? { folio: 'Booking', plan: 'Plan', fecha: 'Date and time', bicis: 'Bikes', total: 'Total',
+        garantia: tarjeta ? 'Deposit (card hold)' : 'Deposit (cash)',
+        id: 'ID', idNota: 'We keep it during the rental' }
+    : { folio: 'Folio', plan: 'Plan', fecha: 'Fecha y hora', bicis: 'Bicis', total: 'Total',
+        garantia: tarjeta ? 'Garantía (retención en tarjeta)' : 'Garantía (efectivo)',
+        id: 'Identificación', idNota: 'Se resguarda durante la renta' };
+  const montoGarantia = tarjeta ? r.deposito_tarjeta_total : r.deposito_total;
   const hora = String(r.hora_inicio || '').slice(0, 5);
   return `<table style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;font-size:14px;">
     ${filaHtml(t.folio, `WB-${r.folio}`)}
@@ -72,7 +81,8 @@ function resumenHtml(r, lang) {
     ${filaHtml(t.fecha, `${r.fecha_reserva} · ${hora}`)}
     ${filaHtml(t.bicis, String(r.cantidad_bicis))}
     ${filaHtml(t.total, pesos(r.total))}
-    ${filaHtml(t.garantia, pesos(r.deposito_total))}
+    ${filaHtml(t.garantia, pesos(montoGarantia))}
+    ${tarjeta ? '' : filaHtml(t.id, t.idNota)}
   </table>`;
 }
 

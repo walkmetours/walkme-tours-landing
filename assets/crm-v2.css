@@ -382,6 +382,9 @@ textarea.campo-in { resize: vertical; min-height: 62px; font-family: var(--fuent
 .estado.e-deposito_liberado { background: var(--linea-2); color: var(--tenue); }
 .estado.e-deposito_expirado { background: var(--alerta-bg); color: var(--alerta-fg); }
 .estado.e-deposito_requiere_atencion { background: var(--alerta-bg); color: var(--alerta-fg); }
+/* Garantía en efectivo: mismos estados de la base, otras palabras */
+.estado.e-eft_autorizado { background: var(--ok-bg); color: var(--ok-fg); }
+.estado.e-eft_liberado { background: var(--linea-2); color: var(--tenue); }
 .estado-grande { font-size: 12px; padding: 6px 13px; border-radius: 12px; }
 
 /* ---------- Solicitudes ---------- */

@@ -125,6 +125,13 @@ a:hover { color: #E8397D; }
   font-family: 'GTEesti', sans-serif; font-weight: bold;
   color: #F2DE4A; line-height: 1.3;
 }
+/* Aviso de vuelta del checkout de la retención en tarjeta */
+.cp-dep-aviso {
+  font-size: 21px; margin-top: 12px; padding: 10px 14px; border-radius: 10px;
+  font-family: 'GTEesti', sans-serif; line-height: 1.3;
+  background: rgba(255,255,255,0.14); color: #fff;
+}
+.cp-dep-aviso.mal { background: rgba(232,57,125,0.28); }
 
 .cp-cols {
   padding: 38px 56px 0;

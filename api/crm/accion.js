@@ -16,6 +16,27 @@ const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar
 const DEPOSITO_AUTORIZABLE = ['none', 'liberado', 'expirado', 'requiere_atencion'];
 const DEPOSITO_RESOLVIBLE = ['autorizado', 'requiere_atencion'];
 
+// Modalidad de garantía (19-ago-26, ver sql/reservas-bicis-garantia.sql):
+// 'efectivo' = dinero en el mostrador + identificación en resguardo,
+// 'tarjeta'  = hold de Stripe y ningún documento retenido.
+const GARANTIA_ID_TIPOS = ['ine', 'licencia', 'pasaporte', 'otro'];
+
+function esTarjeta(r) { return (r.garantia_tipo || 'efectivo') === 'tarjeta'; }
+
+// Tope de captura: lo que Stripe autorizó DE VERDAD, no lo que hoy dice el
+// catálogo. Los holds creados antes de esta migración no tienen ese dato y
+// se hicieron por deposito_total — ofrecer capturar más rebotaría en Stripe.
+function montoHold(r) {
+  const m = r.deposito_autorizado_monto;
+  return Number(m == null ? r.deposito_total : m);
+}
+
+// ¿Queda un documento del cliente en el cajón? Es la pregunta que no se
+// puede olvidar antes de cerrar o cancelar una renta.
+function idEnResguardo(r) {
+  return !!r.garantia_id_retenido_at && !r.garantia_id_devuelto_at;
+}
+
 // Espacios/saltos de línea invisibles al copiar la clave desde el dashboard
 // de Stripe rompen el header Authorization sin dar un error claro (Stripe
 // SDK lo reporta como "connection error", no como credencial inválida) —
@@ -49,7 +70,10 @@ const EDITABLES = [
 // auditan aparte con el valor ANTERIOR y el NUEVO — no solo el nombre del
 // campo — porque un error de tecleo en un monto es más caro que en un
 // nombre.
-const EDITABLES_DINERO = ['total', 'deposito_unitario', 'cargo_retraso', 'cargo_danos'];
+const EDITABLES_DINERO = [
+  'total', 'deposito_unitario', 'deposito_tarjeta_unitario',
+  'deposito_efectivo_recibido', 'cargo_retraso', 'cargo_danos'
+];
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -72,6 +96,43 @@ module.exports = async (req, res) => {
     return data || null;
   }
 
+  // El movimiento de dinero del hold vive en estos dos helpers y no en tres
+  // copias: los usan 'capturar_deposito', 'liberar_deposito' y 'cerrar'.
+  async function capturarHold(r, monto) {
+    const stripe = stripeClient();
+    const opts = {};
+    if (monto != null) opts.amount_to_capture = Math.round(Number(monto) * 100);
+    const pi = await stripe.paymentIntents.capture(r.deposito_pi_id, opts);
+    const capturado = (pi.amount_received || 0) / 100;
+    await s.from('reservas_bicis').update({
+      deposito_estado: 'capturado',
+      deposito_capturado: capturado,
+      deposito_capturado_at: new Date().toISOString(),
+      deposito_ultimo_error: null,
+      updated_at: new Date().toISOString()
+    }).eq('id', r.id);
+    await auditar(r.id, 'capturar_deposito', { monto: capturado, pi: r.deposito_pi_id });
+    return capturado;
+  }
+
+  async function liberarHold(r) {
+    const stripe = stripeClient();
+    try {
+      await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'requested_by_customer' });
+    } catch (e) {
+      // Puede ya estar cancelado/capturado del lado de Stripe (replay,
+      // expiración natural) — se sigue liberando en la DB igual.
+      console.error('liberarHold: stripe cancel:', e.message);
+    }
+    await s.from('reservas_bicis').update({
+      deposito_estado: 'liberado',
+      deposito_liberado_at: new Date().toISOString(),
+      deposito_ultimo_error: null,
+      updated_at: new Date().toISOString()
+    }).eq('id', r.id);
+    await auditar(r.id, 'liberar_deposito', { pi: r.deposito_pi_id });
+  }
+
   try {
     switch (b.accion) {
 
@@ -87,8 +148,18 @@ module.exports = async (req, res) => {
         if (destino === 'en_curso' && (!r.unidades || r.unidades.length === 0)) {
           return res.status(409).json({ error: 'sin_unidades_asignadas' });
         }
+        // Una renta no se cancela con el pasaporte del cliente todavía en
+        // el cajón: después de cancelarla nada en el CRM lo recuerda.
+        if ((destino === 'cancelada' || destino === 'no_show')
+            && idEnResguardo(r) && b.id_devuelto !== true) {
+          return res.status(409).json({ error: 'id_en_resguardo', tipo: r.garantia_id_tipo });
+        }
 
         const cambios = { estado: destino, updated_at: new Date().toISOString() };
+        if (idEnResguardo(r) && b.id_devuelto === true) {
+          cambios.garantia_id_devuelto_at = new Date().toISOString();
+          cambios.garantia_id_devuelto_por = quien.email;
+        }
         if (destino === 'pagada' && !r.pago_ts) {
           cambios.metodo_pago = 'efectivo';       // cobro en mostrador
           cambios.pago_ts = new Date().toISOString();
@@ -114,8 +185,8 @@ module.exports = async (req, res) => {
         // Si se cancela con un hold de depósito activo, se libera solo
         // (best-effort: si Stripe falla aquí no se bloquea la cancelación,
         // el hold expira solo a los 7 días y queda auditado el intento).
-        if (destino === 'cancelada' && r.deposito_estado === 'autorizado' && r.deposito_pi_id
-            && process.env.STRIPE_SECRET_KEY) {
+        if (destino === 'cancelada' && esTarjeta(r) && r.deposito_estado === 'autorizado'
+            && r.deposito_pi_id && process.env.STRIPE_SECRET_KEY) {
           try {
             const stripe = stripeClient();
             await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'abandoned' });
@@ -172,11 +243,26 @@ module.exports = async (req, res) => {
         if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
         if (r.estado !== 'en_curso') return res.status(409).json({ error: 'estado_invalido' });
 
+        // El documento del cliente no se queda en el cajón de una renta ya
+        // cerrada: si hay uno en resguardo, hay que confirmar que se devolvió.
+        if (idEnResguardo(r) && b.id_devuelto !== true) {
+          return res.status(409).json({ error: 'id_en_resguardo', tipo: r.garantia_id_tipo });
+        }
+
         const cargoRetraso = Math.max(0, Number(b.cargo_retraso) || 0);
         const cargoDanos = Math.max(0, Number(b.cargo_danos) || 0);
-        const devuelto = Math.max(0, Number(r.deposito_total) - cargoRetraso - cargoDanos);
 
-        await s.from('reservas_bicis').update({
+        // Devolver efectivo y liberar un hold NO son la misma operación.
+        // En tarjeta no se devuelve nada: se captura una parte y el resto
+        // lo suelta el banco. deposito_devuelto queda null (no 0: cero
+        // significaría "me quedé con todo") para no inflar ningún reporte.
+        const tarjeta = esTarjeta(r);
+        const baseEfectivo = Number(
+          r.deposito_efectivo_recibido == null ? r.deposito_total : r.deposito_efectivo_recibido
+        );
+        const devuelto = tarjeta ? null : Math.max(0, baseEfectivo - cargoRetraso - cargoDanos);
+
+        const cambios = {
           estado: 'cerrada',
           cargo_retraso: cargoRetraso,
           cargo_danos: cargoDanos,
@@ -185,16 +271,34 @@ module.exports = async (req, res) => {
           cerrada_at: new Date().toISOString(),
           cerrada_por: quien.email,
           updated_at: new Date().toISOString()
-        }).eq('id', r.id);
+        };
+        if (idEnResguardo(r)) {
+          cambios.garantia_id_devuelto_at = new Date().toISOString();
+          cambios.garantia_id_devuelto_por = quien.email;
+        }
+        await s.from('reservas_bicis').update(cambios).eq('id', r.id);
 
         if (r.unidades && r.unidades.length) {
           await s.from('bikes_flota').update({ estado: 'disponible' }).in('id', r.unidades);
         }
         await auditar(r.id, 'cerrar', {
           cargo_retraso: cargoRetraso, cargo_danos: cargoDanos,
-          deposito_devuelto: devuelto, nota: b.nota || null
+          garantia_tipo: r.garantia_tipo, deposito_devuelto: devuelto,
+          id_devuelto: idEnResguardo(r) || undefined, nota: b.nota || null
         });
-        return res.status(200).json({ ok: true, deposito_devuelto: devuelto });
+
+        // Cerrar NO mueve dinero en Stripe: la captura sigue siendo una
+        // acción humana explícita. Se le dice al CRM cuál es el paso que
+        // falta para que lo encadene sin que nadie tenga que acordarse.
+        const pendienteDeposito = tarjeta && DEPOSITO_RESOLVIBLE.includes(r.deposito_estado)
+          ? ((cargoRetraso + cargoDanos) > 0 ? 'capturar' : 'liberar')
+          : null;
+        return res.status(200).json({
+          ok: true,
+          deposito_devuelto: devuelto,
+          pendiente_deposito: pendienteDeposito,
+          monto_a_capturar: pendienteDeposito === 'capturar' ? cargoRetraso + cargoDanos : null
+        });
       }
 
       // ---- Depósito de garantía: autorizar el hold (Stripe Checkout,
@@ -207,6 +311,11 @@ module.exports = async (req, res) => {
         if (!['pagada', 'en_curso'].includes(r.estado)) {
           return res.status(409).json({ error: 'estado_invalido' });
         }
+        // El hold solo existe en la modalidad de tarjeta. Si el cliente
+        // reservó en efectivo y llegó sin dinero, primero se cambia la
+        // modalidad (acción 'garantia_tipo'): así nunca hay efectivo
+        // cobrado Y dinero apartado en la tarjeta por la misma renta.
+        if (!esTarjeta(r)) return res.status(409).json({ error: 'garantia_no_es_tarjeta' });
 
         // Candado atómico anti-doble-clic: solo avanza si el depósito
         // sigue en un estado "libre para empezar". Cero filas = ya hay
@@ -219,6 +328,7 @@ module.exports = async (req, res) => {
 
         const site = process.env.SITE_URL || 'https://www.walkmetours.com';
         const cuponBase = `${site}/${r.idioma === 'en' ? 'cupon-en.html' : 'cupon.html'}?t=${r.token}`;
+        const montoHoldCentavos = Math.round(Number(r.deposito_tarjeta_total) * 100);
         try {
           const stripe = stripeClient();
           const params = {
@@ -235,7 +345,7 @@ module.exports = async (req, res) => {
               quantity: 1,
               price_data: {
                 currency: 'mxn',
-                unit_amount: Math.round(Number(r.deposito_total) * 100),
+                unit_amount: montoHoldCentavos,
                 product_data: { name: `Depósito de garantía · Folio WB-${r.folio}` }
               }
             }],
@@ -246,14 +356,24 @@ module.exports = async (req, res) => {
           // "Invalid email address" — solo se manda si de verdad hay una.
           if (r.email) params.customer_email = r.email;
 
+          // La llave incluye el MONTO. Keyeada solo por token, un segundo
+          // intento con otro importe (cambió el precio, o se liberó el
+          // hold y se rehace) hace que Stripe replaye la sesión vieja o
+          // falle duro con "same parameters". Es dinero real.
           const session = await stripe.checkout.sessions.create(
-            params, { idempotencyKey: `deposito-crear-${r.token}` }
+            params, { idempotencyKey: `deposito-crear-${r.token}-${montoHoldCentavos}` }
           );
 
           await s.from('reservas_bicis')
-            .update({ deposito_checkout_session_id: session.id, updated_at: new Date().toISOString() })
+            .update({
+              deposito_checkout_session_id: session.id,
+              deposito_autorizado_monto: Number(r.deposito_tarjeta_total),
+              updated_at: new Date().toISOString()
+            })
             .eq('id', r.id);
-          await auditar(r.id, 'autorizar_deposito', { checkout_session_id: session.id, monto: r.deposito_total });
+          await auditar(r.id, 'autorizar_deposito', {
+            checkout_session_id: session.id, monto: r.deposito_tarjeta_total
+          });
           return res.status(200).json({ ok: true, url: session.url });
         } catch (e) {
           // Stripe falló: no dejar la reserva atorada en 'pendiente' —
@@ -271,26 +391,20 @@ module.exports = async (req, res) => {
         if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
         const r = await cargarReserva(b.token);
         if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!esTarjeta(r)) return res.status(409).json({ error: 'garantia_no_es_tarjeta' });
         if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
           return res.status(409).json({ error: 'deposito_estado_invalido' });
         }
+        // Tope explícito contra el monto autorizado: un typo de más
+        // rebotaría en Stripe con un error opaco a media operación.
+        let monto = null;
+        if (b.monto != null) {
+          monto = Math.max(0, Number(b.monto) || 0);
+          const tope = montoHold(r);
+          if (monto > tope) return res.status(400).json({ error: 'monto_mayor_al_hold', maximo: tope });
+        }
         try {
-          const stripe = stripeClient();
-          const opts = {};
-          if (b.monto != null) {
-            const monto = Math.max(0, Number(b.monto) || 0);
-            opts.amount_to_capture = Math.round(monto * 100);
-          }
-          const pi = await stripe.paymentIntents.capture(r.deposito_pi_id, opts);
-          const capturado = (pi.amount_received || 0) / 100;
-          await s.from('reservas_bicis').update({
-            deposito_estado: 'capturado',
-            deposito_capturado: capturado,
-            deposito_capturado_at: new Date().toISOString(),
-            deposito_ultimo_error: null,
-            updated_at: new Date().toISOString()
-          }).eq('id', r.id);
-          await auditar(r.id, 'capturar_deposito', { monto: capturado, pi: r.deposito_pi_id });
+          const capturado = await capturarHold(r, monto);
           return res.status(200).json({ ok: true, capturado });
         } catch (e) {
           console.error('capturar_deposito:', e.message);
@@ -303,24 +417,95 @@ module.exports = async (req, res) => {
         if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'stripe_no_configurado' });
         const r = await cargarReserva(b.token);
         if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!esTarjeta(r)) return res.status(409).json({ error: 'garantia_no_es_tarjeta' });
         if (!DEPOSITO_RESOLVIBLE.includes(r.deposito_estado) || !r.deposito_pi_id) {
           return res.status(409).json({ error: 'deposito_estado_invalido' });
         }
-        const stripe = stripeClient();
-        try {
-          await stripe.paymentIntents.cancel(r.deposito_pi_id, { cancellation_reason: 'requested_by_customer' });
-        } catch (e) {
-          // Puede ya estar cancelado/capturado del lado de Stripe (replay,
-          // expiración natural) — se sigue liberando en la DB igual.
-          console.error('liberar_deposito: stripe cancel:', e.message);
+        await liberarHold(r);
+        return res.status(200).json({ ok: true });
+      }
+
+      // ---- Garantía: cambiar de modalidad en el mostrador ----
+      //      El cliente eligió en línea, pero llegó sin efectivo o sin la
+      //      tarjeta. Nunca puede haber las dos garantías vivas a la vez.
+      case 'garantia_tipo': {
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        const tipo = b.tipo === 'tarjeta' ? 'tarjeta' : 'efectivo';
+        if (['cerrada', 'cancelada', 'no_show'].includes(r.estado)) {
+          return res.status(409).json({ error: 'estado_invalido' });
         }
+        if (tipo === (r.garantia_tipo || 'efectivo')) {
+          return res.status(200).json({ ok: true, garantia_tipo: tipo, sin_cambio: true });
+        }
+        // Con dinero apartado en la tarjeta, primero se libera: si no,
+        // quedaría un hold vivo en la tarjeta de alguien que ya pagó en
+        // efectivo, y nadie volvería a esa pantalla a soltarlo.
+        if (esTarjeta(r) && ['pendiente', 'autorizado'].includes(r.deposito_estado)) {
+          return res.status(409).json({ error: 'hold_activo' });
+        }
+        // Al revés: pasar a tarjeta con la identificación todavía en el
+        // cajón exige devolverla primero.
+        if (tipo === 'tarjeta' && idEnResguardo(r) && b.id_devuelto !== true) {
+          return res.status(409).json({ error: 'id_en_resguardo', tipo: r.garantia_id_tipo });
+        }
+
+        const cambios = { garantia_tipo: tipo, updated_at: new Date().toISOString() };
+        if (tipo === 'tarjeta' && idEnResguardo(r)) {
+          cambios.garantia_id_devuelto_at = new Date().toISOString();
+          cambios.garantia_id_devuelto_por = quien.email;
+        }
+        await s.from('reservas_bicis').update(cambios).eq('id', r.id);
+        await auditar(r.id, 'garantia_tipo', { antes: r.garantia_tipo || 'efectivo', despues: tipo });
+        return res.status(200).json({ ok: true, garantia_tipo: tipo });
+      }
+
+      // ---- Garantía en efectivo: registrar el dinero y la identificación
+      //      que quedan en el mostrador. Es el equivalente de
+      //      'autorizar_deposito' para la modalidad de efectivo. ----
+      case 'deposito_efectivo': {
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (esTarjeta(r)) return res.status(409).json({ error: 'garantia_no_es_efectivo' });
+        if (!['pagada', 'en_curso'].includes(r.estado)) {
+          return res.status(409).json({ error: 'estado_invalido' });
+        }
+        const idTipo = String(b.id_tipo || '');
+        if (!GARANTIA_ID_TIPOS.includes(idTipo)) {
+          return res.status(400).json({ error: 'id_tipo_invalido' });
+        }
+        const monto = b.monto == null ? Number(r.deposito_total) : Math.max(0, Number(b.monto) || 0);
+        if (!Number.isFinite(monto)) return res.status(400).json({ error: 'monto_invalido' });
+
+        const ahora = new Date().toISOString();
         await s.from('reservas_bicis').update({
-          deposito_estado: 'liberado',
-          deposito_liberado_at: new Date().toISOString(),
-          deposito_ultimo_error: null,
+          deposito_estado: 'autorizado',       // mismo chip que el hold: "la garantía está puesta"
+          deposito_autorizado_at: ahora,
+          deposito_efectivo_recibido: monto,
+          garantia_id_tipo: idTipo,
+          garantia_id_detalle: String(b.id_detalle || '').trim().slice(0, 120) || null,
+          garantia_id_retenido_at: ahora,
+          garantia_id_retenido_por: quien.email,
+          garantia_id_devuelto_at: null,
+          garantia_id_devuelto_por: null,
+          updated_at: ahora
+        }).eq('id', r.id);
+        await auditar(r.id, 'deposito_efectivo', { monto, id_tipo: idTipo });
+        return res.status(200).json({ ok: true, monto, id_tipo: idTipo });
+      }
+
+      // ---- Garantía en efectivo: devolver la identificación sin cerrar
+      //      la renta (p. ej. el cliente la necesita a medio alquiler) ----
+      case 'devolver_id': {
+        const r = await cargarReserva(b.token);
+        if (!r) return res.status(404).json({ error: 'reserva_no_encontrada' });
+        if (!idEnResguardo(r)) return res.status(409).json({ error: 'sin_id_en_resguardo' });
+        await s.from('reservas_bicis').update({
+          garantia_id_devuelto_at: new Date().toISOString(),
+          garantia_id_devuelto_por: quien.email,
           updated_at: new Date().toISOString()
         }).eq('id', r.id);
-        await auditar(r.id, 'liberar_deposito', { pi: r.deposito_pi_id });
+        await auditar(r.id, 'devolver_id', { tipo: r.garantia_id_tipo });
         return res.status(200).json({ ok: true });
       }
 
@@ -348,6 +533,13 @@ module.exports = async (req, res) => {
           }
           cambiosDinero[k] = v;
         }
+        // Con un hold vivo en Stripe, mover el monto de la retención deja
+        // a la base diciendo un número y a Stripe reteniendo otro. Primero
+        // se libera el hold, luego se corrige, luego se vuelve a autorizar.
+        if ('deposito_tarjeta_unitario' in cambiosDinero
+            && ['pendiente', 'autorizado'].includes(r.deposito_estado)) {
+          return res.status(409).json({ error: 'hold_activo' });
+        }
         Object.assign(cambios, cambiosDinero);
 
         if (!Object.keys(cambios).length) return res.status(400).json({ error: 'sin_cambios' });
@@ -370,12 +562,17 @@ module.exports = async (req, res) => {
         // 'cerrar', con el deposito_total NUEVO (Postgres ya lo recalculó
         // para `r` no, pero sí lo hará al hacer update — por eso se calcula
         // aquí a mano con el mismo deposito_unitario nuevo).
-        if (r.cerrada_at && ('deposito_unitario' in cambiosDinero ||
-            'cargo_retraso' in cambiosDinero || 'cargo_danos' in cambiosDinero)) {
+        // Solo aplica en efectivo: en tarjeta deposito_devuelto es null a
+        // propósito (no se devuelve dinero, se libera un hold).
+        if (!esTarjeta(r) && r.cerrada_at &&
+            ('deposito_unitario' in cambiosDinero || 'deposito_efectivo_recibido' in cambiosDinero ||
+             'cargo_retraso' in cambiosDinero || 'cargo_danos' in cambiosDinero)) {
           const depUnit = cambiosDinero.deposito_unitario ?? r.deposito_unitario;
+          const recibido = cambiosDinero.deposito_efectivo_recibido ?? r.deposito_efectivo_recibido;
+          const base = recibido == null ? depUnit * r.cantidad_bicis : Number(recibido);
           const cRetraso = cambiosDinero.cargo_retraso ?? r.cargo_retraso;
           const cDanos = cambiosDinero.cargo_danos ?? r.cargo_danos;
-          cambios.deposito_devuelto = Math.max(0, depUnit * r.cantidad_bicis - cRetraso - cDanos);
+          cambios.deposito_devuelto = Math.max(0, base - cRetraso - cDanos);
         }
 
         cambios.updated_at = new Date().toISOString();
@@ -463,11 +660,13 @@ module.exports = async (req, res) => {
           precio_unitario: precio.precioUnitario,
           total: precio.total,
           deposito_unitario: precio.depositoUnitario,
+          garantia_tipo: b.garantiaTipo === 'tarjeta' ? 'tarjeta' : 'efectivo',
+          deposito_tarjeta_unitario: precio.depositoTarjetaUnitario,
           nombre_completo: nombre,
           email: String(b.email || '').trim(),
           telefono: String(b.telefono || '').trim(),
           firma_nombre: nombre,               // en mostrador firma el contrato en papel
-          terminos_version: 'bici-v1-2026-08',
+          terminos_version: 'bici-v2-2026-08',
           estado: 'pendiente_efectivo',       // walk-in: paga en el momento
           expira_at: null,
           forzar: b.forzar === true           // saltar disponibilidad si María sabe que una bici volvió

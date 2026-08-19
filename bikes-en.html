@@ -8,7 +8,7 @@
   <link rel="canonical" href="bikes-en.html">
   <link rel="alternate" hreflang="en" href="bikes-en.html">
   <link rel="alternate" hreflang="es" href="bikes.html">
-  <link rel="stylesheet" href="assets/styles.css?v=20260818">
+  <link rel="stylesheet" href="assets/styles.css?v=20260819">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -217,6 +217,27 @@
     <!-- Honeypot: invisible to humans, bots fill it -->
     <input type="text" id="hp" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;opacity:0;">
 
+    <!-- Deposit: the customer picks here; the counter can change it -->
+    <div class="field">
+      <label class="field-label">How will you leave your deposit?</label>
+      <div class="gar-opts">
+        <label class="gar-opt">
+          <input type="radio" name="garantia" value="efectivo" required>
+          <span>
+            <span class="gar-opt-titulo">Cash <span id="garEfMonto"></span> per bike</span>
+            <span class="gar-opt-desc">You leave it when you pick up the bike, along with a valid government ID (national ID, driver's license or passport) that stays at the counter for the whole rental. We give both back when you return the bike in good condition. If you leave your passport, pick it up before leaving the country.</span>
+          </span>
+        </label>
+        <label class="gar-opt">
+          <input type="radio" name="garantia" value="tarjeta">
+          <span>
+            <span class="gar-opt-titulo">Card hold <span id="garTjMonto"></span> per bike</span>
+            <span class="gar-opt-desc">It is not a charge: your bank sets that amount aside and releases it when you return the bike with no damage. We do it at the counter when we hand you the bike, and we keep no documents, we only look at your ID.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
     <div class="terms-box">
       <input type="checkbox" id="terms" required>
       <label for="terms">
@@ -227,10 +248,10 @@
       <summary style="cursor:pointer;font-size:13px;color:var(--green);font-weight:bold;">View terms, conditions and rental contract</summary>
       <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
         <li>Includes helmet, lock and charger. <strong>Does not include medical, accident, theft or damage insurance</strong> &mdash; the customer is responsible for any accident or damage to themselves, third parties or the equipment.</li>
-        <li><strong>Deposit:</strong> valid passport (held during the rental) + $3,000 MXN cash deposit per bike, paid in advance along with the rental fee. Proof of your reservation (hotel, Airbnb or address) is also required.</li>
+        <li><strong>Deposit (you choose one when you book):</strong> <em>cash</em>, <span id="txtGarEfectivo"></span> MXN per bike at pick-up, plus a valid government ID (national ID, driver's license or passport) that is kept at the counter during the rental and returned when you bring the bike back; or a <em>card hold</em> of <span id="txtGarTarjeta"></span> MXN per bike, which is not a charge and is released when you return the bike with no damage. Proof of your reservation (hotel, Airbnb or address) is also required.</li>
         <li><strong>Damage or loss fees:</strong> <span id="txtAccesorios"></span> (MXN).</li>
         <li>Late return: <span id="txtRetraso"></span> MXN per hour. Theft or total loss of the bike: <span id="txtReposicion"></span> MXN.</li>
-        <li>The bike and accessories must be returned in their original condition; the deposit is refunded in full if everything comes back in good condition.</li>
+        <li>The bike and accessories must be returned in their original condition. If everything comes back in good shape we give your cash and your ID back in full, or release the hold on your card without charging anything.</li>
         <li>Your data is handled according to our <a href="privacy-notice-en.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Privacy Notice</a>.</li>
       </ul>
     </details>
@@ -273,10 +294,11 @@
     <div style="background:white;border-radius:18px;padding:24px;border:2px solid #f0e8d8;">
       <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--green);opacity:0.65;margin-bottom:12px;">At pickup</h4>
       <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;">
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Valid passport (held during the rental)</li>
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>$3,000 MXN cash deposit per bike</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Valid government ID (national ID, driver's license or passport)</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Cash deposit of <span id="txtGarEfectivo2"></span> MXN per bike, and we keep your ID during the rental</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Or a card hold of <span id="txtGarTarjeta2"></span> MXN per bike, with no documents held</li>
         <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Proof of your reservation (hotel, Airbnb or address)</li>
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Deposit returned when the bike comes back in good condition</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>You get everything back when the bike comes back in good condition</li>
       </ul>
     </div>
   </div>
@@ -305,12 +327,29 @@
   <div class="f-bottom"><span>© 2026 WalkMe Travel · Playa del Carmen, Mexico</span><span>Bookings via WhatsApp</span></div>
 </footer>
 
-<script src="assets/catalogo-bicis.js?v=20260817"></script>
+<script src="assets/catalogo-bicis.js?v=20260819"></script>
 <script>
   // Damage charges from the shared catalog (previously hand-written here).
   document.getElementById('txtAccesorios').textContent = WM_BICIS.textoAccesorios('en');
   document.getElementById('txtRetraso').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.retrasoHora.toLocaleString('en-US');
   document.getElementById('txtReposicion').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.reposicion.toLocaleString('en-US');
+
+  // Both deposit amounts also come from the catalog: they used to be
+  // hand-written in the HTML and drifted out of sync.
+  const GAR_EF = '$' + WM_BICIS.DEPOSITO_UNITARIO.toLocaleString('en-US');
+  const GAR_TJ = '$' + WM_BICIS.DEPOSITO_TARJETA_UNITARIO.toLocaleString('en-US');
+  ['txtGarEfectivo', 'txtGarEfectivo2', 'garEfMonto'].forEach(id => {
+    document.getElementById(id).textContent = GAR_EF;
+  });
+  ['txtGarTarjeta', 'txtGarTarjeta2', 'garTjMonto'].forEach(id => {
+    document.getElementById(id).textContent = GAR_TJ;
+  });
+
+  // Nothing pre-selected on purpose: this is the clause the customer
+  // signs, and guessing wrong is what causes friction at the counter.
+  function garantiaSel() {
+    return document.querySelector('input[name="garantia"]:checked');
+  }
 
   const form = document.getElementById('bikeForm');
   const submitBtn = document.getElementById('submitBtn');
@@ -339,9 +378,17 @@
     const n = document.getElementById('cantidad').value;
     const calc = WM_BICIS.calcularTotal(d, n);
     if (calc) {
+      const sel = garantiaSel();
+      let garTexto = '';
+      if (sel && sel.value === 'tarjeta') {
+        garTexto = ' · Card hold: ' + WM_BICIS.money(calc.depositoTarjetaTotal) +
+          ' (released on return)';
+      } else if (sel) {
+        garTexto = ' · Deposit at pickup: ' + WM_BICIS.money(calc.depositoTotal) +
+          ' in cash plus your ID';
+      }
       totalVivo.style.display = 'block';
-      totalVivo.textContent = 'Rental total: ' + WM_BICIS.money(calc.total) +
-        ' · Deposit at pickup: ' + WM_BICIS.money(calc.depositoTotal) + ' in cash';
+      totalVivo.textContent = 'Rental total: ' + WM_BICIS.money(calc.total) + garTexto;
     } else {
       totalVivo.style.display = 'none';
     }
@@ -350,7 +397,7 @@
   function validate() {
     const terms = document.getElementById('terms').checked;
     const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
-    submitBtn.disabled = !(terms && allFilled) || enviando;
+    submitBtn.disabled = !(terms && allFilled && garantiaSel()) || enviando;
     pintarTotal();
   }
   form.addEventListener('input', validate);
@@ -400,6 +447,7 @@
           fecha: document.getElementById('fecha').value,
           hora: document.getElementById('hora').value,
           cantidad: document.getElementById('cantidad').value,
+          garantiaTipo: garantiaSel() ? garantiaSel().value : 'efectivo',
           nombre: document.getElementById('nombre').value.trim(),
           email: document.getElementById('email').value.trim(),
           telefono: document.getElementById('telefono').value.trim(),

@@ -15,9 +15,12 @@
     folio: 'FILE NO.', cliente: 'CLIENT', plan: 'PLAN', fecha: 'DATE AND TIME', bicis: 'BIKES',
     total: 'TOTAL',
     garantiaTitulo: 'CASH DEPOSIT AT PICK-UP',
-    garantiaNota: 'Returned in full at drop-off if there is no damage or missing items.',
+    garantiaTituloTarjeta: 'CARD HOLD AT PICK-UP',
+    garantiaNota: 'Returned in full at drop-off, along with your ID, if there is no damage or missing items.',
+    garantiaNotaTarjeta: 'Not a charge: your bank sets the amount aside and releases it at drop-off if there is no damage or missing items.',
     requisitos: 'BRING WITH YOU', incluye: 'INCLUDES',
-    reqs: dep => ['Valid passport or driver’s license', 'Hotel, Airbnb or local address', dep + ' cash deposit'],
+    reqs: dep => ['Valid government ID (we keep it during the rental)', 'Hotel, Airbnb or local address', dep + ' cash deposit'],
+    reqsTarjeta: () => ['The card you will use for the hold', 'Valid government ID (we only look at it)', 'Hotel, Airbnb or local address'],
     incs: ['Helmet', 'Lock', 'Charger'],
     direccionTitulo: 'Pick up your bike here',
     direccion: 'WalkMe Tours · 5th Avenue, between 10th and 12th Streets, across from Sala de Despecho, Playa del Carmen, Quintana Roo. Find us on Google Maps as “WalkMe Tours”.',
@@ -36,8 +39,12 @@
       pendiente: (total, fp) => 'Pending: pay ' + total + ' at the agency · ' + fp,
       sin: total => 'Pending: choose how to pay ' + total
     },
-    efectivoPagado: dep => 'Bring ' + dep + ' MXN in cash for the deposit.',
+    efectivoPagado: dep => 'Bring ' + dep + ' MXN in cash for the deposit, plus your ID.',
     efectivoPend: monto => 'Bring in cash: ' + monto + ' (rental + deposit).',
+    tarjetaPagado: 'Just bring the card for the hold. No cash needed.',
+    tarjetaPend: monto => 'Bring in cash: ' + monto + ' (rental only). The deposit goes on your card.',
+    depositoOk: 'Card hold authorized. Nothing was charged.',
+    depositoCancelado: 'The card hold was not completed. We will sort it out at the counter.',
     metodo: { mercadopago: 'Mercado Pago', stripe: 'Card (Stripe)', efectivo: 'Cash at the agency' },
     payTitle: 'Choose how to pay',
     payMP: 'Pay with Mercado Pago',
@@ -62,9 +69,12 @@
     folio: 'FOLIO', cliente: 'CLIENTE', plan: 'PLAN', fecha: 'FECHA Y HORA', bicis: 'BICICLETAS',
     total: 'TOTAL',
     garantiaTitulo: 'GARANTÍA EN EFECTIVO AL RECOGER',
-    garantiaNota: 'Se devuelve completa al entregar la bicicleta si no hay daños ni faltantes.',
+    garantiaTituloTarjeta: 'RETENCIÓN EN TARJETA AL RECOGER',
+    garantiaNota: 'Se devuelve completa, junto con tu identificación, al entregar la bicicleta si no hay daños ni faltantes.',
+    garantiaNotaTarjeta: 'No es un cobro: tu banco aparta el monto y lo libera al entregar la bicicleta si no hay daños ni faltantes.',
     requisitos: 'LLEVA CONTIGO', incluye: 'INCLUYE',
-    reqs: dep => ['Pasaporte o licencia vigente', 'Comprobante de hotel, Airbnb o domicilio', 'Garantía en efectivo de ' + dep],
+    reqs: dep => ['Identificación oficial vigente (se resguarda durante la renta)', 'Comprobante de hotel, Airbnb o domicilio', 'Garantía en efectivo de ' + dep],
+    reqsTarjeta: () => ['La tarjeta con la que harás la retención', 'Identificación oficial vigente (solo la vemos)', 'Comprobante de hotel, Airbnb o domicilio'],
     incs: ['Casco', 'Candado', 'Cargador'],
     direccionTitulo: 'Recoge tu bicicleta aquí',
     direccion: 'WalkMe Tours · 5ta Avenida entre Calle 10 y Calle 12, frente a Sala de Despecho, Playa del Carmen, Quintana Roo. Búscanos en Google Maps como “WalkMe Tours”.',
@@ -83,8 +93,12 @@
       pendiente: (total, fp) => 'Pendiente: paga ' + total + ' en la agencia · ' + fp,
       sin: total => 'Pendiente: elige cómo pagar ' + total
     },
-    efectivoPagado: dep => 'Lleva ' + dep + ' en efectivo para la garantía.',
+    efectivoPagado: dep => 'Lleva ' + dep + ' en efectivo para la garantía, más tu identificación.',
     efectivoPend: monto => 'Lleva en efectivo: ' + monto + ' (renta + garantía).',
+    tarjetaPagado: 'Solo lleva la tarjeta para la retención. No necesitas efectivo.',
+    tarjetaPend: monto => 'Lleva en efectivo: ' + monto + ' (solo la renta). La garantía va en tu tarjeta.',
+    depositoOk: 'Retención autorizada. No se te cobró nada.',
+    depositoCancelado: 'La retención no se completó. Lo resolvemos en el mostrador.',
     metodo: { mercadopago: 'Mercado Pago', stripe: 'Tarjeta (Stripe)', efectivo: 'Efectivo en la agencia' },
     payTitle: 'Elige cómo pagar',
     payMP: 'Pagar con Mercado Pago',
@@ -109,6 +123,9 @@
   const money = n => '$' + Number(n).toLocaleString('en-US') + ' MXN';
   const token = new URLSearchParams(location.search).get('t') || '';
   const pagando = new URLSearchParams(location.search).get('pagando') === '1';
+  // Vuelta del checkout de la retención: lo manda api/crm/accion.js
+  // (success_url / cancel_url de 'autorizar_deposito').
+  const depositoParam = new URLSearchParams(location.search).get('deposito');
 
   function fmtFecha(fechaISO, horaStr) {
     // fechaISO: 'YYYY-MM-DD' · horaStr: 'HH:MM[:SS]'
@@ -161,7 +178,11 @@
     $('cpCargando').style.display = 'none';
     $('cpScaleOuter').style.display = 'block';
 
-    const dep = money(r.deposito_total);
+    // Modalidad de garantía. El '|| efectivo' no es decorativo: si este
+    // archivo llegara al navegador antes de la migración, el cupón se
+    // comporta exactamente como antes en vez de romperse.
+    const garTarjeta = (r.garantia_tipo || 'efectivo') === 'tarjeta';
+    const dep = money(garTarjeta ? r.deposito_tarjeta_total : r.deposito_total);
     const total = money(r.total);
     const estado = r.estado;
     const pagado = estado === 'pagada' || estado === 'en_curso' || estado === 'cerrada';
@@ -193,15 +214,29 @@
       : estado === 'pendiente_efectivo'
         ? T.pagoDetalle.pendiente(total, fp || T.metodo.efectivo)
         : T.pagoDetalle.sin(total);
+    $('cpGarLabel').textContent = garTarjeta ? T.garantiaTituloTarjeta : T.garantiaTitulo;
     $('cpGarMonto').textContent = dep;
-    $('cpGarNota').textContent = T.garantiaNota;
-    $('cpEfectivo').textContent = pagado
-      ? T.efectivoPagado(dep)
-      : T.efectivoPend(money(Number(r.total) + Number(r.deposito_total)));
+    $('cpGarNota').textContent = garTarjeta ? T.garantiaNotaTarjeta : T.garantiaNota;
+    // Con tarjeta el efectivo a llevar es SOLO la renta: sumarle la
+    // garantía le diría al cliente que traiga $7,500 que nadie le va a pedir.
+    $('cpEfectivo').textContent = garTarjeta
+      ? (pagado ? T.tarjetaPagado : T.tarjetaPend(total))
+      : (pagado ? T.efectivoPagado(dep)
+                : T.efectivoPend(money(Number(r.total) + Number(r.deposito_total))));
+
+    // Vuelta del checkout de la retención. Se confía en deposito_estado,
+    // no en el parámetro de la URL: el hold lo confirma el webhook.
+    const avisoDep = $('cpDepAviso');
+    if (depositoParam) {
+      const ok = depositoParam === '1' && r.deposito_estado === 'autorizado';
+      avisoDep.textContent = ok ? T.depositoOk : T.depositoCancelado;
+      avisoDep.className = 'cp-dep-aviso' + (ok ? '' : ' mal');
+      avisoDep.style.display = 'block';
+    }
 
     // Listas
     const reqs = $('cpReqs'); reqs.textContent = '';
-    T.reqs(dep).forEach(txt => {
+    (garTarjeta ? T.reqsTarjeta() : T.reqs(dep)).forEach(txt => {
       const div = document.createElement('div');
       div.className = 'cp-item';
       const span = document.createElement('span');

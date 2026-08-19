@@ -56,6 +56,7 @@
     editandoDinero: false,
     cerrando: false,
     capturandoDeposito: false,
+    registrandoEfectivo: false,
     unidadesSel: [],
     cargando: false,
     modalAbierto: false,
@@ -139,8 +140,39 @@
     deposito_capturado: 'Depósito cobrado',
     deposito_liberado: 'Depósito liberado',
     deposito_expirado: 'Depósito expirado',
-    deposito_requiere_atencion: 'Depósito: requiere atención'
+    deposito_requiere_atencion: 'Depósito: requiere atención',
+    // ---- Garantía en efectivo (mismos estados, otras palabras) ----
+    eft_autorizado: 'Efectivo + ID en resguardo',
+    eft_liberado: 'Efectivo devuelto'
   };
+
+  // Modalidad de garantía (19-ago-26). El '|| efectivo' cubre las reservas
+  // creadas antes de la migración.
+  function esTarjeta(r) { return (r.garantia_tipo || 'efectivo') === 'tarjeta'; }
+  function idEnResguardo(r) {
+    return !!r.garantia_id_retenido_at && !r.garantia_id_devuelto_at;
+  }
+  // Monto de la garantía según modalidad.
+  function montoGarantia(r) {
+    return Number(esTarjeta(r) ? r.deposito_tarjeta_total : r.deposito_total);
+  }
+  // Tope de captura: lo que Stripe autorizó de verdad (los holds viejos no
+  // lo tienen y se hicieron por deposito_total).
+  function montoHold(r) {
+    return Number(r.deposito_autorizado_monto == null ? r.deposito_total : r.deposito_autorizado_monto);
+  }
+  var ETIQUETA_ID = {
+    ine: 'INE', licencia: 'Licencia', pasaporte: 'Pasaporte', otro: 'Otro documento'
+  };
+  // El chip del depósito se lee distinto según la modalidad: "Depósito
+  // autorizado" no significa nada en el mostrador cuando lo que hay es
+  // dinero en la caja y un pasaporte en el cajón.
+  function claveChipDeposito(r) {
+    if (!esTarjeta(r) && (r.deposito_estado === 'autorizado' || r.deposito_estado === 'liberado')) {
+      return 'eft_' + r.deposito_estado;
+    }
+    return 'deposito_' + r.deposito_estado;
+  }
 
   // Estado "de pantalla": en_curso puede verse como Retrasada o Vence hoy.
   // Valor DERIVADO, nunca editable directamente (el diseño lo insinúa como
@@ -189,7 +221,15 @@
     deposito_ya_activo: 'Ya hay un depósito en proceso o autorizado para esta renta.',
     deposito_estado_invalido: 'El depósito no está en un estado que permita esto.',
     stripe_captura_fallo: 'Stripe no pudo procesar el cobro del depósito. Intenta de nuevo.',
-    stripe_error: 'No se pudo conectar con Stripe. Intenta de nuevo en un momento.'
+    stripe_error: 'No se pudo conectar con Stripe. Intenta de nuevo en un momento.',
+    garantia_no_es_tarjeta: 'Esta renta tiene garantía en efectivo. Cambia la modalidad primero.',
+    garantia_no_es_efectivo: 'Esta renta tiene retención en tarjeta, no garantía en efectivo.',
+    hold_activo: 'Primero libera la retención de la tarjeta.',
+    id_en_resguardo: 'Todavía tienes la identificación del cliente. Confirma que se la devolviste.',
+    sin_id_en_resguardo: 'No hay ninguna identificación en resguardo para esta renta.',
+    id_tipo_invalido: 'Elige qué identificación se quedó en el mostrador.',
+    monto_mayor_al_hold: 'No puedes cobrar más de lo que se retuvo en la tarjeta.',
+    monto_invalido: 'Ese monto no es válido.'
   };
 
   function textoError(e) {
@@ -635,7 +675,16 @@
     }
     f.appendChild(uni);
 
-    f.appendChild(el('span', 'c-total', money(r.total)));
+    // La garantía va como sub-línea del total en vez de columna propia:
+    // la rejilla de la tabla ya está al límite y esto se lee igual de
+    // rápido. 🪪 marca que todavía hay un documento en el cajón.
+    var tot = el('span', 'c-total', money(r.total));
+    tot.appendChild(el('span', 'c-sub',
+      (esTarjeta(r) ? '💳 ' : '💵 ') + money(montoGarantia(r)) + (idEnResguardo(r) ? ' 🪪' : '')));
+    tot.title = (esTarjeta(r) ? 'Retención en tarjeta: ' : 'Garantía en efectivo: ') +
+      money(montoGarantia(r)) +
+      (idEnResguardo(r) ? ' · ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'documento') + ' en resguardo' : '');
+    f.appendChild(tot);
 
     var est = el('span', 'c-estado');
     est.appendChild(chipEstado(estadoVista(r)));
@@ -875,6 +924,7 @@
     estado.editandoDinero = false;
     estado.cerrando = false;
     estado.capturandoDeposito = false;
+    estado.registrandoEfectivo = false;
     var r = rentaPorToken(token);
     estado.unidadesSel = (r && r.unidades) ? r.unidades.slice() : [];
     $('scrimDrawer').hidden = false;
@@ -888,6 +938,7 @@
     estado.editando = false;
     estado.cerrando = false;
     estado.capturandoDeposito = false;
+    estado.registrandoEfectivo = false;
     estado.cotAbierta = null;
     $('scrimDrawer').hidden = true;
     $('drawer').hidden = true;
@@ -1185,7 +1236,9 @@
   // columna generada en Postgres (deposito_unitario × cantidad_bicis).
   var CAMPOS_DINERO = [
     { k: 'total', lab: 'Total de la renta' },
-    { k: 'deposito_unitario', lab: 'Depósito por bici' },
+    { k: 'deposito_unitario', lab: 'Garantía en efectivo por bici' },
+    { k: 'deposito_tarjeta_unitario', lab: 'Retención en tarjeta por bici' },
+    { k: 'deposito_efectivo_recibido', lab: 'Efectivo recibido (total)' },
     { k: 'cargo_retraso', lab: 'Cargo por retraso' },
     { k: 'cargo_danos', lab: 'Cargo por daños' }
   ];
@@ -1204,15 +1257,31 @@
 
     var c = el('div', 'dr-caja');
     c.appendChild(dato('Total de la renta', money(r.total), { fuerte: true }));
-    c.appendChild(dato('Garantía (depósito)', money(r.deposito_total)));
+    var tarjeta = esTarjeta(r);
+    c.appendChild(dato(
+      tarjeta ? 'Garantía (retención en tarjeta)' : 'Garantía (efectivo + identificación)',
+      money(montoGarantia(r))
+    ));
+    if (!tarjeta && r.deposito_efectivo_recibido != null) {
+      c.appendChild(dato('Efectivo recibido', money(r.deposito_efectivo_recibido)));
+    }
+    if (idEnResguardo(r)) {
+      c.appendChild(dato(
+        'Identificación en resguardo',
+        (ETIQUETA_ID[r.garantia_id_tipo] || r.garantia_id_tipo || 'documento') +
+          (r.garantia_id_detalle ? ' · ' + r.garantia_id_detalle : '') +
+          ' · desde ' + fechaCorta(r.garantia_id_retenido_at),
+        { fuerte: true }
+      ));
+    }
     if (r.deposito_estado && r.deposito_estado !== 'none') {
       var filaDep = el('div', 'dato');
-      filaDep.appendChild(el('span', 'dato-lab', 'Estado del depósito'));
+      filaDep.appendChild(el('span', 'dato-lab', 'Estado de la garantía'));
       var valDep = el('span', 'dato-val');
-      valDep.appendChild(chipEstado('deposito_' + r.deposito_estado));
+      valDep.appendChild(chipEstado(claveChipDeposito(r)));
       filaDep.appendChild(valDep);
       c.appendChild(filaDep);
-      if (r.deposito_estado === 'autorizado' && r.deposito_expira_at) {
+      if (tarjeta && r.deposito_estado === 'autorizado' && r.deposito_expira_at) {
         var dias = Math.ceil((new Date(r.deposito_expira_at) - new Date()) / 86400000);
         c.appendChild(dato('Vence en', dias <= 0 ? 'hoy' : (dias + ' día' + (dias === 1 ? '' : 's'))));
       }
@@ -1231,7 +1300,13 @@
       if (r.cargo_nota) c.appendChild(dato('Nota del cierre', r.cargo_nota));
     }
     if (r.estado === 'cerrada') {
-      c.appendChild(dato('Depósito devuelto', money(r.deposito_devuelto || 0), { fuerte: true }));
+      // En tarjeta deposito_devuelto es null a propósito: no se devuelve
+      // dinero, se libera un hold. Pintar $0 sería mentir.
+      c.appendChild(dato(
+        'Depósito devuelto',
+        r.deposito_devuelto == null ? 'No aplica (retención en tarjeta)' : money(r.deposito_devuelto),
+        { fuerte: true }
+      ));
       if (r.cerrada_at) c.appendChild(dato('Cerrada el', fechaCorta(r.cerrada_at)));
     }
     s.appendChild(c);
@@ -1422,54 +1497,117 @@
     // pagadas/entregadas. Los 3 botones son aditivos, no tocan nada de
     // arriba (misma reserva puede tener acciones de renta Y de depósito
     // visibles a la vez, ej. "Entregar bici" + "Autorizar depósito").
-    if (['pagada', 'en_curso'].indexOf(r.estado) !== -1) {
-      var depEstado = r.deposito_estado || 'none';
-      if (['none', 'liberado', 'expirado', 'requiere_atencion'].indexOf(depEstado) !== -1) {
-        var autorizar = el('button', 'btn btn-linea',
-          'Autorizar depósito (' + money(r.deposito_total) + ')');
-        autorizar.type = 'button';
-        autorizar.addEventListener('click', async function () {
-          autorizar.disabled = true;
-          var res = await ejecutar({ accion: 'autorizar_deposito', token: r.token },
-            'Depósito iniciado: comparte el link con el cliente para que meta su tarjeta.');
-          autorizar.disabled = false;
-          if (res && res.url) window.open(res.url, '_blank', 'noopener');
-        });
-        cont.appendChild(autorizar);
-      }
+    var depEstado = r.deposito_estado || 'none';
+    var depSinResolver = ['pendiente', 'autorizado', 'requiere_atencion'].indexOf(depEstado) !== -1;
+    var rentaAbierta = ['pagada', 'en_curso'].indexOf(r.estado) !== -1;
+    // Una renta cerrada también muestra el bloque si quedó un hold vivo:
+    // el flujo normal es cerrar con los cargos y DESPUÉS cobrar o liberar.
+    if (rentaAbierta || (r.estado === 'cerrada' && depSinResolver)) {
+      var tarjetaAcc = esTarjeta(r);
 
-      if (depEstado === 'pendiente') {
-        cont.appendChild(el('div', 'dr-hint', 'Esperando a que el cliente termine de meter su tarjeta.'));
-        var reintentar = el('button', 'btn btn-linea', 'Actualizar');
-        reintentar.type = 'button';
-        reintentar.addEventListener('click', function () { cargarTablero(true); });
-        cont.appendChild(reintentar);
-      }
+      // ---- Rama TARJETA: el hold de Stripe ----
+      if (tarjetaAcc) {
+        if (rentaAbierta && ['none', 'liberado', 'expirado', 'requiere_atencion'].indexOf(depEstado) !== -1) {
+          var autorizar = el('button', 'btn btn-linea',
+            'Autorizar retención (' + money(r.deposito_tarjeta_total) + ')');
+          autorizar.type = 'button';
+          autorizar.addEventListener('click', async function () {
+            autorizar.disabled = true;
+            var res = await ejecutar({ accion: 'autorizar_deposito', token: r.token },
+              'Retención iniciada: comparte el link con el cliente para que meta su tarjeta.');
+            autorizar.disabled = false;
+            if (res && res.url) window.open(res.url, '_blank', 'noopener');
+          });
+          cont.appendChild(autorizar);
+        }
 
-      if (depEstado === 'autorizado' || depEstado === 'requiere_atencion') {
-        if (estado.capturandoDeposito) {
-          cont.appendChild(formularioCapturaDeposito(r));
-        } else {
-          var filaDep = el('div', 'dr-acc-fila');
-          var capturarBt = el('button', 'btn btn-amarillo', 'Capturar depósito…');
-          capturarBt.type = 'button';
-          capturarBt.addEventListener('click', function () { estado.capturandoDeposito = true; pintarDrawer(); });
-          filaDep.appendChild(capturarBt);
+        if (depEstado === 'pendiente') {
+          cont.appendChild(el('div', 'dr-hint', 'Esperando a que el cliente termine de meter su tarjeta.'));
+          var reintentar = el('button', 'btn btn-linea', 'Actualizar');
+          reintentar.type = 'button';
+          reintentar.addEventListener('click', function () { cargarTablero(true); });
+          cont.appendChild(reintentar);
+        }
 
-          var liberarBt = el('button', 'btn btn-linea', 'Liberar depósito');
-          liberarBt.type = 'button';
-          liberarBt.addEventListener('click', async function () {
+        if (depEstado === 'autorizado' || depEstado === 'requiere_atencion') {
+          if (estado.capturandoDeposito) {
+            cont.appendChild(formularioCapturaDeposito(r));
+          } else {
+            var filaDep = el('div', 'dr-acc-fila');
+            var capturarBt = el('button', 'btn btn-amarillo', 'Cobrar del depósito…');
+            capturarBt.type = 'button';
+            capturarBt.addEventListener('click', function () { estado.capturandoDeposito = true; pintarDrawer(); });
+            filaDep.appendChild(capturarBt);
+
+            var liberarBt = el('button', 'btn btn-linea', 'Liberar retención');
+            liberarBt.type = 'button';
+            liberarBt.addEventListener('click', async function () {
+              var ok = await confirmar({
+                titulo: '¿Liberar la retención?',
+                texto: 'No se le cobra nada al cliente. El hold en su tarjeta se cancela.',
+                aceptar: 'Sí, liberar',
+                clase: 'btn-amarillo'
+              });
+              if (ok) ejecutar({ accion: 'liberar_deposito', token: r.token }, 'Retención liberada.');
+            });
+            filaDep.appendChild(liberarBt);
+            cont.appendChild(filaDep);
+          }
+        }
+
+      // ---- Rama EFECTIVO: dinero en la caja + documento en el cajón ----
+      } else {
+        if (rentaAbierta && (depEstado === 'none' || depEstado === 'liberado')) {
+          if (estado.registrandoEfectivo) {
+            cont.appendChild(formularioDepositoEfectivo(r));
+          } else {
+            var registrar = el('button', 'btn btn-linea',
+              'Registrar efectivo + identificación (' + money(r.deposito_total) + ')');
+            registrar.type = 'button';
+            registrar.addEventListener('click', function () {
+              estado.registrandoEfectivo = true; pintarDrawer();
+            });
+            cont.appendChild(registrar);
+          }
+        }
+        if (idEnResguardo(r)) {
+          var devolverId = el('button', 'btn btn-linea',
+            'Devolver ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'identificación').toLowerCase());
+          devolverId.type = 'button';
+          devolverId.addEventListener('click', async function () {
             var ok = await confirmar({
-              titulo: '¿Liberar el depósito?',
-              texto: 'No se le cobra nada al cliente. El hold en su tarjeta se cancela.',
-              aceptar: 'Sí, liberar',
+              titulo: '¿Le devolviste su identificación?',
+              texto: 'Confirma solo cuando el documento ya esté en manos del cliente.',
+              aceptar: 'Sí, se la devolví',
               clase: 'btn-amarillo'
             });
-            if (ok) ejecutar({ accion: 'liberar_deposito', token: r.token }, 'Depósito liberado.');
+            if (ok) ejecutar({ accion: 'devolver_id', token: r.token }, 'Identificación devuelta.');
           });
-          filaDep.appendChild(liberarBt);
-          cont.appendChild(filaDep);
+          cont.appendChild(devolverId);
         }
+      }
+
+      // ---- Cambio de modalidad: el cliente llegó sin efectivo o sin tarjeta ----
+      if (rentaAbierta) {
+      var cambiarGar = el('button', 'btn btn-sutil',
+        tarjetaAcc ? 'Cambiar a garantía en efectivo' : 'Cambiar a retención en tarjeta');
+      cambiarGar.type = 'button';
+      cambiarGar.addEventListener('click', async function () {
+        var destino = tarjetaAcc ? 'efectivo' : 'tarjeta';
+        var ok = await confirmar({
+          titulo: '¿Cambiar la modalidad de garantía?',
+          texto: tarjetaAcc
+            ? 'Pasa de retención en tarjeta de ' + money(r.deposito_tarjeta_total) +
+              ' a ' + money(r.deposito_total) + ' en efectivo más una identificación en resguardo.'
+            : 'Pasa de ' + money(r.deposito_total) + ' en efectivo más identificación a una ' +
+              'retención en tarjeta de ' + money(r.deposito_tarjeta_total) + '.',
+          aceptar: 'Sí, cambiar',
+          clase: 'btn-amarillo'
+        });
+        if (ok) ejecutar({ accion: 'garantia_tipo', token: r.token, tipo: destino },
+          'Modalidad de garantía actualizada.');
+      });
+      cont.appendChild(cambiarGar);
       }
     }
 
@@ -1517,6 +1655,71 @@
     return s;
   }
 
+  // Garantía en efectivo: qué dinero entró y qué documento se quedó en el
+  // mostrador. Es el equivalente de "Autorizar retención" en la otra
+  // modalidad, y lo que hace que el documento no se olvide en el cajón.
+  function formularioDepositoEfectivo(r) {
+    var caja = el('div', 'dr-caja');
+    caja.appendChild(el('div', 'dr-nota',
+      'Registra el efectivo que recibiste y qué identificación se queda en resguardo.'));
+
+    var grid = el('div', 'form-grid');
+    grid.style.marginTop = '10px';
+
+    var labMonto = el('label', 'campo');
+    labMonto.appendChild(el('span', 'campo-lab', 'Efectivo recibido (MXN)'));
+    var inMonto = el('input', 'campo-in');
+    inMonto.type = 'number'; inMonto.min = '0'; inMonto.step = '50';
+    inMonto.inputMode = 'numeric';
+    inMonto.value = String(Number(r.deposito_total || 0));
+    labMonto.appendChild(inMonto);
+    grid.appendChild(labMonto);
+
+    var labTipo = el('label', 'campo');
+    labTipo.appendChild(el('span', 'campo-lab', 'Identificación en resguardo'));
+    var selTipo = el('select', 'campo-in');
+    [['', 'Elige…'], ['ine', 'INE'], ['licencia', 'Licencia de conducir'],
+     ['pasaporte', 'Pasaporte'], ['otro', 'Otro documento']].forEach(function (o) {
+      var op = el('option', null, o[1]);
+      op.value = o[0];
+      selTipo.appendChild(op);
+    });
+    labTipo.appendChild(selTipo);
+    grid.appendChild(labTipo);
+
+    var labDet = el('label', 'campo ancho');
+    labDet.appendChild(el('span', 'campo-lab', 'Referencia del documento (opcional)'));
+    var inDet = el('input', 'campo-in');
+    inDet.type = 'text'; inDet.maxLength = 120;
+    inDet.placeholder = 'Últimos dígitos, país, lo que te ayude a identificarlo';
+    labDet.appendChild(inDet);
+    grid.appendChild(labDet);
+    caja.appendChild(grid);
+
+    var acc = el('div', 'form-acc');
+    var volver = el('button', 'btn btn-linea', 'Cancelar');
+    volver.type = 'button';
+    volver.addEventListener('click', function () { estado.registrandoEfectivo = false; pintarDrawer(); });
+    var guardar = el('button', 'btn btn-amarillo', 'Registrar garantía');
+    guardar.type = 'button';
+    guardar.addEventListener('click', async function () {
+      if (!selTipo.value) { toast('Elige qué identificación se quedó en el mostrador.', 'error'); return; }
+      var monto = Number(inMonto.value);
+      if (!Number.isFinite(monto) || monto < 0) { toast('El monto no puede quedar vacío ni negativo.', 'error'); return; }
+      guardar.disabled = true;
+      var res = await ejecutar({
+        accion: 'deposito_efectivo', token: r.token, monto: monto,
+        id_tipo: selTipo.value, id_detalle: inDet.value.trim()
+      }, 'Garantía en efectivo registrada.');
+      guardar.disabled = false;
+      if (res) { estado.registrandoEfectivo = false; pintarDrawer(); }
+    });
+    acc.appendChild(volver);
+    acc.appendChild(guardar);
+    caja.appendChild(acc);
+    return caja;
+  }
+
   // Monto por cobrar del hold, pre-llenado con los cargos de retraso/daños
   // si la renta ya se cerró (lo normal: primero se cierra la renta con sus
   // cargos, luego se resuelve el depósito con ese mismo número).
@@ -1524,14 +1727,17 @@
     var caja = el('div', 'dr-caja');
     caja.appendChild(el('div', 'dr-nota', 'Cobra del depósito solo lo que corresponda a daños o atraso. El resto se libera.'));
 
+    // El tope es lo que Stripe retuvo de verdad, no lo que dice el
+    // catálogo hoy: un hold viejo puede ser de otro monto.
+    var tope = montoHold(r);
     var sugerido = r.cerrada_at
       ? Math.max(0, Number(r.cargo_retraso || 0) + Number(r.cargo_danos || 0))
-      : Number(r.deposito_total || 0);
+      : tope;
 
     var grid = el('div', 'form-grid');
     grid.style.marginTop = '10px';
     var lab = el('label', 'campo ancho');
-    lab.appendChild(el('span', 'campo-lab', 'Monto a cobrar del depósito (MXN, máx. ' + money(r.deposito_total) + ')'));
+    lab.appendChild(el('span', 'campo-lab', 'Monto a cobrar del depósito (MXN, máx. ' + money(tope) + ')'));
     var input = el('input', 'campo-in');
     input.type = 'number'; input.min = '0'; input.step = '50'; input.value = String(sugerido);
     input.inputMode = 'numeric';
@@ -1548,6 +1754,7 @@
     confirmarBt.addEventListener('click', async function () {
       var monto = Number(input.value);
       if (!Number.isFinite(monto) || monto < 0) { toast('El monto no puede quedar vacío ni negativo.', 'error'); return; }
+      if (monto > tope) { toast('No puedes cobrar más de ' + money(tope) + ', que es lo retenido.', 'error'); return; }
       confirmarBt.disabled = true;
       var res = await ejecutar({ accion: 'capturar_deposito', token: r.token, monto: monto },
         function (d) { return 'Se cobraron ' + money(d.capturado) + ' del depósito.'; });
@@ -1562,7 +1769,14 @@
 
   function formularioCierre(r) {
     var caja = el('div', 'dr-caja');
-    caja.appendChild(el('div', 'dr-nota', 'Anota los cargos, si los hay. El resto del depósito se le devuelve.'));
+    var tarjetaC = esTarjeta(r);
+    // Base del cálculo: en efectivo, lo que de verdad entró a la caja.
+    var baseEfectivo = Number(
+      r.deposito_efectivo_recibido == null ? r.deposito_total : r.deposito_efectivo_recibido
+    );
+    caja.appendChild(el('div', 'dr-nota', tarjetaC
+      ? 'Anota los cargos, si los hay. Se cobran de la retención y el resto se libera.'
+      : 'Anota los cargos, si los hay. El resto del efectivo se le devuelve.'));
 
     var grid = el('div', 'form-grid');
     grid.style.marginTop = '10px';
@@ -1592,9 +1806,24 @@
 
     caja.appendChild(grid);
 
+    // Recordatorio del documento: es lo que más se olvida al cerrar.
+    var chkId = null;
+    if (idEnResguardo(r)) {
+      var labId = el('label', 'campo ancho');
+      labId.style.display = 'flex';
+      labId.style.alignItems = 'flex-start';
+      labId.style.gap = '10px';
+      chkId = el('input');
+      chkId.type = 'checkbox';
+      labId.appendChild(chkId);
+      labId.appendChild(el('span', 'campo-lab',
+        'Le devolví su ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'identificación').toLowerCase()));
+      caja.appendChild(labId);
+    }
+
     var resumen = el('div', 'cierre-total');
-    var etiqueta = el('span', null, 'Se le devuelve');
-    var valor = el('span', null, money(r.deposito_total));
+    var etiqueta = el('span', null, tarjetaC ? 'Se cobra de la retención' : 'Se le devuelve');
+    var valor = el('span', null, money(tarjetaC ? 0 : baseEfectivo));
     resumen.appendChild(etiqueta);
     resumen.appendChild(valor);
     caja.appendChild(resumen);
@@ -1602,7 +1831,9 @@
     function recalcular() {
       var a = Math.max(0, Number(inRetraso.value) || 0);
       var b = Math.max(0, Number(inDanos.value) || 0);
-      valor.textContent = money(Math.max(0, Number(r.deposito_total) - a - b));
+      // En tarjeta no se "devuelve" nada: se cobra lo que se dañó y el
+      // banco suelta el resto solo. Son dos operaciones distintas.
+      valor.textContent = tarjetaC ? money(a + b) : money(Math.max(0, baseEfectivo - a - b));
     }
     inRetraso.addEventListener('input', recalcular);
     inDanos.addEventListener('input', recalcular);
@@ -1611,19 +1842,38 @@
     var volver = el('button', 'btn btn-linea', 'Cancelar');
     volver.type = 'button';
     volver.addEventListener('click', function () { estado.cerrando = false; pintarDrawer(); });
-    var confirmarBt = el('button', 'btn btn-amarillo', 'Cerrar y devolver');
+    var confirmarBt = el('button', 'btn btn-amarillo',
+      tarjetaC ? 'Cerrar renta' : 'Cerrar y devolver');
     confirmarBt.type = 'button';
     confirmarBt.addEventListener('click', async function () {
+      if (chkId && !chkId.checked) {
+        toast('Marca que le devolviste su identificación antes de cerrar.', 'error');
+        return;
+      }
       confirmarBt.disabled = true;
       var res = await ejecutar({
         accion: 'cerrar',
         token: r.token,
         cargo_retraso: Math.max(0, Number(inRetraso.value) || 0),
         cargo_danos: Math.max(0, Number(inDanos.value) || 0),
+        id_devuelto: chkId ? true : undefined,
         nota: inNota.value.trim() || null
-      }, function (d) { return 'Renta cerrada. Devuelve ' + money(d.deposito_devuelto) + '.'; });
+      }, function (d) {
+        return d.deposito_devuelto == null
+          ? 'Renta cerrada. Falta resolver la retención de la tarjeta.'
+          : 'Renta cerrada. Devuelve ' + money(d.deposito_devuelto) + '.';
+      });
       confirmarBt.disabled = false;
-      if (res) { estado.cerrando = false; pintarDrawer(); }
+      if (res) {
+        estado.cerrando = false;
+        // El backend dice cuál es el paso que falta con la retención; se
+        // abre solo para que nadie tenga que acordarse de volver aquí.
+        if (res.pendiente_deposito === 'capturar') estado.capturandoDeposito = true;
+        pintarDrawer();
+        if (res.pendiente_deposito === 'liberar') {
+          toast('Sin cargos: libera la retención de la tarjeta.', 'aviso');
+        }
+      }
     });
     acc.appendChild(volver);
     acc.appendChild(confirmarBt);
@@ -2873,6 +3123,18 @@
       labMail.appendChild(inMail);
       grid.appendChild(labMail);
 
+      var labGar = el('label', 'campo');
+      labGar.appendChild(el('span', 'campo-lab', 'Garantía'));
+      var selGar = el('select', 'campo-in');
+      [['efectivo', 'Efectivo + identificación'], ['tarjeta', 'Retención en tarjeta']]
+        .forEach(function (o) {
+          var og = el('option', null, o[1]);
+          og.value = o[0];
+          selGar.appendChild(og);
+        });
+      labGar.appendChild(selGar);
+      grid.appendChild(labGar);
+
       caja.appendChild(grid);
 
       var total = el('div', 'modal-total');
@@ -2886,12 +3148,15 @@
         l1.appendChild(document.createTextNode('Total a cobrar: '));
         l1.appendChild(el('strong', null, B.money(p.total)));
         total.appendChild(l1);
-        total.appendChild(el('div', null,
-          'Garantía en efectivo: ' + B.money(p.depositoTotal) +
-          ' (' + B.money(p.depositoUnitario) + ' por bici, se devuelve)'));
+        total.appendChild(el('div', null, selGar.value === 'tarjeta'
+          ? 'Retención en tarjeta: ' + B.money(p.depositoTarjetaTotal) +
+            ' (' + B.money(p.depositoTarjetaUnitario) + ' por bici, se libera al devolver)'
+          : 'Garantía en efectivo: ' + B.money(p.depositoTotal) +
+            ' (' + B.money(p.depositoUnitario) + ' por bici) más su identificación en resguardo'));
       }
       selDur.addEventListener('change', recalcular);
       selCant.addEventListener('change', recalcular);
+      selGar.addEventListener('change', recalcular);
       recalcular();
 
       var err = el('div', 'modal-error');
@@ -2925,6 +3190,7 @@
             fecha: inFecha.value,
             hora: inHora.value,
             cantidad: parseInt(selCant.value, 10),
+            garantiaTipo: selGar.value,
             nombre: nombre,
             telefono: inTel.value.trim() || undefined,
             email: inMail.value.trim() || undefined,

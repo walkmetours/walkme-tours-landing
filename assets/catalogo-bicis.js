@@ -3,6 +3,8 @@
 // backend (/api vía api/_lib/catalogo-bicis.js).
 // ⚠ REGLA: si cambian los precios, cambiar AQUÍ y en los chips de
 //   #precios de bikes.html/bikes-en.html en el mismo commit.
+//   Los DOS montos de garantía (efectivo y tarjeta) ya salen de aquí en
+//   todo el copy: no volver a teclearlos a mano en el HTML.
 // UMD mínimo: module.exports en Node, window.WM_BICIS en el navegador.
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -21,8 +23,17 @@
   const CATALOGO = {
     version: '2026-08b',
     moneda: 'MXN',
-    // Garantía en efectivo al recoger, POR BICI (decisión de María, 14-ago-26).
+    // Garantía, POR BICI. Dos modalidades y el cliente elige al reservar
+    // (decisión de María, 19-ago-26):
+    //   · efectivo → se cobra al recoger y se retiene una identificación
+    //     oficial vigente durante la renta.
+    //   · tarjeta  → retención (hold) en Stripe, no es un cobro; sube a
+    //     $7,500 porque es lo que cuesta reponer una bici y no queda
+    //     ningún documento en garantía.
+    // Son constantes independientes a propósito: CARGOS.reposicion también
+    // vale 7500 hoy, pero mover una no debe mover la otra sin querer.
     DEPOSITO_UNITARIO: 3000,
+    DEPOSITO_TARJETA_UNITARIO: 7500,
     tipoBici: { id: 'ebike-u1', nombre: {
       es: 'E-bike WalkMe', en: 'WalkMe e-bike', it: 'E-bike WalkMe',
       fr: 'Vélo électrique WalkMe', pt: 'E-bike WalkMe' } },
@@ -76,7 +87,9 @@
       precioUnitario: d.precio,
       total: d.precio * n,
       depositoUnitario: CATALOGO.DEPOSITO_UNITARIO,
-      depositoTotal: CATALOGO.DEPOSITO_UNITARIO * n
+      depositoTotal: CATALOGO.DEPOSITO_UNITARIO * n,
+      depositoTarjetaUnitario: CATALOGO.DEPOSITO_TARJETA_UNITARIO,
+      depositoTarjetaTotal: CATALOGO.DEPOSITO_TARJETA_UNITARIO * n
     };
   }
 
@@ -100,6 +113,7 @@
   return {
     CATALOGO: CATALOGO,
     DEPOSITO_UNITARIO: CATALOGO.DEPOSITO_UNITARIO,
+    DEPOSITO_TARJETA_UNITARIO: CATALOGO.DEPOSITO_TARJETA_UNITARIO,
     IDIOMAS: IDIOMAS,
     idiomaCupon: idiomaCupon,
     duracion: duracion,
