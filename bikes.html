@@ -8,7 +8,7 @@
   <link rel="canonical" href="bikes.html">
   <link rel="alternate" hreflang="es" href="bikes.html">
   <link rel="alternate" hreflang="en" href="bikes-en.html">
-  <link rel="stylesheet" href="assets/styles.css?v=20260818">
+  <link rel="stylesheet" href="assets/styles.css?v=20260819">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -223,6 +223,27 @@
     <!-- Honeypot: invisible para humanos, los bots lo llenan -->
     <input type="text" id="hp" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;opacity:0;">
 
+    <!-- Garantía: la elige el cliente aquí; el mostrador puede cambiarla -->
+    <div class="field">
+      <label class="field-label">¿Cómo dejarás tu garantía?</label>
+      <div class="gar-opts">
+        <label class="gar-opt">
+          <input type="radio" name="garantia" value="efectivo" required>
+          <span>
+            <span class="gar-opt-titulo">Efectivo <span id="garEfMonto"></span> por bici</span>
+            <span class="gar-opt-desc">Lo dejas al recoger la bici, junto con una identificación oficial vigente (INE, licencia o pasaporte) que se queda en el mostrador durante la renta. Te devolvemos las dos cosas al entregar la bici en buen estado. Si dejas tu pasaporte, recógelo antes de salir del país.</span>
+          </span>
+        </label>
+        <label class="gar-opt">
+          <input type="radio" name="garantia" value="tarjeta">
+          <span>
+            <span class="gar-opt-titulo">Retención en tarjeta <span id="garTjMonto"></span> por bici</span>
+            <span class="gar-opt-desc">No es un cobro: tu banco aparta ese monto y lo libera al devolver la bici sin daños. La hacemos en el mostrador al entregarte la bici y no retenemos ningún documento, solo vemos tu identificación.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
     <!-- Términos -->
     <div class="terms-box">
       <input type="checkbox" id="terms" required>
@@ -234,10 +255,10 @@
       <summary style="cursor:pointer;font-size:13px;color:var(--green);font-weight:bold;">Ver términos, condiciones y contrato de renta</summary>
       <ul style="font-size:13px;color:#555;line-height:1.6;margin-top:8px;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
         <li>Incluye casco, candado y cargador. <strong>No incluye seguro médico ni de accidentes, robo o daños.</strong> El cliente es responsable de cualquier accidente o daño personal, a terceros o al equipo.</li>
-        <li><strong>Garantía:</strong> pasaporte vigente (se retiene durante el alquiler) + depósito de $3,000 MXN en efectivo por bicicleta, pagado por adelantado junto con la renta. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
+        <li><strong>Garantía (eliges una de las dos al reservar):</strong> <em>en efectivo</em>, <span id="txtGarEfectivo"></span> MXN por bicicleta al recoger, más una identificación oficial vigente (INE, licencia o pasaporte) que se resguarda en el mostrador durante la renta y se devuelve al entregar la bici; o <em>retención en tarjeta</em>, <span id="txtGarTarjeta"></span> MXN por bicicleta, que no es un cobro y se libera al devolver la bici sin daños. Se pide también foto de tu reservación (hotel, Airbnb o domicilio).</li>
         <li><strong>Cargos por daño o extravío:</strong> <span id="txtAccesorios"></span> (MXN).</li>
         <li>Retraso en la entrega: <span id="txtRetraso"></span> MXN por hora. Robo o pérdida total de la bici: <span id="txtReposicion"></span> MXN.</li>
-        <li>La bici y accesorios se devuelven en su estado original; el depósito se devuelve completo si todo regresa en buen estado.</li>
+        <li>La bici y accesorios se devuelven en su estado original. Si todo regresa en buen estado te devolvemos el efectivo y tu identificación completos, o liberamos la retención de tu tarjeta sin cobrar nada.</li>
         <li>Tus datos se tratan conforme a nuestro <a href="aviso-privacidad.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:bold;">Aviso de Privacidad</a>.</li>
       </ul>
     </details>
@@ -281,10 +302,11 @@
     <div style="background:white;border-radius:18px;padding:24px;border:2px solid #f0e8d8;">
       <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--green);opacity:0.65;margin-bottom:12px;">Al recoger</h4>
       <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;">
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Pasaporte vigente (se retiene durante el alquiler)</li>
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Depósito de $3,000 MXN en efectivo por bicicleta</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Identificación oficial vigente (INE, licencia o pasaporte)</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Garantía en efectivo <span id="txtGarEfectivo2"></span> MXN por bici, y se resguarda tu identificación durante la renta</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>O retención en tarjeta de <span id="txtGarTarjeta2"></span> MXN por bici, sin retener documentos</li>
         <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Foto de tu reservación (hotel, Airbnb o domicilio)</li>
-        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Devolución del depósito al regresar la bici en buen estado</li>
+        <li style="font-size:14px;display:flex;gap:8px;color:#555;"><span style="color:var(--pink);">●</span>Te devolvemos todo al regresar la bici en buen estado</li>
       </ul>
     </div>
   </div>
@@ -334,12 +356,30 @@
   </div>
 </footer>
 
-<script src="assets/catalogo-bicis.js?v=20260817"></script>
+<script src="assets/catalogo-bicis.js?v=20260819"></script>
 <script>
   // Cargos por daño desde el catálogo compartido (antes escritos a mano aquí).
   document.getElementById('txtAccesorios').textContent = WM_BICIS.textoAccesorios('es');
   document.getElementById('txtRetraso').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.retrasoHora.toLocaleString('en-US');
   document.getElementById('txtReposicion').textContent = '$' + WM_BICIS.CATALOGO.CARGOS.reposicion.toLocaleString('en-US');
+
+  // Los dos montos de garantía, también desde el catálogo: antes estaban
+  // tecleados a mano en el HTML y se desincronizaban.
+  const GAR_EF = '$' + WM_BICIS.DEPOSITO_UNITARIO.toLocaleString('en-US');
+  const GAR_TJ = '$' + WM_BICIS.DEPOSITO_TARJETA_UNITARIO.toLocaleString('en-US');
+  ['txtGarEfectivo', 'txtGarEfectivo2', 'garEfMonto'].forEach(id => {
+    document.getElementById(id).textContent = GAR_EF;
+  });
+  ['txtGarTarjeta', 'txtGarTarjeta2', 'garTjMonto'].forEach(id => {
+    document.getElementById(id).textContent = GAR_TJ;
+  });
+
+  // Sin opción marcada por default a propósito: es la cláusula que el
+  // cliente firma y la que más fricción causa en el mostrador si se
+  // asume mal (llega sin efectivo, o le apartamos $7,500 sin avisar).
+  function garantiaSel() {
+    return document.querySelector('input[name="garantia"]:checked');
+  }
 
   const form = document.getElementById('bikeForm');
   const submitBtn = document.getElementById('submitBtn');
@@ -368,9 +408,17 @@
     const n = document.getElementById('cantidad').value;
     const calc = WM_BICIS.calcularTotal(d, n);
     if (calc) {
+      const sel = garantiaSel();
+      let garTexto = '';
+      if (sel && sel.value === 'tarjeta') {
+        garTexto = ' · Retención en tarjeta: ' + WM_BICIS.money(calc.depositoTarjetaTotal) +
+          ' (se libera al devolver)';
+      } else if (sel) {
+        garTexto = ' · Garantía al recoger: ' + WM_BICIS.money(calc.depositoTotal) +
+          ' en efectivo más tu identificación';
+      }
       totalVivo.style.display = 'block';
-      totalVivo.textContent = 'Total de la renta: ' + WM_BICIS.money(calc.total) +
-        ' · Garantía al recoger: ' + WM_BICIS.money(calc.depositoTotal) + ' en efectivo';
+      totalVivo.textContent = 'Total de la renta: ' + WM_BICIS.money(calc.total) + garTexto;
     } else {
       totalVivo.style.display = 'none';
     }
@@ -379,7 +427,7 @@
   function validate() {
     const terms = document.getElementById('terms').checked;
     const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
-    submitBtn.disabled = !(terms && allFilled) || enviando;
+    submitBtn.disabled = !(terms && allFilled && garantiaSel()) || enviando;
     pintarTotal();
   }
 
@@ -431,6 +479,7 @@
           fecha: document.getElementById('fecha').value,
           hora: document.getElementById('hora').value,
           cantidad: document.getElementById('cantidad').value,
+          garantiaTipo: garantiaSel() ? garantiaSel().value : 'efectivo',
           nombre: document.getElementById('nombre').value.trim(),
           email: document.getElementById('email').value.trim(),
           telefono: document.getElementById('telefono').value.trim(),

@@ -84,6 +84,9 @@ export default async function handler(req, res) {
                 deposito_pi_id: pi.id,
                 deposito_customer_id: pi.customer,
                 deposito_payment_method_id: pi.payment_method,
+                // Monto realmente retenido: es el tope de captura y la
+                // única fuente confiable (el catálogo pudo cambiar después).
+                deposito_autorizado_monto: (pi.amount || 0) / 100,
                 deposito_autorizado_at: new Date().toISOString(),
                 deposito_expira_at: new Date(Date.now() + DEPOSITO_MARGEN_MS).toISOString(),
                 deposito_ultimo_error: null,
@@ -144,6 +147,7 @@ export default async function handler(req, res) {
           .update({
             deposito_estado: 'autorizado',
             deposito_pi_id: pi.id,
+            deposito_autorizado_monto: (pi.amount || 0) / 100,
             deposito_autorizado_at: new Date().toISOString(),
             deposito_expira_at: new Date(Date.now() + DEPOSITO_MARGEN_MS).toISOString(),
             deposito_ultimo_error: null,

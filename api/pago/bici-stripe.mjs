@@ -100,6 +100,11 @@ async function handleCronReauth(req, res) {
 
   const { data: filas, error } = await s.from('reservas_bicis')
     .select('*')
+    // garantia_tipo es obligatorio aquí: desde el 19-ago-26 una garantía
+    // en EFECTIVO también queda en deposito_estado='autorizado' (mismo
+    // chip para el mostrador). Sin este filtro el cron intentaría
+    // reautorizar en Stripe una renta que nunca dio una tarjeta.
+    .eq('garantia_tipo', 'tarjeta')
     .eq('deposito_estado', 'autorizado')
     .eq('estado', 'en_curso')
     .lte('deposito_expira_at', limite);
@@ -111,9 +116,13 @@ async function handleCronReauth(req, res) {
   let reautorizadas = 0, atencion = 0;
   for (const r of (filas || [])) {
     const piAnterior = r.deposito_pi_id;
+    // Se renueva por el MISMO monto que se autorizó, no por el del
+    // catálogo de hoy: renovar un hold no es renegociar la garantía.
+    const montoHold = r.deposito_autorizado_monto == null
+      ? Number(r.deposito_total) : Number(r.deposito_autorizado_monto);
     try {
       const pi = await stripe.paymentIntents.create({
-        amount: Math.round(Number(r.deposito_total) * 100),
+        amount: Math.round(montoHold * 100),
         currency: 'mxn',
         customer: r.deposito_customer_id,
         payment_method: r.deposito_payment_method_id,

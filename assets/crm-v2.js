@@ -46,8 +46,8 @@
 
   // ---------------------------------------------------------------- estado
   var estado = {
-    datos: null,          // { flota, rentas, solicitudes, kpis }
-    vista: 'dashboard',   // 'dashboard' | 'bikes' — únicas dos con backend
+    datos: null,          // { flota, rentas, solicitudes, kpis, cotizaciones, catalogoServicios, servicioTarifas, operadores, operadorOfertas }
+    vista: 'dashboard',   // 'dashboard' | 'bikes' | 'cotizaciones' | 'tarifario' | 'operadores'
     filtro: 'todas',
     busqueda: '',
     tab: 'contratos',
@@ -56,9 +56,20 @@
     editandoDinero: false,
     cerrando: false,
     capturandoDeposito: false,
+    registrandoEfectivo: false,
     unidadesSel: [],
     cargando: false,
-    modalAbierto: false
+    modalAbierto: false,
+    // ---- Cotizaciones (Fase 3, 17-ago-26) ----
+    cotFiltroEstado: 'todas',
+    cotFiltroOrigen: 'todas',
+    cotAbierta: null,      // id de la cotización abierta en el drawer
+    cotVista: 'lista',     // 'lista' | 'formulario' — controla #cotVistaLista/#cotVistaForm
+    // ---- Reportes de bicis (20-ago-26) ----
+    repDesde: null,
+    repHasta: null,
+    repDatos: null,        // respuesta de accion 'reportes_bicis' para el rango actual
+    repCargando: false
   };
 
   // ------------------------------------------------------------- utilidades
@@ -123,14 +134,50 @@
     rentada: 'Rentada',
     cargando: 'Cargando',
     mantenimiento: 'Mantenimiento',
+    // ---- Cotizaciones ----
+    borrador: 'Borrador',
+    enviada: 'Enviada',
+    aceptada: 'Aceptada',
+    expirada: 'Expirada',
     // ---- Depósito de garantía (hold de Stripe) ----
     deposito_pendiente: 'Depósito: esperando al cliente',
     deposito_autorizado: 'Depósito autorizado',
     deposito_capturado: 'Depósito cobrado',
     deposito_liberado: 'Depósito liberado',
     deposito_expirado: 'Depósito expirado',
-    deposito_requiere_atencion: 'Depósito: requiere atención'
+    deposito_requiere_atencion: 'Depósito: requiere atención',
+    // ---- Garantía en efectivo (mismos estados, otras palabras) ----
+    eft_autorizado: 'Efectivo + ID en resguardo',
+    eft_liberado: 'Efectivo devuelto'
   };
+
+  // Modalidad de garantía (19-ago-26). El '|| efectivo' cubre las reservas
+  // creadas antes de la migración.
+  function esTarjeta(r) { return (r.garantia_tipo || 'efectivo') === 'tarjeta'; }
+  function idEnResguardo(r) {
+    return !!r.garantia_id_retenido_at && !r.garantia_id_devuelto_at;
+  }
+  // Monto de la garantía según modalidad.
+  function montoGarantia(r) {
+    return Number(esTarjeta(r) ? r.deposito_tarjeta_total : r.deposito_total);
+  }
+  // Tope de captura: lo que Stripe autorizó de verdad (los holds viejos no
+  // lo tienen y se hicieron por deposito_total).
+  function montoHold(r) {
+    return Number(r.deposito_autorizado_monto == null ? r.deposito_total : r.deposito_autorizado_monto);
+  }
+  var ETIQUETA_ID = {
+    ine: 'INE', licencia: 'Licencia', pasaporte: 'Pasaporte', otro: 'Otro documento'
+  };
+  // El chip del depósito se lee distinto según la modalidad: "Depósito
+  // autorizado" no significa nada en el mostrador cuando lo que hay es
+  // dinero en la caja y un pasaporte en el cajón.
+  function claveChipDeposito(r) {
+    if (!esTarjeta(r) && (r.deposito_estado === 'autorizado' || r.deposito_estado === 'liberado')) {
+      return 'eft_' + r.deposito_estado;
+    }
+    return 'deposito_' + r.deposito_estado;
+  }
 
   // Estado "de pantalla": en_curso puede verse como Retrasada o Vence hoy.
   // Valor DERIVADO, nunca editable directamente (el diseño lo insinúa como
@@ -179,7 +226,15 @@
     deposito_ya_activo: 'Ya hay un depósito en proceso o autorizado para esta renta.',
     deposito_estado_invalido: 'El depósito no está en un estado que permita esto.',
     stripe_captura_fallo: 'Stripe no pudo procesar el cobro del depósito. Intenta de nuevo.',
-    stripe_error: 'No se pudo conectar con Stripe. Intenta de nuevo en un momento.'
+    stripe_error: 'No se pudo conectar con Stripe. Intenta de nuevo en un momento.',
+    garantia_no_es_tarjeta: 'Esta renta tiene garantía en efectivo. Cambia la modalidad primero.',
+    garantia_no_es_efectivo: 'Esta renta tiene retención en tarjeta, no garantía en efectivo.',
+    hold_activo: 'Primero libera la retención de la tarjeta.',
+    id_en_resguardo: 'Todavía tienes la identificación del cliente. Confirma que se la devolviste.',
+    sin_id_en_resguardo: 'No hay ninguna identificación en resguardo para esta renta.',
+    id_tipo_invalido: 'Elige qué identificación se quedó en el mostrador.',
+    monto_mayor_al_hold: 'No puedes cobrar más de lo que se retuvo en la tarjeta.',
+    monto_invalido: 'Ese monto no es válido.'
   };
 
   function textoError(e) {
@@ -329,24 +384,46 @@
   }
 
   // ------------------------------------------------------- nav de 10 items
-  // Sólo 'dashboard' y 'bikes' tienen contenedor + backend; los otros 8
-  // botones ya nacen disabled en el HTML ("en construcción"), así que no
-  // hace falta manejarlos aquí — ni pintarles datos de ejemplo.
-  var TITULOS_VISTA = { dashboard: 'Dashboard', bikes: 'Renta de bicis' };
+  // 'dashboard', 'bikes', 'cotizaciones', 'tarifario', 'operadores' y
+  // 'reportes' tienen contenedor + backend real. Los otros 4 (Reservas,
+  // Calendario, Clientes, Finanzas) siguen disabled en el HTML ("en
+  // construcción").
+  var TITULOS_VISTA = {
+    dashboard: 'Dashboard', bikes: 'Renta de bicis',
+    cotizaciones: 'Cotizaciones', tarifario: 'Tarifario', operadores: 'Operadores',
+    reportes: 'Reportes'
+  };
 
   function irAVista(vista) {
     estado.vista = vista;
     $('vistaDashboardBody').hidden = vista !== 'dashboard';
     $('vistaBikesBody').hidden = vista !== 'bikes';
+    $('vistaCotizacionesBody').hidden = vista !== 'cotizaciones';
+    $('vistaTarifarioBody').hidden = vista !== 'tarifario';
+    $('vistaOperadoresBody').hidden = vista !== 'operadores';
+    $('vistaReportesBody').hidden = vista !== 'reportes';
     $('topTitulo').textContent = TITULOS_VISTA[vista] || vista;
     $('buscador').hidden = vista !== 'bikes';
     $('btnMostrador').hidden = vista !== 'bikes';
+    $('btnNuevaCotizacion').hidden = vista !== 'cotizaciones';
+    // Cambiar de sección siempre regresa Cotizaciones a la lista (cierra
+    // cualquier asistente a medio llenar que hubiera quedado abierto).
+    if (vista !== 'cotizaciones' && estado.cotVista === 'formulario') {
+      estado.cotVista = 'lista';
+      $('cotVistaLista').hidden = false;
+      $('cotVistaForm').hidden = true;
+      vaciar($('cotVistaForm'));
+    }
     Array.prototype.forEach.call($('navPrincipal').querySelectorAll('.nav-item[data-vista]'), function (b) {
       b.classList.toggle('is-activa', b.getAttribute('data-vista') === vista);
     });
     if (estado.datos) {
       if (vista === 'dashboard') pintarDashboard();
-      else pintarTodo();
+      else if (vista === 'bikes') pintarTodo();
+      else if (vista === 'cotizaciones') pintarCotizacionesVista();
+      else if (vista === 'tarifario') pintarTarifarioVista();
+      else if (vista === 'operadores') pintarOperadoresVista();
+      else if (vista === 'reportes') pintarReportesVista();
     }
   }
 
@@ -376,6 +453,9 @@
       mostrarApp();
       pintarDashboard();
       pintarTodo();
+      pintarCotizacionesVista();
+      pintarTarifarioVista();
+      pintarOperadoresVista();
     } catch (e) {
       estado.cargando = false;
       if (e && (e.codigo === 'sin_sesion' || e.message === 'sin_sesion')) { mostrarLogin(); return; }
@@ -604,7 +684,16 @@
     }
     f.appendChild(uni);
 
-    f.appendChild(el('span', 'c-total', money(r.total)));
+    // La garantía va como sub-línea del total en vez de columna propia:
+    // la rejilla de la tabla ya está al límite y esto se lee igual de
+    // rápido. 🪪 marca que todavía hay un documento en el cajón.
+    var tot = el('span', 'c-total', money(r.total));
+    tot.appendChild(el('span', 'c-sub',
+      (esTarjeta(r) ? '💳 ' : '💵 ') + money(montoGarantia(r)) + (idEnResguardo(r) ? ' 🪪' : '')));
+    tot.title = (esTarjeta(r) ? 'Retención en tarjeta: ' : 'Garantía en efectivo: ') +
+      money(montoGarantia(r)) +
+      (idEnResguardo(r) ? ' · ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'documento') + ' en resguardo' : '');
+    f.appendChild(tot);
 
     var est = el('span', 'c-estado');
     est.appendChild(chipEstado(estadoVista(r)));
@@ -839,10 +928,12 @@
 
   function abrirDrawer(token) {
     estado.tokenAbierto = token;
+    estado.cotAbierta = null;
     estado.editando = false;
     estado.editandoDinero = false;
     estado.cerrando = false;
     estado.capturandoDeposito = false;
+    estado.registrandoEfectivo = false;
     var r = rentaPorToken(token);
     estado.unidadesSel = (r && r.unidades) ? r.unidades.slice() : [];
     $('scrimDrawer').hidden = false;
@@ -856,6 +947,8 @@
     estado.editando = false;
     estado.cerrando = false;
     estado.capturandoDeposito = false;
+    estado.registrandoEfectivo = false;
+    estado.cotAbierta = null;
     $('scrimDrawer').hidden = true;
     $('drawer').hidden = true;
     vaciar($('drawerIn'));
@@ -1152,7 +1245,9 @@
   // columna generada en Postgres (deposito_unitario × cantidad_bicis).
   var CAMPOS_DINERO = [
     { k: 'total', lab: 'Total de la renta' },
-    { k: 'deposito_unitario', lab: 'Depósito por bici' },
+    { k: 'deposito_unitario', lab: 'Garantía en efectivo por bici' },
+    { k: 'deposito_tarjeta_unitario', lab: 'Retención en tarjeta por bici' },
+    { k: 'deposito_efectivo_recibido', lab: 'Efectivo recibido (total)' },
     { k: 'cargo_retraso', lab: 'Cargo por retraso' },
     { k: 'cargo_danos', lab: 'Cargo por daños' }
   ];
@@ -1171,15 +1266,31 @@
 
     var c = el('div', 'dr-caja');
     c.appendChild(dato('Total de la renta', money(r.total), { fuerte: true }));
-    c.appendChild(dato('Garantía (depósito)', money(r.deposito_total)));
+    var tarjeta = esTarjeta(r);
+    c.appendChild(dato(
+      tarjeta ? 'Garantía (retención en tarjeta)' : 'Garantía (efectivo + identificación)',
+      money(montoGarantia(r))
+    ));
+    if (!tarjeta && r.deposito_efectivo_recibido != null) {
+      c.appendChild(dato('Efectivo recibido', money(r.deposito_efectivo_recibido)));
+    }
+    if (idEnResguardo(r)) {
+      c.appendChild(dato(
+        'Identificación en resguardo',
+        (ETIQUETA_ID[r.garantia_id_tipo] || r.garantia_id_tipo || 'documento') +
+          (r.garantia_id_detalle ? ' · ' + r.garantia_id_detalle : '') +
+          ' · desde ' + fechaCorta(r.garantia_id_retenido_at),
+        { fuerte: true }
+      ));
+    }
     if (r.deposito_estado && r.deposito_estado !== 'none') {
       var filaDep = el('div', 'dato');
-      filaDep.appendChild(el('span', 'dato-lab', 'Estado del depósito'));
+      filaDep.appendChild(el('span', 'dato-lab', 'Estado de la garantía'));
       var valDep = el('span', 'dato-val');
-      valDep.appendChild(chipEstado('deposito_' + r.deposito_estado));
+      valDep.appendChild(chipEstado(claveChipDeposito(r)));
       filaDep.appendChild(valDep);
       c.appendChild(filaDep);
-      if (r.deposito_estado === 'autorizado' && r.deposito_expira_at) {
+      if (tarjeta && r.deposito_estado === 'autorizado' && r.deposito_expira_at) {
         var dias = Math.ceil((new Date(r.deposito_expira_at) - new Date()) / 86400000);
         c.appendChild(dato('Vence en', dias <= 0 ? 'hoy' : (dias + ' día' + (dias === 1 ? '' : 's'))));
       }
@@ -1198,7 +1309,13 @@
       if (r.cargo_nota) c.appendChild(dato('Nota del cierre', r.cargo_nota));
     }
     if (r.estado === 'cerrada') {
-      c.appendChild(dato('Depósito devuelto', money(r.deposito_devuelto || 0), { fuerte: true }));
+      // En tarjeta deposito_devuelto es null a propósito: no se devuelve
+      // dinero, se libera un hold. Pintar $0 sería mentir.
+      c.appendChild(dato(
+        'Depósito devuelto',
+        r.deposito_devuelto == null ? 'No aplica (retención en tarjeta)' : money(r.deposito_devuelto),
+        { fuerte: true }
+      ));
       if (r.cerrada_at) c.appendChild(dato('Cerrada el', fechaCorta(r.cerrada_at)));
     }
     s.appendChild(c);
@@ -1389,54 +1506,117 @@
     // pagadas/entregadas. Los 3 botones son aditivos, no tocan nada de
     // arriba (misma reserva puede tener acciones de renta Y de depósito
     // visibles a la vez, ej. "Entregar bici" + "Autorizar depósito").
-    if (['pagada', 'en_curso'].indexOf(r.estado) !== -1) {
-      var depEstado = r.deposito_estado || 'none';
-      if (['none', 'liberado', 'expirado', 'requiere_atencion'].indexOf(depEstado) !== -1) {
-        var autorizar = el('button', 'btn btn-linea',
-          'Autorizar depósito (' + money(r.deposito_total) + ')');
-        autorizar.type = 'button';
-        autorizar.addEventListener('click', async function () {
-          autorizar.disabled = true;
-          var res = await ejecutar({ accion: 'autorizar_deposito', token: r.token },
-            'Depósito iniciado: comparte el link con el cliente para que meta su tarjeta.');
-          autorizar.disabled = false;
-          if (res && res.url) window.open(res.url, '_blank', 'noopener');
-        });
-        cont.appendChild(autorizar);
-      }
+    var depEstado = r.deposito_estado || 'none';
+    var depSinResolver = ['pendiente', 'autorizado', 'requiere_atencion'].indexOf(depEstado) !== -1;
+    var rentaAbierta = ['pagada', 'en_curso'].indexOf(r.estado) !== -1;
+    // Una renta cerrada también muestra el bloque si quedó un hold vivo:
+    // el flujo normal es cerrar con los cargos y DESPUÉS cobrar o liberar.
+    if (rentaAbierta || (r.estado === 'cerrada' && depSinResolver)) {
+      var tarjetaAcc = esTarjeta(r);
 
-      if (depEstado === 'pendiente') {
-        cont.appendChild(el('div', 'dr-hint', 'Esperando a que el cliente termine de meter su tarjeta.'));
-        var reintentar = el('button', 'btn btn-linea', 'Actualizar');
-        reintentar.type = 'button';
-        reintentar.addEventListener('click', function () { cargarTablero(true); });
-        cont.appendChild(reintentar);
-      }
+      // ---- Rama TARJETA: el hold de Stripe ----
+      if (tarjetaAcc) {
+        if (rentaAbierta && ['none', 'liberado', 'expirado', 'requiere_atencion'].indexOf(depEstado) !== -1) {
+          var autorizar = el('button', 'btn btn-linea',
+            'Autorizar retención (' + money(r.deposito_tarjeta_total) + ')');
+          autorizar.type = 'button';
+          autorizar.addEventListener('click', async function () {
+            autorizar.disabled = true;
+            var res = await ejecutar({ accion: 'autorizar_deposito', token: r.token },
+              'Retención iniciada: comparte el link con el cliente para que meta su tarjeta.');
+            autorizar.disabled = false;
+            if (res && res.url) window.open(res.url, '_blank', 'noopener');
+          });
+          cont.appendChild(autorizar);
+        }
 
-      if (depEstado === 'autorizado' || depEstado === 'requiere_atencion') {
-        if (estado.capturandoDeposito) {
-          cont.appendChild(formularioCapturaDeposito(r));
-        } else {
-          var filaDep = el('div', 'dr-acc-fila');
-          var capturarBt = el('button', 'btn btn-amarillo', 'Capturar depósito…');
-          capturarBt.type = 'button';
-          capturarBt.addEventListener('click', function () { estado.capturandoDeposito = true; pintarDrawer(); });
-          filaDep.appendChild(capturarBt);
+        if (depEstado === 'pendiente') {
+          cont.appendChild(el('div', 'dr-hint', 'Esperando a que el cliente termine de meter su tarjeta.'));
+          var reintentar = el('button', 'btn btn-linea', 'Actualizar');
+          reintentar.type = 'button';
+          reintentar.addEventListener('click', function () { cargarTablero(true); });
+          cont.appendChild(reintentar);
+        }
 
-          var liberarBt = el('button', 'btn btn-linea', 'Liberar depósito');
-          liberarBt.type = 'button';
-          liberarBt.addEventListener('click', async function () {
+        if (depEstado === 'autorizado' || depEstado === 'requiere_atencion') {
+          if (estado.capturandoDeposito) {
+            cont.appendChild(formularioCapturaDeposito(r));
+          } else {
+            var filaDep = el('div', 'dr-acc-fila');
+            var capturarBt = el('button', 'btn btn-amarillo', 'Cobrar del depósito…');
+            capturarBt.type = 'button';
+            capturarBt.addEventListener('click', function () { estado.capturandoDeposito = true; pintarDrawer(); });
+            filaDep.appendChild(capturarBt);
+
+            var liberarBt = el('button', 'btn btn-linea', 'Liberar retención');
+            liberarBt.type = 'button';
+            liberarBt.addEventListener('click', async function () {
+              var ok = await confirmar({
+                titulo: '¿Liberar la retención?',
+                texto: 'No se le cobra nada al cliente. El hold en su tarjeta se cancela.',
+                aceptar: 'Sí, liberar',
+                clase: 'btn-amarillo'
+              });
+              if (ok) ejecutar({ accion: 'liberar_deposito', token: r.token }, 'Retención liberada.');
+            });
+            filaDep.appendChild(liberarBt);
+            cont.appendChild(filaDep);
+          }
+        }
+
+      // ---- Rama EFECTIVO: dinero en la caja + documento en el cajón ----
+      } else {
+        if (rentaAbierta && (depEstado === 'none' || depEstado === 'liberado')) {
+          if (estado.registrandoEfectivo) {
+            cont.appendChild(formularioDepositoEfectivo(r));
+          } else {
+            var registrar = el('button', 'btn btn-linea',
+              'Registrar efectivo + identificación (' + money(r.deposito_total) + ')');
+            registrar.type = 'button';
+            registrar.addEventListener('click', function () {
+              estado.registrandoEfectivo = true; pintarDrawer();
+            });
+            cont.appendChild(registrar);
+          }
+        }
+        if (idEnResguardo(r)) {
+          var devolverId = el('button', 'btn btn-linea',
+            'Devolver ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'identificación').toLowerCase());
+          devolverId.type = 'button';
+          devolverId.addEventListener('click', async function () {
             var ok = await confirmar({
-              titulo: '¿Liberar el depósito?',
-              texto: 'No se le cobra nada al cliente. El hold en su tarjeta se cancela.',
-              aceptar: 'Sí, liberar',
+              titulo: '¿Le devolviste su identificación?',
+              texto: 'Confirma solo cuando el documento ya esté en manos del cliente.',
+              aceptar: 'Sí, se la devolví',
               clase: 'btn-amarillo'
             });
-            if (ok) ejecutar({ accion: 'liberar_deposito', token: r.token }, 'Depósito liberado.');
+            if (ok) ejecutar({ accion: 'devolver_id', token: r.token }, 'Identificación devuelta.');
           });
-          filaDep.appendChild(liberarBt);
-          cont.appendChild(filaDep);
+          cont.appendChild(devolverId);
         }
+      }
+
+      // ---- Cambio de modalidad: el cliente llegó sin efectivo o sin tarjeta ----
+      if (rentaAbierta) {
+      var cambiarGar = el('button', 'btn btn-sutil',
+        tarjetaAcc ? 'Cambiar a garantía en efectivo' : 'Cambiar a retención en tarjeta');
+      cambiarGar.type = 'button';
+      cambiarGar.addEventListener('click', async function () {
+        var destino = tarjetaAcc ? 'efectivo' : 'tarjeta';
+        var ok = await confirmar({
+          titulo: '¿Cambiar la modalidad de garantía?',
+          texto: tarjetaAcc
+            ? 'Pasa de retención en tarjeta de ' + money(r.deposito_tarjeta_total) +
+              ' a ' + money(r.deposito_total) + ' en efectivo más una identificación en resguardo.'
+            : 'Pasa de ' + money(r.deposito_total) + ' en efectivo más identificación a una ' +
+              'retención en tarjeta de ' + money(r.deposito_tarjeta_total) + '.',
+          aceptar: 'Sí, cambiar',
+          clase: 'btn-amarillo'
+        });
+        if (ok) ejecutar({ accion: 'garantia_tipo', token: r.token, tipo: destino },
+          'Modalidad de garantía actualizada.');
+      });
+      cont.appendChild(cambiarGar);
       }
     }
 
@@ -1484,6 +1664,71 @@
     return s;
   }
 
+  // Garantía en efectivo: qué dinero entró y qué documento se quedó en el
+  // mostrador. Es el equivalente de "Autorizar retención" en la otra
+  // modalidad, y lo que hace que el documento no se olvide en el cajón.
+  function formularioDepositoEfectivo(r) {
+    var caja = el('div', 'dr-caja');
+    caja.appendChild(el('div', 'dr-nota',
+      'Registra el efectivo que recibiste y qué identificación se queda en resguardo.'));
+
+    var grid = el('div', 'form-grid');
+    grid.style.marginTop = '10px';
+
+    var labMonto = el('label', 'campo');
+    labMonto.appendChild(el('span', 'campo-lab', 'Efectivo recibido (MXN)'));
+    var inMonto = el('input', 'campo-in');
+    inMonto.type = 'number'; inMonto.min = '0'; inMonto.step = '50';
+    inMonto.inputMode = 'numeric';
+    inMonto.value = String(Number(r.deposito_total || 0));
+    labMonto.appendChild(inMonto);
+    grid.appendChild(labMonto);
+
+    var labTipo = el('label', 'campo');
+    labTipo.appendChild(el('span', 'campo-lab', 'Identificación en resguardo'));
+    var selTipo = el('select', 'campo-in');
+    [['', 'Elige…'], ['ine', 'INE'], ['licencia', 'Licencia de conducir'],
+     ['pasaporte', 'Pasaporte'], ['otro', 'Otro documento']].forEach(function (o) {
+      var op = el('option', null, o[1]);
+      op.value = o[0];
+      selTipo.appendChild(op);
+    });
+    labTipo.appendChild(selTipo);
+    grid.appendChild(labTipo);
+
+    var labDet = el('label', 'campo ancho');
+    labDet.appendChild(el('span', 'campo-lab', 'Referencia del documento (opcional)'));
+    var inDet = el('input', 'campo-in');
+    inDet.type = 'text'; inDet.maxLength = 120;
+    inDet.placeholder = 'Últimos dígitos, país, lo que te ayude a identificarlo';
+    labDet.appendChild(inDet);
+    grid.appendChild(labDet);
+    caja.appendChild(grid);
+
+    var acc = el('div', 'form-acc');
+    var volver = el('button', 'btn btn-linea', 'Cancelar');
+    volver.type = 'button';
+    volver.addEventListener('click', function () { estado.registrandoEfectivo = false; pintarDrawer(); });
+    var guardar = el('button', 'btn btn-amarillo', 'Registrar garantía');
+    guardar.type = 'button';
+    guardar.addEventListener('click', async function () {
+      if (!selTipo.value) { toast('Elige qué identificación se quedó en el mostrador.', 'error'); return; }
+      var monto = Number(inMonto.value);
+      if (!Number.isFinite(monto) || monto < 0) { toast('El monto no puede quedar vacío ni negativo.', 'error'); return; }
+      guardar.disabled = true;
+      var res = await ejecutar({
+        accion: 'deposito_efectivo', token: r.token, monto: monto,
+        id_tipo: selTipo.value, id_detalle: inDet.value.trim()
+      }, 'Garantía en efectivo registrada.');
+      guardar.disabled = false;
+      if (res) { estado.registrandoEfectivo = false; pintarDrawer(); }
+    });
+    acc.appendChild(volver);
+    acc.appendChild(guardar);
+    caja.appendChild(acc);
+    return caja;
+  }
+
   // Monto por cobrar del hold, pre-llenado con los cargos de retraso/daños
   // si la renta ya se cerró (lo normal: primero se cierra la renta con sus
   // cargos, luego se resuelve el depósito con ese mismo número).
@@ -1491,14 +1736,17 @@
     var caja = el('div', 'dr-caja');
     caja.appendChild(el('div', 'dr-nota', 'Cobra del depósito solo lo que corresponda a daños o atraso. El resto se libera.'));
 
+    // El tope es lo que Stripe retuvo de verdad, no lo que dice el
+    // catálogo hoy: un hold viejo puede ser de otro monto.
+    var tope = montoHold(r);
     var sugerido = r.cerrada_at
       ? Math.max(0, Number(r.cargo_retraso || 0) + Number(r.cargo_danos || 0))
-      : Number(r.deposito_total || 0);
+      : tope;
 
     var grid = el('div', 'form-grid');
     grid.style.marginTop = '10px';
     var lab = el('label', 'campo ancho');
-    lab.appendChild(el('span', 'campo-lab', 'Monto a cobrar del depósito (MXN, máx. ' + money(r.deposito_total) + ')'));
+    lab.appendChild(el('span', 'campo-lab', 'Monto a cobrar del depósito (MXN, máx. ' + money(tope) + ')'));
     var input = el('input', 'campo-in');
     input.type = 'number'; input.min = '0'; input.step = '50'; input.value = String(sugerido);
     input.inputMode = 'numeric';
@@ -1515,6 +1763,7 @@
     confirmarBt.addEventListener('click', async function () {
       var monto = Number(input.value);
       if (!Number.isFinite(monto) || monto < 0) { toast('El monto no puede quedar vacío ni negativo.', 'error'); return; }
+      if (monto > tope) { toast('No puedes cobrar más de ' + money(tope) + ', que es lo retenido.', 'error'); return; }
       confirmarBt.disabled = true;
       var res = await ejecutar({ accion: 'capturar_deposito', token: r.token, monto: monto },
         function (d) { return 'Se cobraron ' + money(d.capturado) + ' del depósito.'; });
@@ -1529,7 +1778,14 @@
 
   function formularioCierre(r) {
     var caja = el('div', 'dr-caja');
-    caja.appendChild(el('div', 'dr-nota', 'Anota los cargos, si los hay. El resto del depósito se le devuelve.'));
+    var tarjetaC = esTarjeta(r);
+    // Base del cálculo: en efectivo, lo que de verdad entró a la caja.
+    var baseEfectivo = Number(
+      r.deposito_efectivo_recibido == null ? r.deposito_total : r.deposito_efectivo_recibido
+    );
+    caja.appendChild(el('div', 'dr-nota', tarjetaC
+      ? 'Anota los cargos, si los hay. Se cobran de la retención y el resto se libera.'
+      : 'Anota los cargos, si los hay. El resto del efectivo se le devuelve.'));
 
     var grid = el('div', 'form-grid');
     grid.style.marginTop = '10px';
@@ -1559,9 +1815,24 @@
 
     caja.appendChild(grid);
 
+    // Recordatorio del documento: es lo que más se olvida al cerrar.
+    var chkId = null;
+    if (idEnResguardo(r)) {
+      var labId = el('label', 'campo ancho');
+      labId.style.display = 'flex';
+      labId.style.alignItems = 'flex-start';
+      labId.style.gap = '10px';
+      chkId = el('input');
+      chkId.type = 'checkbox';
+      labId.appendChild(chkId);
+      labId.appendChild(el('span', 'campo-lab',
+        'Le devolví su ' + (ETIQUETA_ID[r.garantia_id_tipo] || 'identificación').toLowerCase()));
+      caja.appendChild(labId);
+    }
+
     var resumen = el('div', 'cierre-total');
-    var etiqueta = el('span', null, 'Se le devuelve');
-    var valor = el('span', null, money(r.deposito_total));
+    var etiqueta = el('span', null, tarjetaC ? 'Se cobra de la retención' : 'Se le devuelve');
+    var valor = el('span', null, money(tarjetaC ? 0 : baseEfectivo));
     resumen.appendChild(etiqueta);
     resumen.appendChild(valor);
     caja.appendChild(resumen);
@@ -1569,7 +1840,9 @@
     function recalcular() {
       var a = Math.max(0, Number(inRetraso.value) || 0);
       var b = Math.max(0, Number(inDanos.value) || 0);
-      valor.textContent = money(Math.max(0, Number(r.deposito_total) - a - b));
+      // En tarjeta no se "devuelve" nada: se cobra lo que se dañó y el
+      // banco suelta el resto solo. Son dos operaciones distintas.
+      valor.textContent = tarjetaC ? money(a + b) : money(Math.max(0, baseEfectivo - a - b));
     }
     inRetraso.addEventListener('input', recalcular);
     inDanos.addEventListener('input', recalcular);
@@ -1578,25 +1851,1334 @@
     var volver = el('button', 'btn btn-linea', 'Cancelar');
     volver.type = 'button';
     volver.addEventListener('click', function () { estado.cerrando = false; pintarDrawer(); });
-    var confirmarBt = el('button', 'btn btn-amarillo', 'Cerrar y devolver');
+    var confirmarBt = el('button', 'btn btn-amarillo',
+      tarjetaC ? 'Cerrar renta' : 'Cerrar y devolver');
     confirmarBt.type = 'button';
     confirmarBt.addEventListener('click', async function () {
+      if (chkId && !chkId.checked) {
+        toast('Marca que le devolviste su identificación antes de cerrar.', 'error');
+        return;
+      }
       confirmarBt.disabled = true;
       var res = await ejecutar({
         accion: 'cerrar',
         token: r.token,
         cargo_retraso: Math.max(0, Number(inRetraso.value) || 0),
         cargo_danos: Math.max(0, Number(inDanos.value) || 0),
+        id_devuelto: chkId ? true : undefined,
         nota: inNota.value.trim() || null
-      }, function (d) { return 'Renta cerrada. Devuelve ' + money(d.deposito_devuelto) + '.'; });
+      }, function (d) {
+        return d.deposito_devuelto == null
+          ? 'Renta cerrada. Falta resolver la retención de la tarjeta.'
+          : 'Renta cerrada. Devuelve ' + money(d.deposito_devuelto) + '.';
+      });
       confirmarBt.disabled = false;
-      if (res) { estado.cerrando = false; pintarDrawer(); }
+      if (res) {
+        estado.cerrando = false;
+        // El backend dice cuál es el paso que falta con la retención; se
+        // abre solo para que nadie tenga que acordarse de volver aquí.
+        if (res.pendiente_deposito === 'capturar') estado.capturandoDeposito = true;
+        pintarDrawer();
+        if (res.pendiente_deposito === 'liberar') {
+          toast('Sin cargos: libera la retención de la tarjeta.', 'aviso');
+        }
+      }
     });
     acc.appendChild(volver);
     acc.appendChild(confirmarBt);
     caja.appendChild(acc);
 
     return caja;
+  }
+
+  // =====================================================================
+  // COTIZACIONES · TARIFARIO · OPERADORES — Fase 3, 17-ago-26.
+  // Traduce el look de "CRM Walkme v2.dc.html" (listas + drawer + modal,
+  // mismos componentes que ya usa Bikes) sin copiar sus datos mock — ver
+  // cabecera del archivo y el prompt de esta fase para las discrepancias
+  // corregidas (folio real COT-<folio>, catálogo/operadores vacíos hoy).
+  // =====================================================================
+
+  // ---- helpers de formulario reutilizables (Cotizaciones/Tarifario/Operadores) ----
+  function campoTexto(grid, etiqueta, tipo, valor, ancho) {
+    var lab = el('label', 'campo' + (ancho ? ' ancho' : ''));
+    lab.appendChild(el('span', 'campo-lab', etiqueta));
+    var input = el('input', 'campo-in');
+    input.type = tipo;
+    input.value = (valor === null || valor === undefined) ? '' : String(valor);
+    lab.appendChild(input);
+    grid.appendChild(lab);
+    return input;
+  }
+  function campoSelect(grid, etiqueta, opciones, valorDefault, ancho) {
+    var lab = el('label', 'campo' + (ancho ? ' ancho' : ''));
+    lab.appendChild(el('span', 'campo-lab', etiqueta));
+    var sel = el('select', 'campo-in');
+    opciones.forEach(function (p) {
+      var o = el('option', null, p[1]);
+      o.value = p[0];
+      sel.appendChild(o);
+    });
+    sel.value = valorDefault;
+    lab.appendChild(sel);
+    grid.appendChild(lab);
+    return sel;
+  }
+  function campoTextarea(grid, etiqueta, valor, ancho) {
+    var lab = el('label', 'campo' + (ancho ? ' ancho' : ''));
+    lab.appendChild(el('span', 'campo-lab', etiqueta));
+    var ta = el('textarea', 'campo-in');
+    ta.value = valor || '';
+    lab.appendChild(ta);
+    grid.appendChild(lab);
+    return ta;
+  }
+
+  // 'YYYY-MM-DD' → "22 ago 2026" (para fechas de servicio, sin hora).
+  function fechaSoloDia(iso) {
+    if (!iso) return '—';
+    var d = new Date(String(iso).slice(0, 10) + 'T00:00:00Z');
+    if (isNaN(d.getTime())) return '—';
+    return d.getUTCDate() + ' ' + MESES[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+  }
+
+  // "Xcaret Plus" → "xcaret-plus" (id del catálogo, lo genera el CRM).
+  function slugify(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60);
+  }
+
+  function iniciales(nombre) {
+    var partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return '?';
+    return (partes[0].charAt(0) + (partes[1] ? partes[1].charAt(0) : '')).toUpperCase();
+  }
+
+  // ========================================================== Cotizaciones
+  var COT_FILTROS_ESTADO = [
+    { id: 'todas', lab: 'Todas' },
+    { id: 'borrador', lab: 'Borrador' },
+    { id: 'enviada', lab: 'Enviada' },
+    { id: 'aceptada', lab: 'Aceptada' },
+    { id: 'cancelada', lab: 'Cancelada' },
+    { id: 'expirada', lab: 'Expirada' }
+  ];
+  var COT_FILTROS_ORIGEN = [
+    { id: 'todas', lab: 'Todas' },
+    { id: 'crm', lab: 'Creadas por mí' },
+    { id: 'lead_web', lab: 'Leads de la web' }
+  ];
+  // A qué estados puede pasar cada estado desde el drawer — MISMA matriz
+  // que valida api/crm/accion.js 'cotizacion_estado'. No se inventan botones
+  // que lleven a una transición que el servidor vaya a rechazar.
+  var COT_TRANSICIONES = {
+    borrador: [['enviada', 'Marcar como enviada', 'btn-amarillo'], ['cancelada', 'Cancelar cotización', 'btn-peligro']],
+    enviada: [['aceptada', 'Marcar como aceptada', 'btn-amarillo'], ['borrador', 'Regresar a borrador', 'btn-linea'], ['cancelada', 'Cancelar cotización', 'btn-peligro']],
+    aceptada: [],
+    cancelada: [],
+    expirada: [['borrador', 'Reabrir como borrador', 'btn-amarillo']]
+  };
+
+  function cotizacionPorId(id) {
+    var cots = (estado.datos && estado.datos.cotizaciones) || [];
+    for (var i = 0; i < cots.length; i++) if (cots[i].id === id) return cots[i];
+    return null;
+  }
+
+  function totalesCotizacion(c) {
+    var items = c.items || [];
+    var subtotal = items.reduce(function (sum, it) {
+      return sum + (Number(it.adultos) || 0) * (Number(it.precio_adulto) || 0) +
+        (Number(it.menores) || 0) * (Number(it.precio_menor) || 0);
+    }, 0);
+    var descuento = Number(c.descuento) || 0;
+    return { subtotal: subtotal, descuento: descuento, total: Math.max(0, subtotal - descuento) };
+  }
+
+  function cotizacionesFiltradas() {
+    var cots = (estado.datos && estado.datos.cotizaciones) || [];
+    if (estado.cotFiltroEstado !== 'todas') {
+      cots = cots.filter(function (c) { return c.estado === estado.cotFiltroEstado; });
+    }
+    if (estado.cotFiltroOrigen !== 'todas') {
+      cots = cots.filter(function (c) { return c.origen === estado.cotFiltroOrigen; });
+    }
+    return cots;
+  }
+
+  function pintarCotizacionesVista() {
+    pintarCotFiltros();
+    pintarTablaCot();
+    if (estado.cotAbierta && estado.cotVista !== 'formulario') pintarDrawerCotizacion();
+  }
+
+  function pintarCotFiltros() {
+    var contE = $('cotFiltrosEstado');
+    vaciar(contE);
+    COT_FILTROS_ESTADO.forEach(function (f) {
+      var b = el('button', 'chip' + (estado.cotFiltroEstado === f.id ? ' is-activo' : ''), f.lab);
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        estado.cotFiltroEstado = f.id;
+        pintarCotFiltros();
+        pintarTablaCot();
+      });
+      contE.appendChild(b);
+    });
+    var contO = $('cotFiltrosOrigen');
+    vaciar(contO);
+    COT_FILTROS_ORIGEN.forEach(function (f) {
+      var b = el('button', 'chip' + (estado.cotFiltroOrigen === f.id ? ' is-activo' : ''), f.lab);
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        estado.cotFiltroOrigen = f.id;
+        pintarCotFiltros();
+        pintarTablaCot();
+      });
+      contO.appendChild(b);
+    });
+  }
+
+  function pintarTablaCot() {
+    var cont = $('tablaCot');
+    vaciar(cont);
+    var todas = (estado.datos && estado.datos.cotizaciones) || [];
+    var filas = cotizacionesFiltradas();
+
+    $('cotSub').textContent = filas.length + (filas.length === 1 ? ' cotización' : ' cotizaciones');
+
+    var head = el('div', 'fila fila-head');
+    head.appendChild(el('span', 'c-folio', 'Folio'));
+    head.appendChild(el('span', 'c-cliente', 'Cliente'));
+    head.appendChild(el('span', 'c-creada', 'Creada'));
+    head.appendChild(el('span', 'c-total', 'Total'));
+    head.appendChild(el('span', 'c-estado', 'Estado'));
+    cont.appendChild(head);
+
+    if (!filas.length) {
+      cont.appendChild(el('div', 'tabla-vacia',
+        todas.length ? 'No hay cotizaciones en este filtro.' : 'Todavía no hay cotizaciones.'));
+      return;
+    }
+    filas.forEach(function (c) { cont.appendChild(filaCot(c)); });
+  }
+
+  function filaCot(c) {
+    var f = el('div', 'fila');
+    f.setAttribute('role', 'button');
+    f.setAttribute('tabindex', '0');
+
+    f.appendChild(el('span', 'c-folio', 'COT-' + c.folio));
+
+    var cli = el('span', 'c-cliente');
+    var filaNom = el('div', 'cot-nombre-fila');
+    filaNom.appendChild(el('strong', null, c.cliente_nombre || 'Sin nombre'));
+    if (c.origen === 'lead_web') filaNom.appendChild(el('span', 'badge-lead', 'Lead web'));
+    cli.appendChild(filaNom);
+    cli.appendChild(el('span', 'c-sub', c.cliente_tel || c.cliente_email || '—'));
+    f.appendChild(cli);
+
+    f.appendChild(el('span', 'c-creada', fechaCorta(c.created_at)));
+
+    var tot = totalesCotizacion(c);
+    f.appendChild(el('span', 'c-total', money(tot.total)));
+
+    var est = el('span', 'c-estado');
+    est.appendChild(chipEstado(c.estado));
+    f.appendChild(est);
+
+    function abrir() { abrirDrawerCotizacion(c.id); }
+    f.addEventListener('click', abrir);
+    f.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); }
+    });
+    return f;
+  }
+
+  function abrirDrawerCotizacion(id) {
+    estado.cotAbierta = id;
+    estado.tokenAbierto = null;
+    $('scrimDrawer').hidden = false;
+    $('drawer').hidden = false;
+    $('drawer').scrollTop = 0;
+    pintarDrawerCotizacion();
+  }
+
+  function pintarDrawerCotizacion() {
+    var c = cotizacionPorId(estado.cotAbierta);
+    var caja = $('drawerIn');
+    vaciar(caja);
+
+    if (!c) {
+      caja.appendChild(el('p', 'dr-nota', 'Esta cotización ya no está en la lista. Actualiza la pantalla.'));
+      var volver = el('button', 'btn btn-linea', 'Cerrar');
+      volver.type = 'button';
+      volver.addEventListener('click', cerrarDrawer);
+      caja.appendChild(volver);
+      return;
+    }
+
+    var top = el('div', 'dr-top');
+    var izq = el('div', null);
+    izq.appendChild(el('div', 'dr-kicker', c.origen === 'lead_web' ? 'Lead de la web' : 'Creada en el CRM'));
+    izq.appendChild(el('h2', 'dr-folio', 'COT-' + c.folio));
+    top.appendChild(izq);
+    var cerrar = el('button', 'dr-cerrar');
+    cerrar.type = 'button';
+    cerrar.appendChild(el('span', 'cerrar-largo', '× Cerrar'));
+    cerrar.appendChild(el('span', 'cerrar-corto', '← Volver'));
+    cerrar.addEventListener('click', cerrarDrawer);
+    top.appendChild(cerrar);
+    caja.appendChild(top);
+
+    var chips = el('div', 'dr-chips');
+    chips.appendChild(chipEstado(c.estado, true));
+    caja.appendChild(chips);
+
+    var secCliente = seccion('Cliente');
+    var cc = el('div', 'dr-caja');
+    cc.appendChild(dato('Nombre', c.cliente_nombre, { fuerte: true }));
+    cc.appendChild(dato('Teléfono', c.cliente_tel, { tel: true }));
+    cc.appendChild(dato('Correo', c.cliente_email, { mail: true }));
+    cc.appendChild(dato('Creada', fechaCorta(c.created_at)));
+    cc.appendChild(dato('Idioma', c.idioma === 'en' ? 'Inglés' : 'Español'));
+    if (c.notas) cc.appendChild(dato('Notas', c.notas));
+    secCliente.appendChild(cc);
+    caja.appendChild(secCliente);
+
+    var secItems = seccion('Servicios cotizados');
+    var ci = el('div', null);
+    (c.items || []).forEach(function (it) {
+      var card = el('div', 'cot-item-vista');
+      var top1 = el('div', 'cot-item-vista-top');
+      top1.appendChild(el('strong', null, it.servicio_nombre));
+      var importe = (Number(it.adultos) || 0) * (Number(it.precio_adulto) || 0) +
+        (Number(it.menores) || 0) * (Number(it.precio_menor) || 0);
+      top1.appendChild(el('strong', null, money(importe)));
+      card.appendChild(top1);
+      var partes = [];
+      if (it.fecha) partes.push(fechaSoloDia(it.fecha));
+      if (it.zona) partes.push(it.zona);
+      partes.push(it.nacionalidad === 'nacional' ? 'Nacional' : 'Extranjero');
+      partes.push(it.adultos + (it.adultos === 1 ? ' adulto' : ' adultos') +
+        (it.menores ? ' + ' + it.menores + (it.menores === 1 ? ' menor' : ' menores') : ''));
+      partes.push(money(it.precio_adulto) + '/ad' + (it.precio_menor ? ' · ' + money(it.precio_menor) + '/mn' : ''));
+      card.appendChild(el('div', 'cot-item-vista-sub', partes.join(' · ')));
+      ci.appendChild(card);
+    });
+    secItems.appendChild(ci);
+    caja.appendChild(secItems);
+
+    var secDinero = seccion('Total');
+    var tot = totalesCotizacion(c);
+    var cd = el('div', 'dr-caja');
+    cd.appendChild(dato('Subtotal', money(tot.subtotal)));
+    if (tot.descuento) cd.appendChild(dato('Descuento', '-' + money(tot.descuento)));
+    cd.appendChild(dato('Total', money(tot.total), { fuerte: true }));
+    secDinero.appendChild(cd);
+    caja.appendChild(secDinero);
+
+    caja.appendChild(seccionAccionesCot(c));
+  }
+
+  function seccionAccionesCot(c) {
+    var s = seccion('Acciones');
+    var cont = el('div', 'dr-acc');
+
+    if (c.estado === 'borrador') {
+      var editar = el('button', 'btn btn-linea', 'Editar cotización');
+      editar.type = 'button';
+      editar.addEventListener('click', function () { abrirFormularioCotizacion(c); });
+      cont.appendChild(editar);
+    }
+
+    (COT_TRANSICIONES[c.estado] || []).forEach(function (t) {
+      var destino = t[0], etiqueta = t[1], clase = t[2];
+      var b = el('button', 'btn ' + clase, etiqueta);
+      b.type = 'button';
+      b.addEventListener('click', async function () {
+        var ok = await confirmar({
+          titulo: '¿' + etiqueta + '?',
+          texto: 'COT-' + c.folio + ' pasa de "' + (ETIQUETA_ESTADO[c.estado] || c.estado) +
+            '" a "' + (ETIQUETA_ESTADO[destino] || destino) + '".',
+          aceptar: 'Sí, continuar',
+          clase: destino === 'cancelada' ? 'btn-peligro' : 'btn-amarillo'
+        });
+        if (ok) ejecutar({ accion: 'cotizacion_estado', id: c.id, estado: destino }, 'Cotización actualizada.');
+      });
+      cont.appendChild(b);
+    });
+
+    var imprimir = el('button', 'btn btn-linea', 'Ver / imprimir cotización');
+    imprimir.type = 'button';
+    imprimir.addEventListener('click', function () { imprimirCotizacion(c); });
+    cont.appendChild(imprimir);
+
+    s.appendChild(cont);
+    return s;
+  }
+
+  // ---- formulario / asistente de nueva cotización o edición de un borrador ----
+  function abrirFormularioCotizacion(cotExistente) {
+    cerrarDrawer();
+    estado.cotVista = 'formulario';
+    $('cotVistaLista').hidden = true;
+    var cont = $('cotVistaForm');
+    vaciar(cont);
+    cont.hidden = false;
+    construirFormularioCotizacion(cont, cotExistente);
+    cont.scrollIntoView({ block: 'start' });
+  }
+
+  function cerrarFormularioCotizacion() {
+    estado.cotVista = 'lista';
+    $('cotVistaLista').hidden = false;
+    $('cotVistaForm').hidden = true;
+    vaciar($('cotVistaForm'));
+    pintarCotizacionesVista();
+  }
+
+  function construirFormularioCotizacion(cont, cotExistente) {
+    var editando = !!cotExistente;
+    var catalogo = (estado.datos && estado.datos.catalogoServicios) || [];
+
+    var head = el('div', 'cot-form-head');
+    head.appendChild(el('h2', 'cot-form-tit', editando ? 'Editar COT-' + cotExistente.folio : 'Nueva cotización'));
+    var cancelarX = el('button', 'btn-sutil', '× Cancelar');
+    cancelarX.type = 'button';
+    cancelarX.addEventListener('click', cerrarFormularioCotizacion);
+    head.appendChild(cancelarX);
+    cont.appendChild(head);
+
+    if (!catalogo.length) {
+      cont.appendChild(el('div', 'cot-aviso',
+        'Todavía no hay servicios en el Tarifario. Puedes cotizar escribiendo el nombre del servicio a mano, ' +
+        'pero para que el precio se autocomplete primero agrega servicios en Tarifario.'));
+    }
+
+    var listaZonas = el('datalist');
+    listaZonas.id = 'listaZonasCot';
+    var zonasVistas = {};
+    ((estado.datos && estado.datos.servicioTarifas) || []).forEach(function (t) {
+      if (t.zona && !zonasVistas[t.zona]) {
+        zonasVistas[t.zona] = true;
+        var o = el('option'); o.value = t.zona; listaZonas.appendChild(o);
+      }
+    });
+    cont.appendChild(listaZonas);
+
+    cont.appendChild(el('div', 'cot-sec-tit', 'Cliente'));
+    var gridCliente = el('div', 'form-grid');
+    var inNombre = campoTexto(gridCliente, 'Nombre del cliente', 'text', editando ? cotExistente.cliente_nombre : '', true);
+    var inTel = campoTexto(gridCliente, 'Teléfono', 'tel', editando ? (cotExistente.cliente_tel || '') : '');
+    var inMail = campoTexto(gridCliente, 'Correo', 'email', editando ? (cotExistente.cliente_email || '') : '');
+    var selIdioma = null;
+    if (!editando) selIdioma = campoSelect(gridCliente, 'Idioma', [['es', 'Español'], ['en', 'Inglés']], 'es');
+    cont.appendChild(gridCliente);
+
+    cont.appendChild(el('div', 'cot-sec-tit', 'Servicios'));
+    var contItems = el('div', null);
+    cont.appendChild(contItems);
+
+    var filas = [];
+
+    function renumerar() {
+      Array.prototype.forEach.call(contItems.children, function (card, i) {
+        var numEl = card.querySelector('.cot-item-num');
+        if (numEl) numEl.textContent = 'Servicio ' + (i + 1);
+      });
+    }
+
+    function agregarFila(itemInicial) {
+      var card = el('div', 'cot-item');
+      card.appendChild(el('div', 'cot-item-num', 'Servicio ' + (filas.length + 1)));
+
+      var quitar = el('button', 'cot-item-quitar', '×');
+      quitar.type = 'button';
+      quitar.title = 'Quitar este servicio';
+      card.appendChild(quitar);
+
+      var g = el('div', 'cot-item-grid');
+
+      var labServicio = el('label', 'campo ancho');
+      labServicio.appendChild(el('span', 'campo-lab', 'Servicio'));
+      var selServicio = el('select', 'campo-in');
+      var optOtro = el('option', null, 'Otro (escribir a mano)');
+      optOtro.value = '';
+      selServicio.appendChild(optOtro);
+      catalogo.forEach(function (s) {
+        var o = el('option', null, s.nombre + (s.activo === false ? ' (inactivo)' : ''));
+        o.value = s.id;
+        selServicio.appendChild(o);
+      });
+      labServicio.appendChild(selServicio);
+      g.appendChild(labServicio);
+
+      var labNombre = el('label', 'campo ancho');
+      labNombre.appendChild(el('span', 'campo-lab', 'Nombre del servicio (aparece en la cotización)'));
+      var inNombreServicio = el('input', 'campo-in');
+      inNombreServicio.type = 'text';
+      labNombre.appendChild(inNombreServicio);
+      g.appendChild(labNombre);
+
+      var labZona = el('label', 'campo');
+      labZona.appendChild(el('span', 'campo-lab', 'Zona'));
+      var inZona = el('input', 'campo-in');
+      inZona.type = 'text';
+      inZona.setAttribute('list', 'listaZonasCot');
+      inZona.placeholder = 'Riviera Maya…';
+      labZona.appendChild(inZona);
+      g.appendChild(labZona);
+
+      var labNac = el('label', 'campo');
+      labNac.appendChild(el('span', 'campo-lab', 'Nacionalidad'));
+      var selNac = el('select', 'campo-in');
+      [['extranjero', 'Extranjero'], ['nacional', 'Nacional']].forEach(function (p) {
+        var o = el('option', null, p[1]); o.value = p[0]; selNac.appendChild(o);
+      });
+      labNac.appendChild(selNac);
+      g.appendChild(labNac);
+
+      var labFecha = el('label', 'campo');
+      labFecha.appendChild(el('span', 'campo-lab', 'Fecha (opcional)'));
+      var inFecha = el('input', 'campo-in');
+      inFecha.type = 'date';
+      labFecha.appendChild(inFecha);
+      g.appendChild(labFecha);
+
+      var labAd = el('label', 'campo');
+      labAd.appendChild(el('span', 'campo-lab', 'Adultos'));
+      var inAd = el('input', 'campo-in');
+      inAd.type = 'number'; inAd.min = '0'; inAd.step = '1'; inAd.value = '1';
+      labAd.appendChild(inAd);
+      g.appendChild(labAd);
+
+      var labMn = el('label', 'campo');
+      labMn.appendChild(el('span', 'campo-lab', 'Menores'));
+      var inMn = el('input', 'campo-in');
+      inMn.type = 'number'; inMn.min = '0'; inMn.step = '1'; inMn.value = '0';
+      labMn.appendChild(inMn);
+      g.appendChild(labMn);
+
+      var labPa = el('label', 'campo');
+      labPa.appendChild(el('span', 'campo-lab', 'Precio adulto'));
+      var inPa = el('input', 'campo-in');
+      inPa.type = 'number'; inPa.min = '0'; inPa.step = '1'; inPa.value = '0';
+      labPa.appendChild(inPa);
+      g.appendChild(labPa);
+
+      var labPm = el('label', 'campo');
+      labPm.appendChild(el('span', 'campo-lab', 'Precio menor'));
+      var inPm = el('input', 'campo-in');
+      inPm.type = 'number'; inPm.min = '0'; inPm.step = '1'; inPm.value = '0';
+      labPm.appendChild(inPm);
+      g.appendChild(labPm);
+
+      card.appendChild(g);
+      var sub = el('div', 'cot-item-sub');
+      card.appendChild(sub);
+      contItems.appendChild(card);
+
+      function autocompletar() {
+        var tarifas = (estado.datos && estado.datos.servicioTarifas) || [];
+        var sid = selServicio.value;
+        var zona = inZona.value.trim();
+        var nac = selNac.value;
+        if (!sid || !zona) { sub.textContent = ''; return; }
+        var match = tarifas.filter(function (t) {
+          return t.servicio_id === sid && t.nacionalidad === nac &&
+            String(t.zona || '').trim().toLowerCase() === zona.toLowerCase();
+        })[0];
+        if (match) {
+          inPa.value = String(match.precio_adulto);
+          inPm.value = (match.precio_menor === null || match.precio_menor === undefined) ? '0' : String(match.precio_menor);
+          sub.textContent = 'Precio tomado del Tarifario para esa zona/nacionalidad. Puedes cambiarlo a mano.';
+          recalcularTotal();
+        } else {
+          sub.textContent = 'Sin tarifa guardada para esa combinación — escribe el precio a mano.';
+        }
+      }
+
+      selServicio.addEventListener('change', function () {
+        if (selServicio.value) {
+          var s = catalogo.filter(function (x) { return x.id === selServicio.value; })[0];
+          if (s) inNombreServicio.value = s.nombre;
+        }
+        autocompletar();
+      });
+      inZona.addEventListener('change', autocompletar);
+      selNac.addEventListener('change', autocompletar);
+
+      if (itemInicial) {
+        if (itemInicial.servicio_id) selServicio.value = itemInicial.servicio_id;
+        inNombreServicio.value = itemInicial.servicio_nombre || '';
+        inZona.value = itemInicial.zona || '';
+        selNac.value = itemInicial.nacionalidad === 'nacional' ? 'nacional' : 'extranjero';
+        if (itemInicial.fecha) inFecha.value = String(itemInicial.fecha).slice(0, 10);
+        inAd.value = String(itemInicial.adultos != null ? itemInicial.adultos : 1);
+        inMn.value = String(itemInicial.menores != null ? itemInicial.menores : 0);
+        inPa.value = String(itemInicial.precio_adulto != null ? itemInicial.precio_adulto : 0);
+        inPm.value = String(itemInicial.precio_menor != null ? itemInicial.precio_menor : 0);
+      }
+
+      var fila = {
+        obtener: function () {
+          var nombre = inNombreServicio.value.trim();
+          if (!nombre) return null;
+          var pa = Number(inPa.value);
+          if (!Number.isFinite(pa)) return null;
+          return {
+            servicio_id: selServicio.value || null,
+            servicio_nombre: nombre,
+            fecha: inFecha.value || null,
+            zona: inZona.value.trim() || null,
+            nacionalidad: selNac.value === 'nacional' ? 'nacional' : 'extranjero',
+            adultos: Math.max(0, parseInt(inAd.value, 10) || 0),
+            menores: Math.max(0, parseInt(inMn.value, 10) || 0),
+            precio_adulto: pa,
+            precio_menor: inPm.value === '' ? 0 : (Number(inPm.value) || 0)
+          };
+        },
+        subtotal: function () {
+          var ad = Math.max(0, parseInt(inAd.value, 10) || 0);
+          var mn = Math.max(0, parseInt(inMn.value, 10) || 0);
+          return ad * (Number(inPa.value) || 0) + mn * (Number(inPm.value) || 0);
+        }
+      };
+      filas.push(fila);
+
+      quitar.addEventListener('click', function () {
+        if (filas.length <= 1) { toast('La cotización necesita al menos un servicio.'); return; }
+        var i = filas.indexOf(fila);
+        if (i !== -1) filas.splice(i, 1);
+        card.parentNode.removeChild(card);
+        renumerar();
+        recalcularTotal();
+      });
+
+      [inAd, inMn, inPa, inPm].forEach(function (input) {
+        input.addEventListener('input', recalcularTotal);
+      });
+    }
+
+    var itemsIniciales = (editando && cotExistente.items && cotExistente.items.length)
+      ? cotExistente.items : [null];
+    itemsIniciales.forEach(function (it) { agregarFila(it); });
+
+    var btnAgregarItem = el('button', 'btn-agregar-item', '+ Agregar servicio');
+    btnAgregarItem.type = 'button';
+    btnAgregarItem.addEventListener('click', function () { agregarFila(null); recalcularTotal(); });
+    cont.appendChild(btnAgregarItem);
+
+    cont.appendChild(el('div', 'cot-sec-tit', 'Notas y descuento'));
+    var gridExtra = el('div', 'form-grid');
+    var inNotas = campoTextarea(gridExtra, 'Notas (opcional)', editando ? (cotExistente.notas || '') : '', true);
+    var inDescuento = campoTexto(gridExtra, 'Descuento (MXN, opcional)', 'number', editando ? String(cotExistente.descuento || 0) : '0');
+    cont.appendChild(gridExtra);
+    inDescuento.min = '0';
+
+    var totalBox = el('div', 'cot-total-box');
+    cont.appendChild(totalBox);
+
+    function recalcularTotal() {
+      var subtotal = filas.reduce(function (sum, f) { return sum + f.subtotal(); }, 0);
+      var descuento = Math.max(0, Number(inDescuento.value) || 0);
+      var total = Math.max(0, subtotal - descuento);
+      vaciar(totalBox);
+      var f1 = el('div', 'cot-total-fila');
+      f1.appendChild(el('span', null, 'Subtotal'));
+      f1.appendChild(el('span', null, money(subtotal)));
+      totalBox.appendChild(f1);
+      if (descuento) {
+        var f2 = el('div', 'cot-total-fila');
+        f2.appendChild(el('span', null, 'Descuento'));
+        f2.appendChild(el('span', null, '-' + money(descuento)));
+        totalBox.appendChild(f2);
+      }
+      var f3 = el('div', 'cot-total-fila cot-total-final');
+      f3.appendChild(el('span', null, 'Total'));
+      f3.appendChild(el('span', null, money(total)));
+      totalBox.appendChild(f3);
+    }
+    inDescuento.addEventListener('input', recalcularTotal);
+    recalcularTotal();
+
+    var acc = el('div', 'form-acc');
+    var btnCancelar = el('button', 'btn btn-linea', 'Cancelar');
+    btnCancelar.type = 'button';
+    btnCancelar.addEventListener('click', cerrarFormularioCotizacion);
+    var btnGuardar = el('button', 'btn btn-amarillo', editando ? 'Guardar cambios' : 'Crear cotización');
+    btnGuardar.type = 'button';
+    btnGuardar.addEventListener('click', async function () {
+      var nombre = inNombre.value.trim();
+      if (!nombre) { toast('Escribe el nombre del cliente.', 'error'); inNombre.focus(); return; }
+      var items = [];
+      var huboInvalido = false;
+      filas.forEach(function (f) {
+        var it = f.obtener();
+        if (it) items.push(it); else huboInvalido = true;
+      });
+      if (!items.length) {
+        toast(huboInvalido ? 'Revisa los servicios: falta el nombre o el precio.' : 'Agrega al menos un servicio.', 'error');
+        return;
+      }
+      btnGuardar.disabled = true;
+      var res;
+      if (editando) {
+        res = await ejecutar({
+          accion: 'cotizacion_editar', id: cotExistente.id,
+          cliente_nombre: nombre,
+          cliente_tel: inTel.value.trim() || undefined,
+          cliente_email: inMail.value.trim() || undefined,
+          notas: inNotas.value.trim() || undefined,
+          descuento: Math.max(0, Number(inDescuento.value) || 0),
+          items: items
+        }, 'Cotización actualizada.');
+      } else {
+        res = await ejecutar({
+          accion: 'cotizacion_crear',
+          cliente_nombre: nombre,
+          cliente_tel: inTel.value.trim() || undefined,
+          cliente_email: inMail.value.trim() || undefined,
+          idioma: selIdioma ? selIdioma.value : 'es',
+          descuento: Math.max(0, Number(inDescuento.value) || 0),
+          notas: inNotas.value.trim() || undefined,
+          items: items
+        }, function (r) { return 'Cotización COT-' + r.folio + ' creada.'; });
+      }
+      btnGuardar.disabled = false;
+      if (res) {
+        var idAbrir = editando ? cotExistente.id : res.id;
+        cerrarFormularioCotizacion();
+        if (idAbrir) abrirDrawerCotizacion(idAbrir);
+      }
+    });
+    acc.appendChild(btnCancelar);
+    acc.appendChild(btnGuardar);
+    cont.appendChild(acc);
+  }
+
+  // ---- vista de impresión (hoja carta) ----
+  function imprimirCotizacion(c) {
+    pintarHojaCot(c);
+    $('hojaCot').hidden = false;
+    window.print();
+  }
+  window.addEventListener('afterprint', function () { $('hojaCot').hidden = true; });
+
+  function pintarHojaCot(c) {
+    var hoja = $('hojaCot');
+    vaciar(hoja);
+    var wrap = el('div', 'hoja-en');
+
+    var head = el('div', 'hoja-head');
+    var logo = document.createElement('img');
+    logo.className = 'hoja-logo';
+    logo.src = 'uploads/WALKME_LOGO_FVERDE.png';
+    logo.alt = 'WalkMe Tours';
+    head.appendChild(logo);
+    var der = el('div', null);
+    der.appendChild(el('div', 'hoja-folio-lab', 'Cotización'));
+    der.appendChild(el('div', 'hoja-folio', 'COT-' + c.folio));
+    der.appendChild(el('div', 'hoja-fecha', fechaCorta(c.created_at)));
+    head.appendChild(der);
+    wrap.appendChild(head);
+
+    var datos = el('div', 'hoja-datos');
+    [['Cliente', c.cliente_nombre || '—'],
+     ['Teléfono / correo', c.cliente_tel || c.cliente_email || '—'],
+     ['Estado', ETIQUETA_ESTADO[c.estado] || c.estado]].forEach(function (p) {
+      var cel = el('div', 'hoja-dato-cel');
+      cel.appendChild(el('div', 'hoja-dato-lab', p[0]));
+      cel.appendChild(el('div', 'hoja-dato-val', p[1]));
+      datos.appendChild(cel);
+    });
+    wrap.appendChild(datos);
+
+    var tabla = document.createElement('table');
+    tabla.className = 'hoja-tabla';
+    var thead = document.createElement('thead');
+    var trh = document.createElement('tr');
+    ['Servicio', 'Pax', 'Precio unitario', 'Importe'].forEach(function (t, i) {
+      var th = document.createElement('th');
+      th.textContent = t;
+      if (i === 3) th.style.textAlign = 'right';
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    tabla.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    (c.items || []).forEach(function (it) {
+      var tr = document.createElement('tr');
+
+      var tdServ = document.createElement('td');
+      tdServ.appendChild(el('strong', null, it.servicio_nombre));
+      var partes = [];
+      if (it.fecha) partes.push(fechaSoloDia(it.fecha));
+      if (it.zona) partes.push(it.zona);
+      partes.push(it.nacionalidad === 'nacional' ? 'Nacional' : 'Extranjero');
+      tdServ.appendChild(el('div', 'hoja-servicio-sub', partes.join(' · ')));
+      tr.appendChild(tdServ);
+
+      var tdPax = document.createElement('td');
+      tdPax.textContent = it.adultos + ' ad' + (it.menores ? ' + ' + it.menores + ' mn' : '');
+      tr.appendChild(tdPax);
+
+      var tdPrecio = document.createElement('td');
+      tdPrecio.textContent = money(it.precio_adulto) + (it.precio_menor ? ' / ' + money(it.precio_menor) : '');
+      tr.appendChild(tdPrecio);
+
+      var importe = (Number(it.adultos) || 0) * (Number(it.precio_adulto) || 0) +
+        (Number(it.menores) || 0) * (Number(it.precio_menor) || 0);
+      var tdImp = document.createElement('td');
+      tdImp.className = 'num';
+      tdImp.textContent = money(importe);
+      tr.appendChild(tdImp);
+
+      tbody.appendChild(tr);
+    });
+    tabla.appendChild(tbody);
+    wrap.appendChild(tabla);
+
+    var tot = totalesCotizacion(c);
+    var totales = el('div', 'hoja-totales');
+    var f1 = el('div', 'hoja-tot-fila');
+    f1.appendChild(el('span', null, 'Subtotal'));
+    f1.appendChild(el('strong', null, money(tot.subtotal)));
+    totales.appendChild(f1);
+    if (tot.descuento) {
+      var f2 = el('div', 'hoja-tot-fila');
+      f2.appendChild(el('span', null, 'Descuento'));
+      f2.appendChild(el('strong', null, '-' + money(tot.descuento)));
+      totales.appendChild(f2);
+    }
+    var f3 = el('div', 'hoja-tot-final');
+    f3.appendChild(el('span', null, 'Total'));
+    f3.appendChild(el('strong', null, money(tot.total)));
+    totales.appendChild(f3);
+    wrap.appendChild(totales);
+
+    if (c.notas) {
+      var notas = el('div', 'hoja-notas');
+      notas.appendChild(el('strong', null, 'Notas: '));
+      notas.appendChild(document.createTextNode(c.notas));
+      wrap.appendChild(notas);
+    }
+
+    var pie = el('div', 'hoja-pie');
+    pie.appendChild(el('span', null, 'WalkMe Tours · Playa del Carmen, Q. Roo'));
+    pie.appendChild(el('span', null, 'WhatsApp +52 984 178 4102 · hola@walkmetours.com'));
+    wrap.appendChild(pie);
+
+    hoja.appendChild(wrap);
+  }
+
+  // =============================================================== Tarifario
+  var CATEGORIA_LABEL = { tour: 'Tour', parque: 'Parque', bici: 'Bici' };
+
+  function pintarTarifarioVista() {
+    var servicios = (estado.datos && estado.datos.catalogoServicios) || [];
+    var tarifas = (estado.datos && estado.datos.servicioTarifas) || [];
+    var cont = $('tarLista');
+    vaciar(cont);
+    $('tarSub').textContent = servicios.length + (servicios.length === 1 ? ' servicio' : ' servicios');
+
+    if (!servicios.length) {
+      cont.appendChild(el('div', 'tabla-vacia', 'Todavía no hay servicios en el tarifario — agrega el primero.'));
+      return;
+    }
+
+    var tarifasPorServicio = {};
+    tarifas.forEach(function (t) {
+      (tarifasPorServicio[t.servicio_id] = tarifasPorServicio[t.servicio_id] || []).push(t);
+    });
+
+    servicios.forEach(function (s) {
+      cont.appendChild(filaServicioTarifario(s, tarifasPorServicio[s.id] || []));
+    });
+  }
+
+  function filaServicioTarifario(s, tarifasServicio) {
+    var fila = el('div', 'tar-servicio' + (s.activo === false ? ' tar-inactivo' : ''));
+
+    var head = el('div', 'tar-servicio-head');
+    var izq = el('div', null);
+    var nom = el('div', 'tar-servicio-nom');
+    nom.appendChild(document.createTextNode(s.nombre));
+    if (s.activo === false) nom.appendChild(el('span', 'tar-tag', 'Inactivo'));
+    izq.appendChild(nom);
+    izq.appendChild(el('div', 'tar-servicio-meta',
+      (CATEGORIA_LABEL[s.categoria] || s.categoria) + ' · ' +
+      tarifasServicio.length + (tarifasServicio.length === 1 ? ' tarifa' : ' tarifas')));
+    head.appendChild(izq);
+
+    var acc = el('div', 'tar-servicio-acc');
+    var editarServ = el('button', 'btn-sutil', 'Editar servicio');
+    editarServ.type = 'button';
+    editarServ.addEventListener('click', function () { abrirModalServicio(s); });
+    acc.appendChild(editarServ);
+    var agregarTar = el('button', 'btn-sutil', '+ Agregar tarifa');
+    agregarTar.type = 'button';
+    agregarTar.addEventListener('click', function () { abrirModalTarifa(s, null); });
+    acc.appendChild(agregarTar);
+    head.appendChild(acc);
+    fila.appendChild(head);
+
+    var lista = el('div', 'tar-tarifas');
+    if (!tarifasServicio.length) {
+      lista.appendChild(el('div', 'tar-vacio', 'Sin tarifas todavía.'));
+    } else {
+      tarifasServicio.forEach(function (t) {
+        var row = el('div', 'tar-tarifa-row');
+        row.appendChild(el('strong', null, t.zona + ' · ' + (t.nacionalidad === 'nacional' ? 'Nacional' : 'Extranjero')));
+        row.appendChild(el('span', null, 'Adulto ' + money(t.precio_adulto)));
+        row.appendChild(el('span', null, (t.precio_menor != null) ? 'Menor ' + money(t.precio_menor) : 'Sin tarifa de menor'));
+        row.appendChild(el('span', null, t.vigente === false ? 'No vigente' : 'Vigente'));
+        var edBtn = el('button', 'btn-sutil', 'Editar');
+        edBtn.type = 'button';
+        edBtn.addEventListener('click', function () { abrirModalTarifa(s, t); });
+        row.appendChild(edBtn);
+        lista.appendChild(row);
+      });
+    }
+    fila.appendChild(lista);
+    return fila;
+  }
+
+  function abrirModalServicio(servicioExistente) {
+    abrirModal(function (caja) {
+      var editando = !!servicioExistente;
+      caja.appendChild(el('h2', 'modal-tit', editando ? 'Editar servicio' : 'Nuevo servicio'));
+      caja.appendChild(el('p', 'modal-sub', editando
+        ? 'ID interno: ' + servicioExistente.id
+        : 'El identificador se genera solo a partir del nombre (ej. "Xcaret Plus" → xcaret-plus).'));
+
+      var grid = el('div', 'form-grid');
+      var inNombre = campoTexto(grid, 'Nombre', 'text', editando ? servicioExistente.nombre : '', true);
+      var selCat = campoSelect(grid, 'Categoría', [['tour', 'Tour'], ['parque', 'Parque']], editando ? servicioExistente.categoria : 'tour');
+      var selActivo = campoSelect(grid, 'Estado', [['si', 'Activo'], ['no', 'Inactivo']],
+        (editando && servicioExistente.activo === false) ? 'no' : 'si', true);
+      caja.appendChild(grid);
+
+      var err = el('div', 'modal-error');
+      err.hidden = true;
+      caja.appendChild(err);
+
+      var acc = el('div', 'modal-acc');
+      var cancelar = el('button', 'btn btn-linea', 'Cancelar');
+      cancelar.type = 'button';
+      cancelar.addEventListener('click', cerrarModal);
+      var guardar = el('button', 'btn btn-amarillo', 'Guardar');
+      guardar.type = 'button';
+      guardar.addEventListener('click', async function () {
+        var nombre = inNombre.value.trim();
+        if (!nombre) { err.hidden = false; err.textContent = 'Escribe el nombre del servicio.'; return; }
+        var id = editando ? servicioExistente.id : slugify(nombre);
+        if (!id) { err.hidden = false; err.textContent = 'No se pudo generar un identificador de ese nombre.'; return; }
+        guardar.disabled = true;
+        var res = await ejecutar({
+          accion: 'servicio_guardar', id: id, nombre: nombre,
+          categoria: selCat.value, activo: selActivo.value === 'si'
+        }, editando ? 'Servicio actualizado.' : 'Servicio "' + nombre + '" agregado.');
+        guardar.disabled = false;
+        if (res) cerrarModal();
+      });
+      acc.appendChild(cancelar);
+      acc.appendChild(guardar);
+      caja.appendChild(acc);
+    });
+  }
+
+  function abrirModalTarifa(servicio, tarifaExistente) {
+    abrirModal(function (caja) {
+      var editando = !!tarifaExistente;
+      caja.appendChild(el('h2', 'modal-tit', editando ? 'Editar tarifa' : 'Nueva tarifa'));
+      caja.appendChild(el('p', 'modal-sub', servicio.nombre +
+        (editando ? ' — la zona y la nacionalidad no se cambian aquí; crea una tarifa nueva si necesitas otra combinación.' : '')));
+
+      var grid = el('div', 'form-grid');
+      var inZona, selNac;
+      if (editando) {
+        var zonaFija = el('div', 'campo');
+        zonaFija.appendChild(el('span', 'campo-lab', 'Zona'));
+        zonaFija.appendChild(el('div', null, tarifaExistente.zona));
+        grid.appendChild(zonaFija);
+        var nacFija = el('div', 'campo');
+        nacFija.appendChild(el('span', 'campo-lab', 'Nacionalidad'));
+        nacFija.appendChild(el('div', null, tarifaExistente.nacionalidad === 'nacional' ? 'Nacional' : 'Extranjero'));
+        grid.appendChild(nacFija);
+      } else {
+        inZona = campoTexto(grid, 'Zona', 'text', '', false);
+        inZona.setAttribute('list', 'listaZonasTarifario');
+        selNac = campoSelect(grid, 'Nacionalidad', [['extranjero', 'Extranjero'], ['nacional', 'Nacional']], 'extranjero');
+      }
+      var inPa = campoTexto(grid, 'Precio adulto', 'number', editando ? String(tarifaExistente.precio_adulto) : '0');
+      var inPm = campoTexto(grid, 'Precio menor (opcional)', 'number',
+        (editando && tarifaExistente.precio_menor != null) ? String(tarifaExistente.precio_menor) : '');
+      caja.appendChild(grid);
+
+      if (!editando) {
+        var listaZ = el('datalist');
+        listaZ.id = 'listaZonasTarifario';
+        var vistos = {};
+        ((estado.datos && estado.datos.servicioTarifas) || []).forEach(function (t) {
+          if (t.zona && !vistos[t.zona]) { vistos[t.zona] = true; var o = el('option'); o.value = t.zona; listaZ.appendChild(o); }
+        });
+        caja.appendChild(listaZ);
+      }
+
+      var err = el('div', 'modal-error');
+      err.hidden = true;
+      caja.appendChild(err);
+
+      var acc = el('div', 'modal-acc');
+      var cancelar = el('button', 'btn btn-linea', 'Cancelar');
+      cancelar.type = 'button';
+      cancelar.addEventListener('click', cerrarModal);
+      var guardar = el('button', 'btn btn-amarillo', 'Guardar');
+      guardar.type = 'button';
+      guardar.addEventListener('click', async function () {
+        var zona = editando ? tarifaExistente.zona : inZona.value.trim();
+        var nac = editando ? tarifaExistente.nacionalidad : selNac.value;
+        if (!zona) { err.hidden = false; err.textContent = 'Escribe la zona.'; return; }
+        var pa = Number(inPa.value);
+        if (!Number.isFinite(pa) || pa < 0) { err.hidden = false; err.textContent = 'El precio de adulto no es válido.'; return; }
+        guardar.disabled = true;
+        var res = await ejecutar({
+          accion: 'tarifa_guardar', servicio_id: servicio.id, zona: zona, nacionalidad: nac,
+          precio_adulto: pa, precio_menor: inPm.value.trim() === '' ? null : Number(inPm.value)
+        }, 'Tarifa guardada.');
+        guardar.disabled = false;
+        if (res) cerrarModal();
+      });
+      acc.appendChild(cancelar);
+      acc.appendChild(guardar);
+      caja.appendChild(acc);
+    });
+  }
+
+  // =============================================================== Operadores
+  // ------------------------------------------------------- reportes (bicis)
+  // Vive fuera de estado.datos (el tablero) a propósito: un reporte necesita
+  // mirar más atrás que los 60 días/200 filas que carga el dashboard del
+  // día a día. Se pide aparte, bajo demanda, con accion('reportes_bicis').
+  function rangoReportesDefault() {
+    var hasta = hoyCancun();
+    var desde = diaCancun(new Date(Date.now() - 29 * 24 * 3600 * 1000));
+    return { desde: desde, hasta: hasta };
+  }
+
+  function pintarReportesVista() {
+    if (!estado.repDesde || !estado.repHasta) {
+      var def = rangoReportesDefault();
+      estado.repDesde = def.desde;
+      estado.repHasta = def.hasta;
+    }
+    var grid = $('repFiltroGrid');
+    vaciar(grid);
+    var inDesde = campoTexto(grid, 'Desde', 'date', estado.repDesde);
+    var inHasta = campoTexto(grid, 'Hasta', 'date', estado.repHasta);
+    var campoBtn = el('label', 'campo');
+    campoBtn.appendChild(el('span', 'campo-lab', ' '));
+    var btnVer = el('button', 'btn btn-amarillo', 'Ver reporte');
+    btnVer.type = 'button';
+    btnVer.addEventListener('click', function () {
+      estado.repDesde = inDesde.value;
+      estado.repHasta = inHasta.value;
+      cargarReportes();
+    });
+    campoBtn.appendChild(btnVer);
+    grid.appendChild(campoBtn);
+
+    if (estado.repDatos) pintarReportesResultados();
+    else cargarReportes();
+  }
+
+  async function cargarReportes() {
+    var cont = $('repResultados');
+    if (!estado.repDesde || !estado.repHasta) return;
+    if (estado.repDesde > estado.repHasta) {
+      toast('La fecha "Desde" no puede ser después de "Hasta".', 'error');
+      return;
+    }
+    if (estado.repCargando) return;
+    estado.repCargando = true;
+    vaciar(cont);
+    cont.appendChild(el('div', 'tabla-vacia', 'Cargando…'));
+    try {
+      var res = await accion({ accion: 'reportes_bicis', desde: estado.repDesde, hasta: estado.repHasta });
+      estado.repDatos = res;
+      pintarReportesResultados();
+    } catch (e) {
+      if (e.codigo === 'sin_sesion') { mostrarLogin(); return; }
+      vaciar(cont);
+      cont.appendChild(el('div', 'tabla-vacia', textoError(e)));
+    } finally {
+      estado.repCargando = false;
+    }
+  }
+
+  function panelKpis(titulo, subtitulo, tarjetas) {
+    var panel = el('section', 'panel');
+    var head = el('div', 'panel-head');
+    head.appendChild(el('h2', 'panel-tit', titulo));
+    if (subtitulo) head.appendChild(el('span', 'panel-sub', subtitulo));
+    panel.appendChild(head);
+    var kpis = el('div', 'kpis');
+    tarjetas.forEach(function (t) {
+      var c = el('div', 'kpi ' + (t.clase || ''));
+      c.appendChild(el('div', 'kpi-lab', t.lab));
+      c.appendChild(el('div', 'kpi-val', t.val));
+      kpis.appendChild(c);
+    });
+    panel.appendChild(kpis);
+    return panel;
+  }
+
+  function pintarReportesResultados() {
+    var d = estado.repDatos;
+    var cont = $('repResultados');
+    vaciar(cont);
+    if (!d) return;
+
+    cont.appendChild(panelKpis('Ingresos', 'Solo lo que de verdad se cobró en el rango', [
+      { lab: 'Total cobrado', val: money(d.ingresos.total), clase: 'kpi-oscuro' },
+      { lab: 'Efectivo', val: money(d.ingresos.efectivo) },
+      { lab: 'Stripe', val: money(d.ingresos.stripe) },
+      { lab: 'MercadoPago', val: money(d.ingresos.mercadopago) }
+    ]));
+
+    cont.appendChild(panelKpis('Ocupación de flota', null, [
+      { lab: 'Ocupación', val: d.ocupacion.porcentaje + '%', clase: 'kpi-amarillo' },
+      { lab: 'Días-bici rentados', val: d.ocupacion.diasBiciRentados },
+      { lab: 'Días-bici disponibles', val: d.ocupacion.diasBiciDisponibles }
+    ]));
+
+    var panelGar = el('section', 'panel');
+    var headGar = el('div', 'panel-head');
+    headGar.appendChild(el('h2', 'panel-tit', 'Garantías'));
+    headGar.appendChild(el('span', 'panel-sub', 'Efectivo y tarjeta nunca se suman entre sí'));
+    panelGar.appendChild(headGar);
+
+    var colsGar = el('div', 'form-grid');
+    var colEfectivo = el('div', null);
+    colEfectivo.appendChild(el('div', 'panel-sub-bloque', 'Efectivo (mostrador)'));
+    colEfectivo.appendChild(dato('Recibido en el rango', money(d.garantias.efectivoRetenido)));
+    colEfectivo.appendChild(dato('Todavía sin devolver', money(d.garantias.efectivoSinDevolver)));
+    colEfectivo.appendChild(dato('Identificaciones en el cajón', d.garantias.idsSinDevolver));
+    colsGar.appendChild(colEfectivo);
+
+    var colTarjeta = el('div', null);
+    colTarjeta.appendChild(el('div', 'panel-sub-bloque', 'Tarjeta (hold de Stripe)'));
+    colTarjeta.appendChild(dato('Capturado en el rango', money(d.garantias.capturadoStripe)));
+    Object.keys(d.garantias.holdsPorEstado).forEach(function (k) {
+      colTarjeta.appendChild(dato(
+        ETIQUETA_ESTADO['deposito_' + k] || capitaliza(k),
+        d.garantias.holdsPorEstado[k]
+      ));
+    });
+    colsGar.appendChild(colTarjeta);
+
+    panelGar.appendChild(colsGar);
+    cont.appendChild(panelGar);
+  }
+
+  function pintarOperadoresVista() {
+    var operadores = (estado.datos && estado.datos.operadores) || [];
+    var ofertas = (estado.datos && estado.datos.operadorOfertas) || [];
+    var cont = $('opLista');
+    vaciar(cont);
+    $('opSub').textContent = operadores.length + (operadores.length === 1 ? ' operador' : ' operadores');
+
+    if (!operadores.length) {
+      cont.appendChild(el('div', 'tabla-vacia', 'Todavía no hay operadores — agrega el primero.'));
+      return;
+    }
+
+    var ofertasPorOperador = {};
+    ofertas.forEach(function (o) {
+      (ofertasPorOperador[o.operador_id] = ofertasPorOperador[o.operador_id] || []).push(o);
+    });
+
+    operadores.forEach(function (op) {
+      cont.appendChild(tarjetaOperador(op, ofertasPorOperador[op.id] || []));
+    });
+  }
+
+  function tarjetaOperador(op, ofertasOp) {
+    var servicios = (estado.datos && estado.datos.catalogoServicios) || [];
+    var tarifas = (estado.datos && estado.datos.servicioTarifas) || [];
+    var serviciosPorId = {};
+    servicios.forEach(function (s) { serviciosPorId[s.id] = s; });
+
+    var card = el('div', 'op-card' + (op.activo === false ? ' tar-inactivo' : ''));
+    var head = el('div', 'op-card-head');
+    head.appendChild(el('div', 'op-avatar', iniciales(op.nombre)));
+    var izq = el('div', null);
+    var nom = el('div', 'op-nombre');
+    nom.appendChild(document.createTextNode(op.nombre));
+    if (op.activo === false) nom.appendChild(el('span', 'tar-tag', 'Inactivo'));
+    izq.appendChild(nom);
+    var metaPartes = [];
+    if (op.contacto) metaPartes.push(op.contacto);
+    if (op.telefono) metaPartes.push(op.telefono);
+    izq.appendChild(el('div', 'op-meta', metaPartes.length ? metaPartes.join(' · ') : 'Sin contacto guardado'));
+    if (op.notas) izq.appendChild(el('div', 'op-meta', op.notas));
+    head.appendChild(izq);
+
+    var acc = el('div', 'op-acc');
+    var editarOp = el('button', 'btn-sutil', 'Editar');
+    editarOp.type = 'button';
+    editarOp.addEventListener('click', function () { abrirModalOperador(op); });
+    acc.appendChild(editarOp);
+    var agregarOf = el('button', 'btn-sutil', '+ Agregar oferta');
+    agregarOf.type = 'button';
+    if (!servicios.length) {
+      agregarOf.disabled = true;
+      agregarOf.title = 'Agrega primero un servicio en Tarifario.';
+    } else {
+      agregarOf.addEventListener('click', function () { abrirModalOferta(op, null); });
+    }
+    acc.appendChild(agregarOf);
+    head.appendChild(acc);
+    card.appendChild(head);
+
+    var lista = el('div', 'op-ofertas');
+    if (!ofertasOp.length) {
+      lista.appendChild(el('div', 'tar-vacio', 'Sin ofertas de este operador todavía.'));
+    } else {
+      ofertasOp.forEach(function (of) {
+        var s = serviciosPorId[of.servicio_id];
+        var row = el('div', 'op-oferta-row');
+        row.appendChild(el('strong', null, s ? s.nombre : of.servicio_id));
+        row.appendChild(el('span', null, 'Neto ad ' + money(of.neto_adulto)));
+        row.appendChild(el('span', null, (of.neto_menor != null) ? 'Neto mn ' + money(of.neto_menor) : 'Sin neto de menor'));
+
+        var ventas = tarifas.filter(function (t) { return t.servicio_id === of.servicio_id; });
+        var margenTxt = ventas.map(function (v) {
+          return money(Number(v.precio_adulto) - Number(of.neto_adulto)) + ' (' + v.zona + ')';
+        }).join(' · ');
+        row.appendChild(el('span', margenTxt ? 'op-margen' : null, margenTxt || '—'));
+
+        var edBtn = el('button', 'btn-sutil', 'Editar');
+        edBtn.type = 'button';
+        edBtn.addEventListener('click', function () { abrirModalOferta(op, of); });
+        row.appendChild(edBtn);
+
+        lista.appendChild(row);
+      });
+    }
+    card.appendChild(lista);
+    return card;
+  }
+
+  function abrirModalOperador(operadorExistente) {
+    abrirModal(function (caja) {
+      var editando = !!operadorExistente;
+      caja.appendChild(el('h2', 'modal-tit', editando ? 'Editar operador' : 'Nuevo operador'));
+      var grid = el('div', 'form-grid');
+      var inNombre = campoTexto(grid, 'Nombre', 'text', editando ? operadorExistente.nombre : '', true);
+      var inContacto = campoTexto(grid, 'Contacto (persona)', 'text', editando ? (operadorExistente.contacto || '') : '');
+      var inTel = campoTexto(grid, 'Teléfono', 'tel', editando ? (operadorExistente.telefono || '') : '');
+      var selActivo = campoSelect(grid, 'Estado', [['si', 'Activo'], ['no', 'Inactivo']],
+        (editando && operadorExistente.activo === false) ? 'no' : 'si');
+      var inNotas = campoTextarea(grid, 'Notas (opcional)', editando ? (operadorExistente.notas || '') : '', true);
+      caja.appendChild(grid);
+
+      var err = el('div', 'modal-error');
+      err.hidden = true;
+      caja.appendChild(err);
+
+      var acc = el('div', 'modal-acc');
+      var cancelar = el('button', 'btn btn-linea', 'Cancelar');
+      cancelar.type = 'button';
+      cancelar.addEventListener('click', cerrarModal);
+      var guardar = el('button', 'btn btn-amarillo', 'Guardar');
+      guardar.type = 'button';
+      guardar.addEventListener('click', async function () {
+        var nombre = inNombre.value.trim();
+        if (!nombre) { err.hidden = false; err.textContent = 'Escribe el nombre del operador.'; return; }
+        guardar.disabled = true;
+        var cuerpo = {
+          accion: 'operador_guardar', nombre: nombre,
+          contacto: inContacto.value.trim() || undefined,
+          telefono: inTel.value.trim() || undefined,
+          notas: inNotas.value.trim() || undefined,
+          activo: selActivo.value === 'si'
+        };
+        if (editando) cuerpo.id = operadorExistente.id;
+        var res = await ejecutar(cuerpo, editando ? 'Operador actualizado.' : 'Operador "' + nombre + '" agregado.');
+        guardar.disabled = false;
+        if (res) cerrarModal();
+      });
+      acc.appendChild(cancelar);
+      acc.appendChild(guardar);
+      caja.appendChild(acc);
+    });
+  }
+
+  function abrirModalOferta(operador, ofertaExistente) {
+    abrirModal(function (caja) {
+      var editando = !!ofertaExistente;
+      var servicios = (estado.datos && estado.datos.catalogoServicios) || [];
+      caja.appendChild(el('h2', 'modal-tit', editando ? 'Editar oferta' : 'Nueva oferta'));
+      caja.appendChild(el('p', 'modal-sub', operador.nombre));
+
+      var grid = el('div', 'form-grid');
+      var selServicio = null;
+      if (editando) {
+        var s = servicios.filter(function (x) { return x.id === ofertaExistente.servicio_id; })[0];
+        var servFijo = el('div', 'campo ancho');
+        servFijo.appendChild(el('span', 'campo-lab', 'Servicio'));
+        servFijo.appendChild(el('div', null, s ? s.nombre : ofertaExistente.servicio_id));
+        grid.appendChild(servFijo);
+      } else {
+        var labServ = el('label', 'campo ancho');
+        labServ.appendChild(el('span', 'campo-lab', 'Servicio'));
+        selServicio = el('select', 'campo-in');
+        servicios.forEach(function (s2) {
+          var o = el('option', null, s2.nombre); o.value = s2.id; selServicio.appendChild(o);
+        });
+        labServ.appendChild(selServicio);
+        grid.appendChild(labServ);
+      }
+      var inNa = campoTexto(grid, 'Neto adulto', 'number', editando ? String(ofertaExistente.neto_adulto) : '0');
+      var inNm = campoTexto(grid, 'Neto menor (opcional)', 'number',
+        (editando && ofertaExistente.neto_menor != null) ? String(ofertaExistente.neto_menor) : '');
+      caja.appendChild(grid);
+
+      var err = el('div', 'modal-error');
+      err.hidden = true;
+      caja.appendChild(err);
+
+      var acc = el('div', 'modal-acc');
+      var cancelar = el('button', 'btn btn-linea', 'Cancelar');
+      cancelar.type = 'button';
+      cancelar.addEventListener('click', cerrarModal);
+      var guardar = el('button', 'btn btn-amarillo', 'Guardar');
+      guardar.type = 'button';
+      guardar.addEventListener('click', async function () {
+        var servicioId = editando ? ofertaExistente.servicio_id : selServicio.value;
+        if (!servicioId) { err.hidden = false; err.textContent = 'Elige un servicio.'; return; }
+        var na = Number(inNa.value);
+        if (!Number.isFinite(na) || na < 0) { err.hidden = false; err.textContent = 'El neto de adulto no es válido.'; return; }
+        guardar.disabled = true;
+        var res = await ejecutar({
+          accion: 'oferta_guardar', operador_id: operador.id, servicio_id: servicioId,
+          neto_adulto: na, neto_menor: inNm.value.trim() === '' ? null : Number(inNm.value)
+        }, 'Oferta guardada.');
+        guardar.disabled = false;
+        if (res) cerrarModal();
+      });
+      acc.appendChild(cancelar);
+      acc.appendChild(guardar);
+      caja.appendChild(acc);
+    });
   }
 
   // ------------------------------------------------- renta en mostrador
@@ -1675,6 +3257,18 @@
       labMail.appendChild(inMail);
       grid.appendChild(labMail);
 
+      var labGar = el('label', 'campo');
+      labGar.appendChild(el('span', 'campo-lab', 'Garantía'));
+      var selGar = el('select', 'campo-in');
+      [['efectivo', 'Efectivo + identificación'], ['tarjeta', 'Retención en tarjeta']]
+        .forEach(function (o) {
+          var og = el('option', null, o[1]);
+          og.value = o[0];
+          selGar.appendChild(og);
+        });
+      labGar.appendChild(selGar);
+      grid.appendChild(labGar);
+
       caja.appendChild(grid);
 
       var total = el('div', 'modal-total');
@@ -1688,12 +3282,15 @@
         l1.appendChild(document.createTextNode('Total a cobrar: '));
         l1.appendChild(el('strong', null, B.money(p.total)));
         total.appendChild(l1);
-        total.appendChild(el('div', null,
-          'Garantía en efectivo: ' + B.money(p.depositoTotal) +
-          ' (' + B.money(p.depositoUnitario) + ' por bici, se devuelve)'));
+        total.appendChild(el('div', null, selGar.value === 'tarjeta'
+          ? 'Retención en tarjeta: ' + B.money(p.depositoTarjetaTotal) +
+            ' (' + B.money(p.depositoTarjetaUnitario) + ' por bici, se libera al devolver)'
+          : 'Garantía en efectivo: ' + B.money(p.depositoTotal) +
+            ' (' + B.money(p.depositoUnitario) + ' por bici) más su identificación en resguardo'));
       }
       selDur.addEventListener('change', recalcular);
       selCant.addEventListener('change', recalcular);
+      selGar.addEventListener('change', recalcular);
       recalcular();
 
       var err = el('div', 'modal-error');
@@ -1727,6 +3324,7 @@
             fecha: inFecha.value,
             hora: inHora.value,
             cantidad: parseInt(selCant.value, 10),
+            garantiaTipo: selGar.value,
             nombre: nombre,
             telefono: inTel.value.trim() || undefined,
             email: inMail.value.trim() || undefined,
@@ -1805,6 +3403,9 @@
     $('btnSalirMovil').addEventListener('click', salir);
     $('btnRefrescar').addEventListener('click', function () { cargarTablero(false); });
     $('btnMostrador').addEventListener('click', abrirMostrador);
+    $('btnNuevaCotizacion').addEventListener('click', function () { abrirFormularioCotizacion(null); });
+    $('btnNuevoServicio').addEventListener('click', function () { abrirModalServicio(null); });
+    $('btnNuevoOperador').addEventListener('click', function () { abrirModalOperador(null); });
     $('fatalReintentar').addEventListener('click', function () { location.reload(); });
     $('scrimDrawer').addEventListener('click', cerrarDrawer);
     $('scrimModal').addEventListener('click', cerrarModal);
@@ -1844,7 +3445,7 @@
     document.addEventListener('keydown', function (ev) {
       if (ev.key !== 'Escape') return;
       if (estado.modalAbierto) { cerrarModal(); return; }
-      if (estado.tokenAbierto) cerrarDrawer();
+      if (estado.tokenAbierto || estado.cotAbierta) cerrarDrawer();
     });
 
     // Auto-refresco cada 60 s, sólo si la pestaña está visible y no hay
@@ -1853,6 +3454,7 @@
       if (document.visibilityState !== 'visible') return;
       if ($('vistaApp').hidden) return;
       if (estado.editando || estado.cerrando || estado.modalAbierto) return;
+      if (estado.cotVista === 'formulario') return;
       cargarTablero(true);
     }, 60000);
   }

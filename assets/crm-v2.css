@@ -382,6 +382,9 @@ textarea.campo-in { resize: vertical; min-height: 62px; font-family: var(--fuent
 .estado.e-deposito_liberado { background: var(--linea-2); color: var(--tenue); }
 .estado.e-deposito_expirado { background: var(--alerta-bg); color: var(--alerta-fg); }
 .estado.e-deposito_requiere_atencion { background: var(--alerta-bg); color: var(--alerta-fg); }
+/* Garantía en efectivo: mismos estados de la base, otras palabras */
+.estado.e-eft_autorizado { background: var(--ok-bg); color: var(--ok-fg); }
+.estado.e-eft_liberado { background: var(--linea-2); color: var(--tenue); }
 .estado-grande { font-size: 12px; padding: 6px 13px; border-radius: 12px; }
 
 /* ---------- Solicitudes ---------- */
@@ -700,3 +703,174 @@ textarea.campo-in { resize: vertical; min-height: 62px; font-family: var(--fuent
   .form-grid { grid-template-columns: 1fr; }
   .form-grid .ancho { grid-column: auto; }
 }
+
+/* ================= COTIZACIONES / TARIFARIO / OPERADORES =================
+   Fase 3, 17-ago-26. Mismos componentes de siempre (panel, chip, campo,
+   dr-caja, form-grid, modal) — sólo se agregan clases nuevas para lo que
+   no tenía equivalente: fila de tabla de 5 columnas, badge de lead, tarjeta
+   de ítem del cotizador, tarjetas de Tarifario/Operadores y la hoja de
+   impresión. */
+
+/* ---------- estados nuevos de cotización ---------- */
+.estado.e-borrador  { background: var(--linea-2); color: var(--tenue); }
+.estado.e-enviada   { background: var(--azul-bg); color: var(--azul-fg); }
+.estado.e-aceptada  { background: var(--ok-bg); color: var(--ok-fg); }
+.estado.e-expirada  { background: var(--aviso-bg); color: var(--aviso-fg); }
+
+.badge-lead {
+  display: inline-block; background: var(--rosa); color: #fff;
+  border-radius: 8px; padding: 2px 8px; margin-left: 6px;
+  font-family: var(--titulo); font-weight: bold; font-size: 9.5px;
+  letter-spacing: 0.03em; white-space: nowrap; vertical-align: middle;
+}
+.cot-nombre-fila { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+
+/* ---------- tabla de cotizaciones (5 columnas, no 8 como Bikes) ---------- */
+.tabla-cot .fila {
+  grid-template-columns: 78px minmax(120px, 1.6fr) 96px 96px 100px;
+}
+.tabla-cot .c-creada { font-size: 12px; opacity: 0.8; }
+
+@media (max-width: 899px) {
+  .tabla-cot .fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "folio   estado"
+      "cliente cliente"
+      "creada  total";
+    gap: 4px 8px;
+    padding: 12px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    background: var(--arena-2);
+  }
+  .tabla-cot .c-folio { grid-area: folio; font-size: 14px; }
+  .tabla-cot .c-estado { grid-area: estado; justify-self: end; }
+  .tabla-cot .c-cliente { grid-area: cliente; }
+  .tabla-cot .c-creada { grid-area: creada; }
+  .tabla-cot .c-total { grid-area: total; text-align: right; }
+}
+
+/* ---------- formulario / asistente de cotización ---------- */
+.cot-form-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.cot-form-head .btn-sutil { margin-left: auto; }
+.cot-form-tit { font-family: var(--display); font-size: 26px; line-height: 1; }
+.cot-aviso {
+  background: var(--aviso-bg); color: var(--aviso-fg);
+  border-radius: 12px; padding: 12px 15px; font-size: 13px; line-height: 1.5; margin-bottom: 16px;
+}
+.cot-sec-tit {
+  font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--titulo); font-weight: bold; color: var(--rosa);
+  margin: 18px 0 8px;
+}
+.cot-item {
+  background: #fff; border: 1px solid var(--linea); border-radius: 14px;
+  padding: 14px 16px 16px; margin-bottom: 12px; position: relative;
+}
+.cot-item-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.cot-item-grid .ancho { grid-column: 1 / -1; }
+.cot-item-quitar {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none; color: #c9c2ab; font-size: 17px; line-height: 1; padding: 2px 4px; cursor: pointer;
+}
+.cot-item-quitar:hover { color: var(--rosa); }
+.cot-item-num {
+  font-family: var(--titulo); font-weight: bold; font-size: 11px; color: var(--verde);
+  opacity: 0.5; margin-bottom: 8px;
+}
+.cot-item-sub { font-size: 11.5px; opacity: 0.6; margin-top: 10px; line-height: 1.4; }
+.btn-agregar-item {
+  width: 100%; background: var(--arena-2); border: 1.5px dashed #d8d4c8; border-radius: 12px;
+  padding: 11px; font-family: var(--titulo); font-weight: bold; font-size: 12.5px; color: var(--verde);
+  margin-bottom: 16px;
+}
+.btn-agregar-item:hover { border-color: var(--verde); }
+.cot-total-box {
+  background: var(--verde); color: #fff; border-radius: 14px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 5px; font-size: 13px; margin: 4px 0 18px;
+}
+.cot-total-box .cot-total-fila { display: flex; justify-content: space-between; gap: 10px; }
+.cot-total-box .cot-total-final { font-family: var(--titulo); font-weight: bold; font-size: 18px; color: var(--amarillo); padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.25); }
+
+/* ---------- panel de detalle de cotización (drawer) ---------- */
+.cot-item-vista { background: var(--arena-2); border-radius: 12px; padding: 11px 13px; margin-bottom: 8px; }
+.cot-item-vista-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.cot-item-vista-sub { font-size: 11.5px; opacity: 0.6; margin-top: 4px; line-height: 1.5; }
+
+/* ---------- Tarifario ---------- */
+.tar-servicio {
+  border-top: 1px solid var(--linea-2); padding: 14px 0;
+}
+.tar-servicio:first-child { border-top: none; }
+.tar-servicio-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.tar-servicio-nom { font-family: var(--titulo); font-weight: bold; font-size: 14.5px; }
+.tar-servicio-meta { font-size: 11px; opacity: 0.55; margin-top: 2px; }
+.tar-servicio-acc { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.tar-inactivo { opacity: 0.5; }
+.tar-tag {
+  display: inline-block; background: var(--linea-2); border-radius: 8px;
+  padding: 2px 8px; font-size: 10px; font-weight: bold; margin-left: 6px; vertical-align: middle;
+}
+.tar-tarifas { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.tar-tarifa-row {
+  display: grid; grid-template-columns: minmax(100px,1fr) 90px 90px 90px auto;
+  gap: 8px; align-items: center; font-size: 12.5px;
+  background: var(--arena-2); border-radius: 10px; padding: 8px 12px;
+}
+.tar-tarifa-row strong { font-family: var(--titulo); }
+.tar-vacio { font-size: 12px; opacity: 0.5; padding: 6px 0; }
+
+/* ---------- Operadores ---------- */
+.op-card {
+  border-top: 1px solid var(--linea-2); padding: 16px 0;
+}
+.op-card:first-child { border-top: none; }
+.op-card-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.op-avatar {
+  width: 38px; height: 38px; border-radius: 11px; background: var(--verde); color: var(--amarillo);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--titulo); font-weight: bold; font-size: 13px; flex-shrink: 0;
+}
+.op-nombre { font-family: var(--titulo); font-weight: bold; font-size: 14.5px; }
+.op-meta { font-size: 11.5px; opacity: 0.55; margin-top: 2px; line-height: 1.5; }
+.op-acc { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.op-ofertas { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.op-oferta-row {
+  display: grid; grid-template-columns: minmax(100px,1fr) 90px 90px minmax(110px,auto) auto;
+  gap: 8px; align-items: center; font-size: 12.5px;
+  background: var(--arena-2); border-radius: 10px; padding: 8px 12px;
+}
+.op-oferta-row strong { font-family: var(--titulo); }
+.op-margen { color: var(--ok-fg); font-weight: bold; }
+
+/* ================= HOJA DE IMPRESIÓN DE COTIZACIÓN ================= */
+#hojaCot { display: none; }
+@media print {
+  @page { size: letter; margin: 0.4in; }
+  body > *:not(#hojaCot) { display: none !important; }
+  #hojaCot { display: block !important; }
+}
+.hoja-en { width: 7.5in; margin: 0 auto; padding: 0.1in 0; font-family: var(--titulo), 'Helvetica Neue', Helvetica, sans-serif; color: var(--verde); }
+.hoja-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; border-bottom: 3px solid var(--verde); padding-bottom: 12px; }
+.hoja-logo { height: 44px; width: auto; display: block; background: var(--verde); padding: 10px 14px; border-radius: 6px; }
+.hoja-folio-lab { font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.6; text-align: right; }
+.hoja-folio { font-size: 22pt; font-weight: bold; text-align: right; }
+.hoja-fecha { font-size: 8.5pt; opacity: 0.6; text-align: right; }
+.hoja-datos { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--borde); margin-top: 16px; }
+.hoja-dato-cel { padding: 9px 12px; border-right: 1px solid var(--borde); }
+.hoja-dato-cel:last-child { border-right: none; }
+.hoja-dato-lab { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5; }
+.hoja-dato-val { font-size: 11pt; font-weight: bold; margin-top: 2px; }
+.hoja-tabla { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 10pt; }
+.hoja-tabla th { text-align: left; border: 1px solid var(--borde); background: var(--arena-2); padding: 7px 10px; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; }
+.hoja-tabla td { border: 1px solid var(--borde); padding: 9px 10px; vertical-align: top; }
+.hoja-tabla .num { text-align: right; font-weight: bold; }
+.hoja-servicio-sub { font-size: 8.5pt; opacity: 0.65; margin-top: 2px; }
+.hoja-totales { width: 300px; margin-left: auto; margin-top: 14px; }
+.hoja-tot-fila { display: flex; justify-content: space-between; font-size: 10pt; padding: 5px 0; border-bottom: 1px solid var(--borde); }
+.hoja-tot-final { display: flex; justify-content: space-between; align-items: baseline; background: var(--verde); color: #fff; padding: 8px 10px; margin-top: 6px; }
+.hoja-tot-final strong { font-size: 16pt; }
+.hoja-notas { margin-top: 16px; font-size: 9pt; line-height: 1.6; }
+.hoja-pie { margin-top: 20px; border-top: 1px solid var(--borde); padding-top: 8px; font-size: 8pt; opacity: 0.7; display: flex; justify-content: space-between; gap: 16px; }

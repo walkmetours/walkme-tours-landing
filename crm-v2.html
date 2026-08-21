@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0D2E1A">
 <title>WalkMe · CRM</title>
 <link rel="icon" href="uploads/WALKME_LOGO_REDONDO.png">
-<link rel="stylesheet" href="assets/crm-v2.css?v=20260818">
+<link rel="stylesheet" href="assets/crm-v2.css?v=20260820">
 </head>
 <body>
 
@@ -56,9 +56,9 @@
         <span class="nav-tx nav-tx-larga">Dashboard</span>
         <span class="nav-tx nav-tx-corta">Inicio</span>
       </button>
-      <button class="nav-item is-apagada" type="button" disabled>
+      <button class="nav-item" type="button" data-vista="cotizaciones">
         <span class="nav-ic" aria-hidden="true">▧</span>
-        <span class="nav-tx nav-tx-larga">Cotizaciones<span class="nav-tag">en construcción</span></span>
+        <span class="nav-tx nav-tx-larga">Cotizaciones</span>
         <span class="nav-tx nav-tx-corta">Cotiz.</span>
       </button>
       <button class="nav-item is-apagada" type="button" disabled>
@@ -81,14 +81,14 @@
         <span class="nav-tx nav-tx-larga">Bikes</span>
         <span class="nav-tx nav-tx-corta">Bikes</span>
       </button>
-      <button class="nav-item is-apagada" type="button" disabled>
+      <button class="nav-item" type="button" data-vista="tarifario">
         <span class="nav-ic" aria-hidden="true">◫</span>
-        <span class="nav-tx nav-tx-larga">Tarifario<span class="nav-tag">en construcción</span></span>
+        <span class="nav-tx nav-tx-larga">Tarifario</span>
         <span class="nav-tx nav-tx-corta">Tarifario</span>
       </button>
-      <button class="nav-item is-apagada" type="button" disabled>
+      <button class="nav-item" type="button" data-vista="operadores">
         <span class="nav-ic" aria-hidden="true">◈</span>
-        <span class="nav-tx nav-tx-larga">Operadores<span class="nav-tag">en construcción</span></span>
+        <span class="nav-tx nav-tx-larga">Operadores</span>
         <span class="nav-tx nav-tx-corta">Operad.</span>
       </button>
       <button class="nav-item is-apagada" type="button" disabled>
@@ -96,9 +96,9 @@
         <span class="nav-tx nav-tx-larga">Finanzas<span class="nav-tag">en construcción</span></span>
         <span class="nav-tx nav-tx-corta">Finanzas</span>
       </button>
-      <button class="nav-item is-apagada" type="button" disabled>
+      <button class="nav-item" type="button" data-vista="reportes">
         <span class="nav-ic" aria-hidden="true">↗</span>
-        <span class="nav-tx nav-tx-larga">Reportes<span class="nav-tag">en construcción</span></span>
+        <span class="nav-tx nav-tx-larga">Reportes</span>
         <span class="nav-tx nav-tx-corta">Reportes</span>
       </button>
       <button class="nav-item nav-salir-movil" type="button" id="btnSalirMovil">
@@ -128,6 +128,7 @@
       <div class="top-acc">
         <button class="btn btn-linea" type="button" id="btnRefrescar">Actualizar</button>
         <button class="btn btn-amarillo" type="button" id="btnMostrador" hidden>+ Renta en mostrador</button>
+        <button class="btn btn-amarillo" type="button" id="btnNuevaCotizacion" hidden>+ Nueva cotización</button>
       </div>
     </header>
 
@@ -137,8 +138,8 @@
     <section id="vistaDashboardBody">
       <div class="kpis" id="kpisDash"></div>
       <div class="dash-nota">
-        <strong>Los demás módulos todavía no tienen datos reales.</strong>
-        Cotizaciones, Reservas de tours, Calendario, Clientes, Tarifario, Operadores, Finanzas y Reportes están en construcción — se activan en el menú cuando tengan backend propio. Por ahora este CRM opera Bikes con datos reales.
+        <strong>Algunos módulos todavía no tienen datos reales.</strong>
+        Reservas de tours, Calendario, Clientes y Finanzas están en construcción — se activan en el menú cuando tengan backend propio. Bikes, Cotizaciones, Tarifario, Operadores y Reportes ya operan con datos reales.
       </div>
     </section>
 
@@ -183,6 +184,60 @@
 
       </div>
     </section>
+
+    <!-- ============ COTIZACIONES ============ -->
+    <section id="vistaCotizacionesBody" hidden>
+      <div id="cotVistaLista">
+        <div class="chips" id="cotFiltrosEstado"></div>
+        <div class="chips" id="cotFiltrosOrigen"></div>
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-tit">Cotizaciones</h2>
+            <span class="panel-sub" id="cotSub"></span>
+          </div>
+          <div class="tabla-wrap">
+            <div class="tabla tabla-cot" id="tablaCot"></div>
+          </div>
+        </section>
+      </div>
+      <div id="cotVistaForm" hidden></div>
+    </section>
+
+    <!-- ============ TARIFARIO ============ -->
+    <section id="vistaTarifarioBody" hidden>
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-tit">Tarifario</h2>
+          <span class="panel-sub" id="tarSub"></span>
+        </div>
+        <div class="tar-lista" id="tarLista"></div>
+        <button class="btn-agregar" type="button" id="btnNuevoServicio">+ Nuevo servicio</button>
+      </section>
+    </section>
+
+    <!-- ============ OPERADORES ============ -->
+    <section id="vistaOperadoresBody" hidden>
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-tit">Operadores</h2>
+          <span class="panel-sub" id="opSub"></span>
+        </div>
+        <div class="op-lista" id="opLista"></div>
+        <button class="btn-agregar" type="button" id="btnNuevoOperador">+ Nuevo operador</button>
+      </section>
+    </section>
+
+    <!-- ============ REPORTES (BICIS) ============ -->
+    <section id="vistaReportesBody" hidden>
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-tit">Rango de fechas</h2>
+          <span class="panel-sub">Bicis · ingresos, ocupación y garantías</span>
+        </div>
+        <div class="form-grid" id="repFiltroGrid"></div>
+      </section>
+      <div id="repResultados"></div>
+    </section>
   </main>
 </div>
 
@@ -191,6 +246,9 @@
 <aside class="drawer" id="drawer" hidden aria-label="Detalle de la renta">
   <div class="drawer-in" id="drawerIn"></div>
 </aside>
+
+<!-- ============ HOJA DE IMPRESIÓN (cotización) — sólo visible al imprimir ============ -->
+<div id="hojaCot" hidden></div>
 
 <!-- ============ MODAL (mostrador / confirmar / prompt) ============ -->
 <div class="scrim" id="scrimModal" hidden></div>
@@ -201,8 +259,8 @@
 <!-- ============ TOASTS ============ -->
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script src="assets/catalogo-bicis.js?v=20260817"></script>
+<script src="assets/catalogo-bicis.js?v=20260819"></script>
 <script src="assets/crm-auth.js?v=20260814"></script>
-<script src="assets/crm-v2.js?v=20260818"></script>
+<script src="assets/crm-v2.js?v=20260820"></script>
 </body>
 </html>

@@ -586,6 +586,20 @@ footer { background: #022814; padding: 52px 48px 28px; } /* verde exacto del log
 .bike-type.checked .bike-type-name { color: var(--yellow); }
 .bike-type.checked .bike-type-desc { color: rgba(255,255,255,0.7); }
 .bike-type-photo { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
+/* Selector de garantía (efectivo + ID / retención en tarjeta), 19-ago-26.
+   El radio queda VISIBLE a propósito: si :has() no aplicara, el cliente
+   sigue viendo cuál eligió. El borde verde es solo refuerzo. */
+.gar-opts { display: flex; flex-direction: column; gap: 10px; }
+.gar-opt {
+  border: 2px solid #e8e3d6; border-radius: 14px; padding: 14px 16px;
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+  background: white; transition: border-color .2s, background .2s;
+}
+.gar-opt:hover { border-color: var(--orange); }
+.gar-opt:has(input:checked) { border-color: var(--green); background: var(--cream); }
+.gar-opt input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; cursor: pointer; accent-color: var(--green); }
+.gar-opt-titulo { display: block; font-weight: bold; color: var(--green); font-size: 14px; margin-bottom: 3px; }
+.gar-opt-desc { display: block; font-size: 12px; color: #777; line-height: 1.5; }
 .terms-box {
   background: var(--cream); border-radius: 14px; padding: 16px 18px;
   display: flex; gap: 12px; align-items: flex-start; margin-bottom: 22px;
