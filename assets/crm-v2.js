@@ -64,7 +64,12 @@
     cotFiltroEstado: 'todas',
     cotFiltroOrigen: 'todas',
     cotAbierta: null,      // id de la cotización abierta en el drawer
-    cotVista: 'lista'      // 'lista' | 'formulario' — controla #cotVistaLista/#cotVistaForm
+    cotVista: 'lista',     // 'lista' | 'formulario' — controla #cotVistaLista/#cotVistaForm
+    // ---- Reportes de bicis (20-ago-26) ----
+    repDesde: null,
+    repHasta: null,
+    repDatos: null,        // respuesta de accion 'reportes_bicis' para el rango actual
+    repCargando: false
   };
 
   // ------------------------------------------------------------- utilidades
@@ -379,12 +384,14 @@
   }
 
   // ------------------------------------------------------- nav de 10 items
-  // 'dashboard', 'bikes', 'cotizaciones', 'tarifario' y 'operadores' tienen
-  // contenedor + backend real. Los otros 5 (Reservas, Calendario, Clientes,
-  // Finanzas, Reportes) siguen disabled en el HTML ("en construcción").
+  // 'dashboard', 'bikes', 'cotizaciones', 'tarifario', 'operadores' y
+  // 'reportes' tienen contenedor + backend real. Los otros 4 (Reservas,
+  // Calendario, Clientes, Finanzas) siguen disabled en el HTML ("en
+  // construcción").
   var TITULOS_VISTA = {
     dashboard: 'Dashboard', bikes: 'Renta de bicis',
-    cotizaciones: 'Cotizaciones', tarifario: 'Tarifario', operadores: 'Operadores'
+    cotizaciones: 'Cotizaciones', tarifario: 'Tarifario', operadores: 'Operadores',
+    reportes: 'Reportes'
   };
 
   function irAVista(vista) {
@@ -394,6 +401,7 @@
     $('vistaCotizacionesBody').hidden = vista !== 'cotizaciones';
     $('vistaTarifarioBody').hidden = vista !== 'tarifario';
     $('vistaOperadoresBody').hidden = vista !== 'operadores';
+    $('vistaReportesBody').hidden = vista !== 'reportes';
     $('topTitulo').textContent = TITULOS_VISTA[vista] || vista;
     $('buscador').hidden = vista !== 'bikes';
     $('btnMostrador').hidden = vista !== 'bikes';
@@ -415,6 +423,7 @@
       else if (vista === 'cotizaciones') pintarCotizacionesVista();
       else if (vista === 'tarifario') pintarTarifarioVista();
       else if (vista === 'operadores') pintarOperadoresVista();
+      else if (vista === 'reportes') pintarReportesVista();
     }
   }
 
@@ -2854,6 +2863,131 @@
   }
 
   // =============================================================== Operadores
+  // ------------------------------------------------------- reportes (bicis)
+  // Vive fuera de estado.datos (el tablero) a propósito: un reporte necesita
+  // mirar más atrás que los 60 días/200 filas que carga el dashboard del
+  // día a día. Se pide aparte, bajo demanda, con accion('reportes_bicis').
+  function rangoReportesDefault() {
+    var hasta = hoyCancun();
+    var desde = diaCancun(new Date(Date.now() - 29 * 24 * 3600 * 1000));
+    return { desde: desde, hasta: hasta };
+  }
+
+  function pintarReportesVista() {
+    if (!estado.repDesde || !estado.repHasta) {
+      var def = rangoReportesDefault();
+      estado.repDesde = def.desde;
+      estado.repHasta = def.hasta;
+    }
+    var grid = $('repFiltroGrid');
+    vaciar(grid);
+    var inDesde = campoTexto(grid, 'Desde', 'date', estado.repDesde);
+    var inHasta = campoTexto(grid, 'Hasta', 'date', estado.repHasta);
+    var campoBtn = el('label', 'campo');
+    campoBtn.appendChild(el('span', 'campo-lab', ' '));
+    var btnVer = el('button', 'btn btn-amarillo', 'Ver reporte');
+    btnVer.type = 'button';
+    btnVer.addEventListener('click', function () {
+      estado.repDesde = inDesde.value;
+      estado.repHasta = inHasta.value;
+      cargarReportes();
+    });
+    campoBtn.appendChild(btnVer);
+    grid.appendChild(campoBtn);
+
+    if (estado.repDatos) pintarReportesResultados();
+    else cargarReportes();
+  }
+
+  async function cargarReportes() {
+    var cont = $('repResultados');
+    if (!estado.repDesde || !estado.repHasta) return;
+    if (estado.repDesde > estado.repHasta) {
+      toast('La fecha "Desde" no puede ser después de "Hasta".', 'error');
+      return;
+    }
+    if (estado.repCargando) return;
+    estado.repCargando = true;
+    vaciar(cont);
+    cont.appendChild(el('div', 'tabla-vacia', 'Cargando…'));
+    try {
+      var res = await accion({ accion: 'reportes_bicis', desde: estado.repDesde, hasta: estado.repHasta });
+      estado.repDatos = res;
+      pintarReportesResultados();
+    } catch (e) {
+      if (e.codigo === 'sin_sesion') { mostrarLogin(); return; }
+      vaciar(cont);
+      cont.appendChild(el('div', 'tabla-vacia', textoError(e)));
+    } finally {
+      estado.repCargando = false;
+    }
+  }
+
+  function panelKpis(titulo, subtitulo, tarjetas) {
+    var panel = el('section', 'panel');
+    var head = el('div', 'panel-head');
+    head.appendChild(el('h2', 'panel-tit', titulo));
+    if (subtitulo) head.appendChild(el('span', 'panel-sub', subtitulo));
+    panel.appendChild(head);
+    var kpis = el('div', 'kpis');
+    tarjetas.forEach(function (t) {
+      var c = el('div', 'kpi ' + (t.clase || ''));
+      c.appendChild(el('div', 'kpi-lab', t.lab));
+      c.appendChild(el('div', 'kpi-val', t.val));
+      kpis.appendChild(c);
+    });
+    panel.appendChild(kpis);
+    return panel;
+  }
+
+  function pintarReportesResultados() {
+    var d = estado.repDatos;
+    var cont = $('repResultados');
+    vaciar(cont);
+    if (!d) return;
+
+    cont.appendChild(panelKpis('Ingresos', 'Solo lo que de verdad se cobró en el rango', [
+      { lab: 'Total cobrado', val: money(d.ingresos.total), clase: 'kpi-oscuro' },
+      { lab: 'Efectivo', val: money(d.ingresos.efectivo) },
+      { lab: 'Stripe', val: money(d.ingresos.stripe) },
+      { lab: 'MercadoPago', val: money(d.ingresos.mercadopago) }
+    ]));
+
+    cont.appendChild(panelKpis('Ocupación de flota', null, [
+      { lab: 'Ocupación', val: d.ocupacion.porcentaje + '%', clase: 'kpi-amarillo' },
+      { lab: 'Días-bici rentados', val: d.ocupacion.diasBiciRentados },
+      { lab: 'Días-bici disponibles', val: d.ocupacion.diasBiciDisponibles }
+    ]));
+
+    var panelGar = el('section', 'panel');
+    var headGar = el('div', 'panel-head');
+    headGar.appendChild(el('h2', 'panel-tit', 'Garantías'));
+    headGar.appendChild(el('span', 'panel-sub', 'Efectivo y tarjeta nunca se suman entre sí'));
+    panelGar.appendChild(headGar);
+
+    var colsGar = el('div', 'form-grid');
+    var colEfectivo = el('div', null);
+    colEfectivo.appendChild(el('div', 'panel-sub-bloque', 'Efectivo (mostrador)'));
+    colEfectivo.appendChild(dato('Recibido en el rango', money(d.garantias.efectivoRetenido)));
+    colEfectivo.appendChild(dato('Todavía sin devolver', money(d.garantias.efectivoSinDevolver)));
+    colEfectivo.appendChild(dato('Identificaciones en el cajón', d.garantias.idsSinDevolver));
+    colsGar.appendChild(colEfectivo);
+
+    var colTarjeta = el('div', null);
+    colTarjeta.appendChild(el('div', 'panel-sub-bloque', 'Tarjeta (hold de Stripe)'));
+    colTarjeta.appendChild(dato('Capturado en el rango', money(d.garantias.capturadoStripe)));
+    Object.keys(d.garantias.holdsPorEstado).forEach(function (k) {
+      colTarjeta.appendChild(dato(
+        ETIQUETA_ESTADO['deposito_' + k] || capitaliza(k),
+        d.garantias.holdsPorEstado[k]
+      ));
+    });
+    colsGar.appendChild(colTarjeta);
+
+    panelGar.appendChild(colsGar);
+    cont.appendChild(panelGar);
+  }
+
   function pintarOperadoresVista() {
     var operadores = (estado.datos && estado.datos.operadores) || [];
     var ofertas = (estado.datos && estado.datos.operadorOfertas) || [];

@@ -6,7 +6,7 @@ const Stripe = require('stripe');
 const { supa, leerJson } = require('../_lib/supabase.js');
 const { verificarCRM } = require('../_lib/auth-crm.js');
 const { esTokenValido, generarToken } = require('../_lib/token.js');
-const { ventana } = require('../_lib/fechas.js');
+const { ventana, instante, RE_FECHA } = require('../_lib/fechas.js');
 const { calcularTotal } = require('../_lib/catalogo-bicis.js');
 const { notificarReservaBici, notificarDuenoFlota } = require('../_lib/notificar-bici.js');
 
@@ -884,6 +884,99 @@ module.exports = async (req, res) => {
         }, { onConflict: 'operador_id,servicio_id' });
         await auditar(null, 'oferta_guardar', { operadorId, servicioId });
         return res.status(200).json({ ok: true });
+      }
+
+      // ---- Reportes de bicis: agregados por rango de fechas ----
+      // Vive aquí (no en tablero.js) porque tablero.js recorta a 60
+      // días/200 filas para la vista operativa del día a día — un reporte
+      // necesita poder mirar más atrás. Es de solo lectura pero comparte
+      // este switch por el límite de functions de Vercel Hobby.
+      case 'reportes_bicis': {
+        const desde = String(b.desde || '');
+        const hasta = String(b.hasta || '');
+        if (!RE_FECHA.test(desde) || !RE_FECHA.test(hasta) || desde > hasta) {
+          return res.status(400).json({ error: 'rango_invalido' });
+        }
+        const desdeTs = instante(desde, '00:00');
+        const hastaTs = new Date(instante(hasta, '00:00').getTime() + 24 * 3600 * 1000);
+        const desdeISO = desdeTs.toISOString();
+        const hastaISO = hastaTs.toISOString();
+
+        const [rentasQ, flotaQ] = await Promise.all([
+          s.from('reservas_bicis').select('*')
+            .lt('inicio', hastaISO).gt('fin', desdeISO)
+            .not('estado', 'in', '(cancelada,no_show)'),
+          s.from('bikes_flota').select('id').neq('estado', 'mantenimiento')
+        ]);
+        if (rentasQ.error) throw new Error(rentasQ.error.message);
+        if (flotaQ.error) throw new Error(flotaQ.error.message);
+        const rentas = rentasQ.data || [];
+        const capacidad = (flotaQ.data || []).length || 6;
+
+        // Ingresos de la renta (NO la garantía): solo lo que de verdad se
+        // cobró dentro del rango, según pago_ts — no según cuándo se creó
+        // la reserva ni cuándo empieza la renta.
+        const ingresos = { efectivo: 0, stripe: 0, mercadopago: 0 };
+        rentas.forEach(r => {
+          if (!r.pago_ts || r.pago_ts < desdeISO || r.pago_ts >= hastaISO) return;
+          const monto = Number(r.total) || 0;
+          if (r.metodo_pago === 'efectivo') ingresos.efectivo += monto;
+          else if (r.metodo_pago === 'stripe') ingresos.stripe += monto;
+          else if (r.metodo_pago === 'mercadopago') ingresos.mercadopago += monto;
+        });
+        ingresos.total = ingresos.efectivo + ingresos.stripe + ingresos.mercadopago;
+
+        // Ocupación: días-bici rentados (solo la porción de cada renta que
+        // cae dentro del rango) sobre días-bici disponibles del rango.
+        const msDesde = desdeTs.getTime(), msHasta = hastaTs.getTime();
+        const diasRango = (msHasta - msDesde) / 86400000;
+        let diasBiciRentados = 0;
+        rentas.forEach(r => {
+          const ini = Math.max(Date.parse(r.inicio), msDesde);
+          const fin = Math.min(Date.parse(r.fin), msHasta);
+          if (fin > ini) diasBiciRentados += ((fin - ini) / 86400000) * r.cantidad_bicis;
+        });
+        const diasBiciDisponibles = capacidad * diasRango;
+
+        // Garantías: efectivo (mostrador) y tarjeta (hold de Stripe) NUNCA
+        // se suman entre sí — son dos canales de dinero distintos (ver
+        // advertencias en sql/reservas-bicis-garantia.sql).
+        let efectivoRetenido = 0, efectivoSinDevolver = 0, idsSinDevolver = 0, capturadoStripe = 0;
+        const holdsPorEstado = { pendiente: 0, autorizado: 0, capturado: 0, liberado: 0, expirado: 0, requiere_atencion: 0 };
+        rentas.forEach(r => {
+          if ((r.garantia_tipo || 'efectivo') === 'efectivo') {
+            if (r.deposito_efectivo_recibido != null) {
+              const recibido = Number(r.deposito_efectivo_recibido);
+              efectivoRetenido += recibido;
+              efectivoSinDevolver += recibido - Number(r.deposito_devuelto || 0);
+            }
+            if (r.garantia_id_retenido_at && !r.garantia_id_devuelto_at) idsSinDevolver++;
+          } else {
+            if (Object.prototype.hasOwnProperty.call(holdsPorEstado, r.deposito_estado)) {
+              holdsPorEstado[r.deposito_estado]++;
+            }
+            if (r.deposito_estado === 'capturado' && r.deposito_capturado != null) {
+              capturadoStripe += Number(r.deposito_capturado);
+            }
+          }
+        });
+
+        return res.status(200).json({
+          ok: true,
+          rango: { desde, hasta },
+          ingresos,
+          ocupacion: {
+            diasBiciRentados: Math.round(diasBiciRentados * 10) / 10,
+            diasBiciDisponibles: Math.round(diasBiciDisponibles * 10) / 10,
+            porcentaje: diasBiciDisponibles > 0
+              ? Math.round(Math.min(diasBiciRentados / diasBiciDisponibles, 1) * 1000) / 10
+              : 0
+          },
+          garantias: {
+            efectivoRetenido, efectivoSinDevolver, idsSinDevolver,
+            capturadoStripe, holdsPorEstado
+          }
+        });
       }
 
       default:
