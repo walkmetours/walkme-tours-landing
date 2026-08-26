@@ -21,7 +21,7 @@
   };
   var TRANSPORTE = {
     'no':      { label: { es: 'Sin transporte', en: 'No transport' }, tarifa: 0 },
-    'pdc':     { label: { es: 'Playa del Carmen', en: 'Playa del Carmen' }, tarifa: 500 },
+    'pdc':     { label: { es: 'Playa del Carmen', en: 'Playa del Carmen' }, tarifa: 600 },
     'riviera': { label: { es: 'Riviera Maya', en: 'Riviera Maya' }, tarifa: 700 },
     'cun':     { label: { es: 'Cancún', en: 'Cancun' }, tarifa: 700 }
   };
@@ -135,8 +135,6 @@
       hotel: overlay.querySelector('[data-jy-hotel]').value,
       nombre: overlay.querySelector('[data-jy-nombre]').value,
       email: overlay.querySelector('[data-jy-email]').value,
-      telefono: overlay.querySelector('[data-jy-tel]').value,
-      notas: overlay.querySelector('[data-jy-notas]').value,
       hp: overlay.querySelector('[data-jy-hp]').value
     };
 
