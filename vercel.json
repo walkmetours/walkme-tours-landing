@@ -71,7 +71,7 @@
       ]
     },
     {
-      "source": "/(cupon|cupon-en).html",
+      "source": "/(cupon|cupon-en|cupon-joya|cupon-joya-en).html",
       "headers": [
         {
           "key": "X-Robots-Tag",

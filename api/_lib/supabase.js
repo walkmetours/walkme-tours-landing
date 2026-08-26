@@ -26,10 +26,19 @@ const CAMPOS_PUBLICOS_BICI =
   // mostrador sobre un documento de identidad.
   'garantia_tipo, deposito_tarjeta_total, deposito_estado';
 
+// Campos de la reserva de JOYÀ que sí pueden viajar al navegador (cupón).
+// Igual criterio que bicis: el nombre sí va (comprobante), nunca
+// email/teléfono/notas/firma_ip/firma_ua por el endpoint público.
+const CAMPOS_PUBLICOS_JOYA =
+  'folio, token, estado, idioma, tier_id, tier_nombre, seccion, ' +
+  'fecha_funcion, horario, adultos, ninos, transporte_id, transporte_tarifa, hotel, ' +
+  'precio_adulto, precio_nino, subtotal_boletos, subtotal_transporte, total, moneda, ' +
+  'nombre_completo, metodo_pago';
+
 function leerJson(req) {
   // Vercel ya parsea JSON; por si llega como string.
   if (typeof req.body === 'string') { try { return JSON.parse(req.body); } catch (e) { return {}; } }
   return req.body || {};
 }
 
-module.exports = { supa, CAMPOS_PUBLICOS_BICI, leerJson };
+module.exports = { supa, CAMPOS_PUBLICOS_BICI, CAMPOS_PUBLICOS_JOYA, leerJson };
